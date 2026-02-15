@@ -1,0 +1,141 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+import { fetchApi, api } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import { buildCategoryTree } from '@/utils/categoryTree';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import ProductCard from '@/components/ProductCard.astro';
+import type { ProductAttributes } from '@/types/content';
+import type { CategoryAttributes } from '@/types/content';
+
+export async function getStaticPaths() {
+  const paths: { params: { locale: string; category: string } }[] = [];
+  for (const locale of supportedLocales) {
+    const res = await fetchApi<{ data?: { slug?: string; name?: string }[] }>(api.categories, {
+      locale,
+      pagination: { pageSize: 100 },
+    });
+    const list = Array.isArray(res?.data) ? res.data : [];
+    for (const item of list) {
+      const category = item.slug;
+      if (category) paths.push({ params: { locale, category } });
+    }
+  }
+  return paths;
+}
+
+const params = Astro.params as { locale?: string; category?: string };
+const locale: Locale = getLocale(params.locale);
+const categorySlug = params.category ?? '';
+const messages = await loadMessages(locale);
+
+// 分类列表并构建树
+const categoriesRes = await fetchApi<{ data?: (CategoryAttributes & { parentID?: number | null; sort?: number })[] }>(api.categories, {
+  locale,
+  pagination: { pageSize: 100 },
+});
+const categories = Array.isArray(categoriesRes?.data) ? categoriesRes.data : [];
+const categoryTree = buildCategoryTree(categories);
+const currentCategory = categories.find((c) => c.slug === categorySlug);
+const categoryName = currentCategory?.name ?? categorySlug;
+
+// 若当前是一级分类（有子分类），则展示该一级 + 其下全部二级分类的产品；否则只展示当前分类产品
+const rootWithSlug = categoryTree.find((r) => r.slug === categorySlug);
+const slugsToFilter =
+  rootWithSlug && rootWithSlug.children.length > 0
+    ? [rootWithSlug.slug, ...rootWithSlug.children.map((c) => c.slug)]
+    : [categorySlug];
+
+const productsRes = await fetchApi<{ data?: ProductAttributes[] }>(api.products, {
+  locale,
+  populate: { images: true, category: true },
+  filters: slugsToFilter.length > 1 ? { category: { slug: { $in: slugsToFilter } } } : { category: { slug: { $eq: categorySlug } } },
+  pagination: { pageSize: 100 },
+});
+const products = Array.isArray(productsRes?.data) ? productsRes.data : [];
+
+const breadcrumbItems = [
+  { label: t(messages, 'pageTitle.home'), href: '/' },
+  { label: t(messages, 'pageTitle.products'), href: '/products' },
+  { label: categoryName },
+];
+const allProductsLabel = t(messages, 'products.allProducts');
+---
+
+<BaseLayout
+  title={`${categoryName} - ${t(messages, 'pageTitle.products')}`}
+  messages={messages}
+  locale={locale}
+>
+  <div class="container mx-auto px-4 py-8">
+    <Breadcrumb items={breadcrumbItems} locale={locale} />
+
+    <div class="flex flex-col md:flex-row gap-4 md:gap-8">
+      <!-- 左侧：产品分类（滚动后吸顶，与产品首页一致） -->
+      <aside class="md:w-56 shrink-0 font-bold md:sticky md:top-60 md:self-start hidden md:block">
+        <ul class="overflow-hidden">
+          <li>
+            <a
+              href={toHref('/products', locale)}
+              class="block p-2 hover:bg-gray-100 hover:text-orange-500 transition-colors"
+            >
+              {allProductsLabel}
+            </a>
+          </li>
+          {categoryTree.map((root) => (
+            root.children.length > 0 ? (
+              <li>
+                <a
+                  href={toHref(`/products/${root.slug}`, locale)}
+                  class={`block p-2 font-semibold uppercase tracking-wide hover:bg-gray-100 hover:text-orange-500 transition-colors ${root.slug === categorySlug ? 'text-orange-500' : ''}`}
+                >
+                  {root.name}
+                </a>
+                <ul class="border-l border-gray-200 ml-2 pl-2">
+                  {root.children.map((child) => {
+                    const isActive = child.slug === categorySlug;
+                    return (  
+                      <li>
+                        <a
+                          href={toHref(`/products/${child.slug}`, locale)}
+                          class={`block p-2 hover:text-orange-500 transition-colors font-normal ${isActive ? 'bg-sky-50 text-sky-700' : ''}`}
+                        >
+                          {child.name}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </li>
+            ) : (
+              <li>
+                <a
+                  href={toHref(`/products/${root.slug}`, locale)}
+                  class={`block p-2 hover:bg-gray-100 hover:text-orange-500 transition-colors ${root.slug === categorySlug ? 'text-orange-500' : ''}`}
+                >
+                  {root.name}
+                </a>
+              </li>
+            )
+          ))}
+        </ul>
+      </aside>
+
+      <!-- 右侧：产品列表 -->
+      <main class="flex-1 min-w-0 mb-12">
+        <h1 class="text-4xl lg:text-5xl font-black mb-6">{categoryName}</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          {products.length > 0 ? (
+            products.map((product) => (
+              <ProductCard product={product} locale={locale} />
+            ))
+          ) : (
+            <p class="text-gray-500 col-span-full">{t(messages, 'search.noResults')}</p>
+          )}
+        </div>
+      </main>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,63 @@
+---
+/**
+ * 文章/洞察卡片组件
+ * 用于展示 insights 列表中的每一项
+ * 样式：封面图、标题，无背景色，可点击跳转
+ */
+
+import type { InsightAttributes, InsightCategoryAttributes } from '@/types/content';
+import { parseImage } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import { Image } from 'astro:assets';
+
+interface Props {
+  insight: InsightAttributes & { cover?: unknown };
+  locale: string;
+  /** 可选：覆盖默认的 /about/insights/{category}/{slug} 链接，用于 Support 等复用场景 */
+  href?: string;
+}
+
+const { insight, locale, href: hrefOverride } = Astro.props;
+
+// 解析封面图片（实际数据字段是 cover，不是 coverImage）
+const coverImage = parseImage(insight.cover || (insight as { coverImage?: unknown }).coverImage);
+// 链接：优先使用传入的 href，否则构建包含分类的文章详情页链接
+const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
+  ? (insight.insight_category as InsightCategoryAttributes)
+  : null;
+const categorySlug = category?.slug ?? '';
+const defaultHref = categorySlug && insight.slug
+  ? toHref(`/about/insights/${categorySlug}/${insight.slug}`, locale)
+  : toHref(`/about/insights/${insight.slug}`, locale);
+const href = hrefOverride ?? defaultHref;
+---
+
+<a
+  href={href}
+  class="group block transition-all duration-300 hover:opacity-90 flex flex-col"
+>
+  <!-- 封面图片 -->
+  {coverImage && coverImage.src && coverImage.width && coverImage.height ? (
+    <div class="relative w-full aspect-video overflow-hidden">
+      <Image
+        src={coverImage.src}
+        alt={coverImage.alt || insight.title}
+        width={coverImage.width}
+        height={coverImage.height}
+        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        format="webp"
+        quality={85}
+        loading="lazy"
+      />
+    </div>
+  ) : (
+    <div class="relative w-full aspect-video bg-gray-200 flex items-center justify-center mb-4">
+      <span class="text-gray-500 text-sm">暂无封面</span>
+    </div>
+  )}
+
+  <!-- 标题 -->
+  <h3 class="text-lg font-bold text-center py-10 px-4 bg-white group-hover:text-orange-500 transition-colors flex-1">
+    {insight.title}
+  </h3>
+</a>

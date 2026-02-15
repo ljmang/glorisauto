@@ -1,0 +1,116 @@
+{
+  "pageTitle": {
+    "home": "首页",
+    "products": "产品",
+    "supportTraining": "培训",
+    "search": "搜索",
+    "contact": "联系我们",
+    "about": "关于我们",
+    "topBrands": "知名品牌"
+  },
+  "products": {
+    "allProducts": "全部产品",
+    "technicalDetails": "技术参数",
+    "downloads": "下载文档",
+    "faq": "常见问题",
+    "becomeDealer": "成为经销商",
+    "leaveMessage": "留言咨询",
+    "gritOptions": "粒度选项",
+    "suitableMaterials": "适用材料"
+  },
+  "common": {
+    "submit": "提交",
+    "loading": "加载中…",
+    "viewAll": "查看全部",
+    "readMore": "了解更多",
+    "back": "返回",
+    "close": "关闭",
+    "send": "发送",
+    "required": "必填",
+    "all": "全部"
+  },
+  "footer": {
+    "copyright": "版权所有 © {year} Powered by Gloris",
+    "privacy": "隐私政策",
+    "cookiePreferences": "Cookie 偏好设置",
+    "products": {
+      "title": "产品",
+      "abrasivePaper": "砂纸",
+      "films": "薄膜",
+      "compoundsPolishes": "抛光剂",
+      "automotiveWindowFilm": "汽车窗膜",
+      "paintProtectionFilms": "漆面保护膜"
+    },
+    "support": {
+      "title": "支持",
+      "download": "下载",
+      "allFiles": "全部文件",
+      "helpCenter": "帮助中心",
+      "training": "培训"
+    },
+    "about": {
+      "title": "关于我们",
+      "brandStory": "品牌故事",
+      "productionBase": "生产制造",
+      "becomeDealer": "成为经销商",
+      "contactUs": "联系我们",
+      "insights": "洞察"
+    },
+    "chat": "我们在这里！"
+  },
+  "form": {
+    "name": "姓名",
+    "email": "邮箱",
+    "company": "公司",
+    "phone": "电话",
+    "message": "留言",
+    "namePlaceholder": "请输入姓名",
+    "emailPlaceholder": "请输入邮箱",
+    "companyPlaceholder": "请输入公司名称",
+    "phonePlaceholder": "请输入电话",
+    "messagePlaceholder": "请输入您的需求或问题",
+    "submitSuccess": "提交成功，我们会尽快联系您",
+    "submitError": "提交失败，请稍后重试"
+  },
+  "home": {
+    "heroTitle": "欢迎",
+    "heroCta": "联系我们"
+  },
+  "error404": {
+    "title": "页面未找到",
+    "message": "抱歉，您访问的页面不存在。",
+    "backHome": "返回首页",
+    "description": "您可能输入了错误的网址，或者页面已被移动。"
+  },
+  "search": {
+    "placeholder": "搜索...",
+    "noResults": "未找到相关结果",
+    "results": "找到 {count} 个结果",
+    "searching": "搜索中...",
+    "recentSearches": "最近搜索",
+    "clearHistory": "清除历史",
+    "allResults": "查看所有结果",
+    "types": {
+      "product": "产品",
+      "insight": "洞察",
+      "help": "帮助",
+      "about": "关于我们",
+      "support": "支持"
+    }
+  },
+  "training": {
+    "description": "通过我们全面的培训计划提升您的技能和知识。向行业专家学习，掌握表面处理和汽车护理的最新技术。"
+  },
+  "helpCenter": {
+    "other": "其他",
+    "relatedProducts": "相关产品",
+    "relatedArticles": "相关文章",
+    "relatedFaq": "相关常见问题",
+    "noArticles": "该分类下暂无文章。"
+  },
+  "insights": {
+    "allArticles": "全部文章",
+    "noCover": "暂无封面",
+    "tableOfContents": "目录"
+  }
+}

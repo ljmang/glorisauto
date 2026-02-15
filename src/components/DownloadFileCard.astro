@@ -1,0 +1,63 @@
+---
+/**
+ * 下载文件卡片：灰色边框、透明底色，标题 + 白色下载按钮（点击打开 PDF）
+ */
+interface Props {
+  item: {
+    title?: string;
+    description?: string;
+    file?: { url?: string; name?: string; ext?: string; size?: number } | null;
+  };
+  downloadLabel: string;
+}
+
+/** Strapi 返回的 file.size 单位为 KB，格式化为 "1.2 MB" 或 "492 KB" */
+function formatFileSize(kb: number | undefined): string {
+  if (kb == null || kb <= 0) return '';
+  if (kb >= 1024) return `${(kb / 1024).toFixed(1)} MB`;
+  return `${kb.toFixed(1)} KB`;
+}
+
+const { item, downloadLabel } = Astro.props;
+const file = item?.file;
+const fileUrl = file?.url;
+const fileExt = (file?.ext ?? '').toUpperCase().replace(/^\./, '') || 'PDF';
+const fileSizeStr = formatFileSize(file?.size);
+const title = item?.title ?? '';
+---
+
+{fileUrl && (
+  <div
+    class="flex flex-col gap-2 rounded-lg border border-gray-300 bg-transparent px-5 py-10 transition-shadow hover:shadow-sm"
+  >
+    <span class="text-sm font-medium">
+      {fileExt}
+      {fileSizeStr && <span class="text-gray-500 font-normal"> · {fileSizeStr}</span>}
+    </span>
+    <h3 class="mt-2 text-lg font-semibold ">
+      {title}
+    </h3>
+    <a
+      href={fileUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="mt-4 inline-flex w-fit items-center gap-2 rounded-md border border-gray-400 bg-white px-12 py-2 font-medium transition-colors hover:bg-gray-100"
+    >
+      <svg
+        class="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+        />
+      </svg>
+      {downloadLabel}
+    </a>
+  </div>
+)}

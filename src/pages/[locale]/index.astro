@@ -1,0 +1,230 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Hero from "@/components/Hero.svelte";
+import { supportedLocales, type Locale } from "@/i18n/config";
+import { loadMessages, t } from "@/i18n";
+import {
+	fetchApi,
+	api,
+	parseHeroMedia,
+	parseImage,
+} from "@/utils/strapiApi";
+import { toHref } from "@/utils/navigationData";
+import { CircleChevronRight } from "lucide-svelte";
+import type { HomeAttributes, StrapiResponse, NewsItem } from "@/types";
+import type { ProductAttributes, InsightAttributes } from "@/types/content";
+import { Image } from "astro:assets";
+import NewsCard from "@/components/NewsCard.astro";
+import ProductCard from "@/components/ProductCard.astro";
+import InsightCard from "@/components/InsightCard.astro";
+import DownloadFileCard from "@/components/DownloadFileCard.astro";
+
+export async function getStaticPaths() {
+	return supportedLocales.map((locale) => ({
+		params: { locale },
+	}));
+}
+
+// 2. 从 params 获取 locale，并断言类型 (因为 params 默认是 string)
+const { locale } = Astro.params as { locale: Locale };
+
+const messages = await loadMessages(locale);
+
+// 3. 使用泛型获取数据，避免 unknown
+const homeData = await fetchApi<StrapiResponse<HomeAttributes>>(api.home, {
+	locale,
+	populate: {
+		heroMedia: true,
+		aboutGlorisCover: true,
+		glorisNews: {
+			populate: "*", // 尝试 populate 组件内的所有字段
+		},
+		products: {
+			populate: "*",
+		},
+		insights: {
+			populate: "*",
+		},
+		downloadFiles: {
+			populate: "*",
+		},
+	},
+});
+// 4. 安全的数据解构 (即使 API 挂了，页面也不会白屏，而是显示默认值)
+const data = homeData?.data || ({} as Partial<HomeAttributes>);
+
+// 处理数据
+const heroMediaProp = parseHeroMedia(data.heroMedia);
+const heroTitle = data.heroTitle ?? t(messages, "home.heroTitle");
+const heroCtaHref = toHref(data.heroButtonLink ?? "/", locale);
+const aboutGlorisCover = parseImage(data.aboutGlorisCover);
+const showDownloadFiles =
+	Boolean(data.downloadFilesTitle) &&
+	Array.isArray(data.downloadFiles) &&
+	data.downloadFiles.length > 0;
+type DownloadFileItem = {
+	title?: string;
+	description?: string;
+	file?: { url?: string; name?: string; ext?: string } | null;
+};
+const downloadFileList = ((data.downloadFiles as DownloadFileItem[]) || []).filter(
+	(item) => item?.file?.url,
+);
+---
+
+<BaseLayout
+	title={t(messages, "pageTitle.home")}
+	messages={messages}
+	locale={locale}
+>
+	<Hero
+		media={heroMediaProp}
+		title={heroTitle}
+		subtitle={data.heroDescription}
+		cta={data.heroButton}
+		ctaHref={heroCtaHref}
+	/>
+
+	<div
+		class="container mx-auto px-4 py-6 lg:py-12 flex flex-col gap-6 lg:gap-12"
+	>
+		<!-- 品牌故事 -->
+		<div class="flex flex-col lg:flex-row items-center bg-white">
+			{
+				aboutGlorisCover &&
+					aboutGlorisCover.width &&
+					aboutGlorisCover.height && (
+						<Image
+							src={aboutGlorisCover.src}
+							alt={
+								aboutGlorisCover.alt ||
+								data.aboutGlorisTitle ||
+								"Company Image"
+							}
+							width={aboutGlorisCover.width}
+							height={aboutGlorisCover.height}
+							class="w-full lg:w-1/3 h-auto object-cover"
+							loading="lazy"
+							format="webp"
+							quality={85}
+						/>
+					)
+			}
+			<div class="flex flex-col gap-3 lg:gap-6 p-4 lg:p-16">
+				<h3 class="text-4xl font-bold">
+					{data.aboutGlorisTitleH1}
+				</h3>
+				<h4 class="text-2xl font-bold">
+					{data.aboutGlorisTitleH2}
+				</h4>
+				<p class="text-lg text-gray-700">
+					{data.aboutGlorisDescription}
+				</p>
+				<a
+					href={toHref("/about", locale)}
+					class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+				>
+					{t(messages, "common.readMore")}
+					<CircleChevronRight class="w-4 h-4" />
+				</a>
+			</div>
+		</div>
+
+		<!-- Gloris News 新闻卡片 -->
+		{
+			data.glorisNewsTitle && (
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					{((data.glorisNews as NewsItem[]) || []).map((news) => (
+						<NewsCard news={news} locale={locale} />
+					))}
+				</div>
+			)
+		}
+
+		<!-- Products 产品展示 -->
+		{
+			data.productsTitle && (
+				<div class="w-full">
+					<div class="flex items-center justify-between mb-6">
+						<h2 class="text-3xl font-bold">
+							{data.productsTitle as string}
+						</h2>
+						<a
+							href={toHref("/products", locale)}
+							class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+						>
+							{t(messages, "common.viewAll")}
+							<CircleChevronRight class="w-4 h-4" />
+						</a>
+					</div>
+					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+						{((data.products as ProductAttributes[]) || []).map(
+							(product) => (
+								<ProductCard
+									product={product}
+									locale={locale}
+								/>
+							),
+						)}
+					</div>
+				</div>
+			)
+		}
+
+		<!-- Insights 文章/洞察展示 -->
+		{
+			data.insightsTitle && (
+				<div class="w-full">
+					<div class="flex items-center justify-between mb-6">
+						<h2 class="text-3xl font-bold">
+							{data.insightsTitle as string}
+						</h2>
+						<a
+							href={toHref("/about/insights", locale)}
+							class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+						>
+							{t(messages, "common.viewAll")}
+							<CircleChevronRight class="w-4 h-4" />
+						</a>
+					</div>
+					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+						{((data.insights as InsightAttributes[]) || []).map(
+							(insight) => (
+								<InsightCard
+									insight={insight}
+									locale={locale}
+								/>
+							),
+						)}
+					</div>
+				</div>
+			)
+		}
+
+		<!-- Download files 下载文件 -->
+		{showDownloadFiles && (
+			<div class="w-full">
+				<div class="flex items-center justify-between mb-6">
+					<h2 class="text-3xl font-bold">
+						{data.downloadFilesTitle as string}
+					</h2>
+					<a
+						href={toHref("/support/download", locale)}
+						class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+					>
+						{t(messages, "common.viewAll")}
+						<CircleChevronRight class="w-4 h-4" />
+					</a>
+				</div>
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+					{downloadFileList.map((fileItem) => (
+						<DownloadFileCard
+							item={fileItem}
+							downloadLabel={t(messages, "footer.support.download")}
+						/>
+					))}
+				</div>
+			</div>
+		)}
+	</div>
+</BaseLayout>

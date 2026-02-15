@@ -1,0 +1,27 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { supportedLocales, type Locale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+
+export async function getStaticPaths() {
+  return supportedLocales.map((locale) => ({
+    params: { locale },
+  }));
+}
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.params;
+const messages = await loadMessages(locale);
+---
+
+<BaseLayout title={t(messages, 'footer.privacy')} messages={messages} locale={locale}>
+	<div class="container mx-auto px-4 py-12 max-w-4xl">
+		<h1 class="text-4xl font-bold text-gray-900 mb-8">{t(messages, 'footer.privacy')}</h1>
+		<div class="prose prose-lg">
+			<p class="text-gray-700">隐私政策内容...</p>
+		</div>
+	</div>
+</BaseLayout>

@@ -1,0 +1,41 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { supportedLocales, type Locale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+import { generateSearchIndex, type SearchItem } from '@/utils/searchIndex';
+import SearchResults from '@/components/SearchResults.svelte';
+
+export async function getStaticPaths() {
+  return supportedLocales.map((locale) => ({
+    params: { locale },
+  }));
+}
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.params;
+const messages = await loadMessages(locale);
+const searchIndex = await generateSearchIndex(locale);
+
+// 从 URL 参数获取搜索关键词
+const url = new URL(Astro.request.url);
+const query = url.searchParams.get('q') || '';
+---
+
+<BaseLayout title={`${t(messages, 'pageTitle.search')} - ${query || ''}`} messages={messages} locale={locale}>
+	<div class="container mx-auto px-4 py-12 max-w-4xl">
+		<h1 class="text-4xl font-bold text-gray-900 mb-8">{t(messages, 'pageTitle.search')}</h1>
+		
+		<div class="mb-8">
+			<SearchResults 
+				client:load
+				searchIndex={searchIndex}
+				initialQuery={query}
+				locale={locale}
+				messages={messages}
+			/>
+		</div>
+	</div>
+</BaseLayout>

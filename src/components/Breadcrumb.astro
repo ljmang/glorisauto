@@ -1,0 +1,36 @@
+---
+/**
+ * 面包屑组件
+ * 用于产品页、分类页等，展示 Home > Products > Category
+ */
+import { toHref } from '@/utils/navigationData';
+
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+  locale: string;
+}
+
+const { items, locale } = Astro.props;
+---
+
+<nav aria-label="Breadcrumb" class="mb-6">
+  <ol class="flex flex-wrap items-center gap-1.5 text-sm text-gray-600">
+    {items.map((item, i) => (
+      <li class="flex items-center gap-1.5 font-bold">
+        {i > 0 && <span aria-hidden="true">&gt;</span>}
+        {item.href ? (
+          <a href={toHref(item.href, locale)} class="text-cyan-600 hover:text-orange-600 transition-colors">
+            {item.label}
+          </a>
+        ) : (
+          <span class="font-medium" aria-current="page">{item.label}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>

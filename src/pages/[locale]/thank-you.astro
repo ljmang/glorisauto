@@ -1,0 +1,28 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { supportedLocales, type Locale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+
+export async function getStaticPaths() {
+  return supportedLocales.map((locale) => ({
+    params: { locale },
+  }));
+}
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.params;
+const messages = await loadMessages(locale);
+---
+
+<BaseLayout title="Thank You" messages={messages} locale={locale}>
+	<div class="text-center py-12">
+		<h1 class="text-4xl font-bold text-gray-900 mb-6">Thank You</h1>
+		<p class="text-gray-700 text-lg mb-8">{t(messages, 'form.submitSuccess')}</p>
+		<a href={`/${locale}`} class="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+			{t(messages, 'pageTitle.home')}
+		</a>
+	</div>
+</BaseLayout>

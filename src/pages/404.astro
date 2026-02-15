@@ -1,0 +1,48 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getLocale, defaultLocale, type Locale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+
+// 从 URL 路径中检测语言
+const pathname = Astro.url.pathname;
+const pathSegments = pathname.split('/').filter(Boolean);
+const detectedLocale = getLocale(pathSegments[0]) as Locale;
+
+// 如果路径中没有语言前缀，使用默认语言
+const locale = pathSegments.length > 0 && pathSegments[0] === detectedLocale 
+  ? detectedLocale 
+  : defaultLocale;
+
+const messages = await loadMessages(locale);
+---
+
+<BaseLayout title={t(messages, 'error404.title')} messages={messages} locale={locale}>
+	<div class="text-center py-20 px-4">
+		<div class="max-w-2xl mx-auto">
+			<h1 class="text-6xl font-bold text-gray-900 mb-4">404</h1>
+			<h2 class="text-3xl font-semibold text-gray-800 mb-4">
+				{t(messages, 'error404.title')}
+			</h2>
+			<p class="text-lg text-gray-600 mb-8">
+				{t(messages, 'error404.message')}
+			</p>
+			<p class="text-sm text-gray-500 mb-8">
+				{t(messages, 'error404.description')}
+			</p>
+			<div class="flex flex-col sm:flex-row gap-4 justify-center">
+				<a
+					href={`/${locale}`}
+					class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+				>
+					{t(messages, 'error404.backHome')}
+				</a>
+				<button
+					onclick="window.history.back()"
+					class="inline-block px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+				>
+					{t(messages, 'common.back')}
+				</button>
+			</div>
+		</div>
+	</div>
+</BaseLayout>

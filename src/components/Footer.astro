@@ -1,0 +1,220 @@
+---
+import { type Messages, t } from '@/i18n';
+import { type Locale } from '@/i18n/config';
+import { Linkedin, Instagram, Facebook, Youtube } from '@/components/icons';
+
+interface Props {
+  messages: Messages;
+  locale: Locale;
+}
+
+const { messages, locale } = Astro.props;
+const currentYear = new Date().getFullYear().toString();
+---
+
+<footer class="bg-black text-white mt-auto">
+  <div class="container mx-auto px-4 py-12">
+    <!-- Main Footer Content -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      <!-- Logo Column -->
+      <div class="col-span-1">
+        <a href={`/${locale}`} class="text-2xl font-bold text-white no-underline hover:text-orange-500 transition-colors">
+          <img src="https://assets.glorisauto.com/uploads/logo_w_a030442c50.webp" alt="GLORIS" class="h-12 object-contain">
+        </a>
+      </div>
+
+      <!-- Products Column -->
+      <div>
+        <h3 class="text-white font-semibold mb-4 uppercase">
+          {t(messages, 'footer.products.title')}
+        </h3>
+        <ul class="space-y-2 list-none p-0 m-0">
+          <li>
+            <a
+              href={`/${locale}/products/abrasive-paper`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.products.abrasivePaper')}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`/${locale}/products/films`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.products.films')}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`/${locale}/products/compounds-polishes`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.products.compoundsPolishes')}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`/${locale}/products/automotive-window-film`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.products.automotiveWindowFilm')}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`/${locale}/products/paint-protection-films`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.products.paintProtectionFilms')}
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Support Column -->
+      <div>
+        <h3 class="text-white font-semibold mb-4 uppercase">
+          {t(messages, 'footer.support.title')}
+        </h3>
+        <ul class="space-y-2 list-none p-0 m-0">
+          <li>
+            <a
+              href={`/${locale}/support/downloads`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.support.download')}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`/${locale}/help`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.support.helpCenter')}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`/${locale}/support/training`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.support.training')}
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- About Us Column -->
+      <div>
+        <h3 class="text-white font-semibold mb-4 uppercase">
+          {t(messages, 'footer.about.title')}
+        </h3>
+        <ul class="space-y-2 list-none p-0 m-0">
+          <li>
+            <a
+              href={`/${locale}/about/brand`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.about.brandStory')}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`/${locale}/about/production`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.about.productionBase')}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`/${locale}/about/dealer`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.about.becomeDealer')}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`/${locale}/support/contact`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.about.contactUs')}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`/${locale}/about/insights`}
+              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+            >
+              {t(messages, 'footer.about.insights')}
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Social Media & Bottom Bar -->
+    <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <!-- Social Media Icons -->
+      <div class="flex items-center gap-4">
+        <a
+          href="https://www.linkedin.com/company/gloris"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-gray-300 hover:text-orange-500 transition-colors"
+          aria-label="LinkedIn"
+        >
+          <Linkedin class="w-6 h-6" />
+        </a>
+        <a
+          href="https://www.instagram.com/gloris"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-gray-300 hover:text-orange-500 transition-colors"
+          aria-label="WeChat"
+        >
+          <Instagram class="w-6 h-6" />
+        </a>
+        <a
+          href="https://www.facebook.com/gloris"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-gray-300 hover:text-orange-500 transition-colors"
+          aria-label="Facebook"
+        >
+          <Facebook class="w-6 h-6" />
+        </a>
+        <a
+          href="https://www.youtube.com/@gloris"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-gray-300 hover:text-orange-500 transition-colors"
+          aria-label="YouTube"
+        >
+          <Youtube class="w-6 h-6" />
+        </a>
+      </div>
+
+      <!-- Copyright & Links -->
+      <div class="flex flex-col md:flex-row items-center gap-4 text-gray-300">
+        <span>{t(messages, 'footer.copyright', { year: currentYear })}</span>
+        <div class="flex gap-4">
+          <a
+            href={`/${locale}/privacy-policy`}
+            class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+          >
+            {t(messages, 'footer.privacy')}
+          </a>
+          <a
+            href={`/${locale}/cookie-preferences`}
+            class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+          >
+            {t(messages, 'footer.cookiePreferences')}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>

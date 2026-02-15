@@ -1,0 +1,116 @@
+{
+  "pageTitle": {
+    "home": "Home",
+    "products": "Products",
+    "supportTraining": "Training",
+    "search": "Search",
+    "contact": "Contact",
+    "about": "About Us",
+    "topBrands": "Top Brands"
+  },
+  "products": {
+    "allProducts": "All Products",
+    "technicalDetails": "Technical details",
+    "downloads": "Downloads",
+    "faq": "F&Q",
+    "becomeDealer": "Become Our Dealer",
+    "leaveMessage": "Leave a Message",
+    "gritOptions": "Grit Options",
+    "suitableMaterials": "Suitable materials"
+  },
+  "common": {
+    "submit": "Submit",
+    "loading": "Loading…",
+    "viewAll": "View All",
+    "readMore": "Read More",
+    "back": "Back",
+    "close": "Close",
+    "send": "Send",
+    "required": "Required",
+    "all": "All"
+  },
+  "footer": {
+    "copyright": "Copyright © {year} Powered by Gloris",
+    "privacy": "Privacy policy",
+    "cookiePreferences": "Cookie preferences",
+    "products": {
+      "title": "Products",
+      "abrasivePaper": "Abrasive Paper",
+      "films": "Films",
+      "compoundsPolishes": "Compounds & Polishes",
+      "automotiveWindowFilm": "Automotive Window Film",
+      "paintProtectionFilms": "Paint Protection Films"
+    },
+    "support": {
+      "title": "Support",
+      "download": "Download",
+      "allFiles": "All Files",
+      "helpCenter": "Help Center",
+      "training": "Training"
+    },
+    "about": {
+      "title": "About Us",
+      "brandStory": "Brand Story",
+      "productionBase": "Production Base",
+      "becomeDealer": "Become Our Dealer",
+      "contactUs": "Contact Us",
+      "insights": "Insights"
+    },
+    "chat": "We are here!"
+  },
+  "form": {
+    "name": "Name",
+    "email": "Email",
+    "company": "Company",
+    "phone": "Phone",
+    "message": "Message",
+    "namePlaceholder": "Your name",
+    "emailPlaceholder": "Your email",
+    "companyPlaceholder": "Company name",
+    "phonePlaceholder": "Your phone",
+    "messagePlaceholder": "Your inquiry or question",
+    "submitSuccess": "Submitted successfully. We will get back to you soon.",
+    "submitError": "Submission failed. Please try again later."
+  },
+  "home": {
+    "heroTitle": "Welcome",
+    "heroCta": "Contact Us"
+  },
+  "error404": {
+    "title": "Page Not Found",
+    "message": "Sorry, the page you are looking for does not exist.",
+    "backHome": "Back to Home",
+    "description": "You may have entered an incorrect URL, or the page may have been moved."
+  },
+  "search": {
+    "placeholder": "Search...",
+    "noResults": "No results found",
+    "results": "Found {count} results",
+    "searching": "Searching...",
+    "recentSearches": "Recent Searches",
+    "clearHistory": "Clear History",
+    "allResults": "View All Results",
+    "types": {
+      "product": "Product",
+      "insight": "Insight",
+      "help": "Help",
+      "about": "About",
+      "support": "Support"
+    }
+  },
+  "training": {
+    "description": "Enhance your skills and knowledge with our comprehensive training programs. Learn from industry experts and master the latest techniques in surface finishing and automotive care."
+  },
+  "helpCenter": {
+    "other": "Other",
+    "relatedProducts": "Related products",
+    "relatedArticles": "Related articles",
+    "relatedFaq": "Related F&Q",
+    "noArticles": "No articles found in this category."
+  },
+  "insights": {
+    "allArticles": "All articles",
+    "noCover": "No cover",
+    "tableOfContents": "Table of Contents"
+  }
+}

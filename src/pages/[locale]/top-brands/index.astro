@@ -1,0 +1,69 @@
+---
+/**
+ * Top Brands 首页：面包屑 + 大标题 + 三张卡片，数据来自 Strapi brand-home 单类型，样式与 Support 首页一致
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import InsightCard from '@/components/InsightCard.astro';
+import type { InsightAttributes } from '@/types/content';
+import type { SupportModuleItem } from '@/types/content';
+
+export async function getStaticPaths() {
+  return supportedLocales.map((locale: Locale) => ({
+    params: { locale },
+  }));
+}
+
+const params = Astro.params as { locale?: string };
+const locale: Locale = getLocale(params.locale);
+const messages = await loadMessages(locale);
+
+const brandHomeRes = await fetchApiWithLocaleFallback<{ data: { title?: string; module?: SupportModuleItem[] } | null }>(api.brandHome, {
+  locale,
+  populate: { module: { populate: { cover: true } } },
+});
+const rawModules = brandHomeRes?.data?.module ?? [];
+const brandCards = [...rawModules]
+  .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
+  .map((m) => ({
+    insight: {
+      title: m.title ?? '',
+      slug: m.slug ?? 'item',
+      cover: m.cover ?? null,
+    } as InsightAttributes & { cover?: unknown },
+    path: m.url || `/top-brands/${m.slug || 'item'}`,
+  }));
+
+const pageTitle = brandHomeRes?.data?.title ?? t(messages, 'pageTitle.topBrands');
+const breadcrumbItems = [
+  { label: t(messages, 'pageTitle.home'), href: '/' },
+  { label: pageTitle },
+];
+---
+
+<BaseLayout
+  title={pageTitle}
+  messages={messages}
+  locale={locale}
+>
+  <div class="container mx-auto px-4 py-12">
+    <Breadcrumb items={breadcrumbItems} locale={locale} />
+
+    <h1 class="text-4xl lg:text-5xl font-black mb-8">{pageTitle}</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+      {brandCards.map(({ insight, path }) => (
+        <div class="rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full">
+          <InsightCard insight={insight} locale={locale} href={toHref(path, locale)} />
+        </div>
+      ))}
+    </div>
+    {brandCards.length === 0 && (
+      <p class="text-gray-600">{t(messages, 'search.noResults')}</p>
+    )}
+  </div>
+</BaseLayout>

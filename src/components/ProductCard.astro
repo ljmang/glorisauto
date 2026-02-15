@@ -1,0 +1,67 @@
+---
+/**
+ * 产品卡片组件
+ * 用于展示产品列表中的每一项
+ * 样式：正方形图片、标题、描述，无背景色，可点击跳转
+ */
+
+import type { ProductAttributes } from '@/types/content';
+import { parseImage } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import { Image } from 'astro:assets';
+
+interface Props {
+  product: ProductAttributes;
+  locale: string;
+}
+
+const { product, locale } = Astro.props;
+
+// 解析第一张图片
+const productImage = parseImage(product.images);
+// 产品详情页链接：/products/{category}/{slug}（与 [category]/[slug].astro 一致）
+const categorySlug =
+  product.category && typeof product.category === 'object' && 'slug' in product.category
+    ? (product.category as { slug?: string }).slug
+    : '';
+const href = categorySlug
+  ? toHref(`/products/${categorySlug}/${product.slug}`, locale)
+  : toHref(`/products/${product.slug}`, locale);
+---
+
+<a
+  href={href}
+  class="group block transition-all duration-300 hover:opacity-90"
+>
+  <!-- 正方形图片 -->
+  {productImage && productImage.src && productImage.width && productImage.height ? (
+    <div class="relative w-full aspect-square overflow-hidden mb-4 flex items-center justify-center">
+      <Image
+        src={productImage.src}
+        alt={productImage.alt || product.name}
+        width={productImage.width}
+        height={productImage.height}
+        class="w-2/3 h-2/3 object-cover transition-transform duration-300 group-hover:scale-105"
+        format="webp"
+        quality={85}
+        loading="lazy"
+      />
+    </div>
+  ) : (
+    <div class="relative w-full aspect-square bg-gray-200 flex items-center justify-center mb-4">
+      <span class="text-gray-500 text-sm">暂无图片</span>
+    </div>
+  )}
+
+  <!-- 标题和描述 -->
+  <div class="space-y-2 text-center">
+    <h3 class="text-xl font-bold group-hover:text-orange-500 transition-colors">
+      {product.name}
+    </h3>
+    {product.description ? (
+      <p class="text-gray-700 leading-relaxed line-clamp-3">
+        {product.description}
+      </p>
+    ) : null}
+  </div>
+</a>

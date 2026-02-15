@@ -1,0 +1,89 @@
+---
+/**
+ * 文章目录组件
+ * 显示 h2 和 h3 的两层结构，点击可快速跳转到对应章节
+ */
+
+import type { Messages } from '@/i18n';
+import { t } from '@/i18n';
+
+interface TOCItem {
+  id: string;
+  text: string;
+  level: 2 | 3;
+}
+
+interface Props {
+  items: TOCItem[];
+  locale: string;
+  messages: Messages;
+}
+
+const { items, locale, messages } = Astro.props;
+
+// 如果没有目录项，不渲染
+if (!items || items.length === 0) {
+  return null;
+}
+
+// 分组：h2 及其下的 h3
+const groupedItems: Array<{ h2: TOCItem; h3s: TOCItem[] }> = [];
+let currentH2: TOCItem | null = null;
+let currentGroup: { h2: TOCItem; h3s: TOCItem[] } | null = null;
+
+for (const item of items) {
+  if (item.level === 2) {
+    // 如果之前有 h2，先保存它
+    if (currentGroup) {
+      groupedItems.push(currentGroup);
+    }
+    // 创建新的 h2 分组
+    currentH2 = item;
+    currentGroup = { h2: item, h3s: [] };
+  } else if (item.level === 3 && currentGroup) {
+    // 将 h3 添加到当前分组
+    currentGroup.h3s.push(item);
+  }
+}
+
+// 添加最后一个分组
+if (currentGroup) {
+  groupedItems.push(currentGroup);
+}
+---
+
+{groupedItems.length > 0 && (
+  <aside class="hidden lg:block lg:w-64 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
+    <nav class="bg-gray-50 rounded-lg p-4 border border-gray-200" aria-label={t(messages, 'insights.tableOfContents')}>
+      <h2 class="text-lg font-bold mb-4">
+        {t(messages, 'insights.tableOfContents')}
+      </h2>
+      <ul class="space-y-2">
+        {groupedItems.map((group) => (
+          <li>
+            <a
+              href={`#${group.h2.id}`}
+              class="block text-sm font-semibold hover:text-orange-500 transition-colors py-1 scroll-smooth"
+            >
+              {group.h2.text}
+            </a>
+            {group.h3s.length > 0 && (
+              <ul class="text-xs mt-1 space-y-1">
+                {group.h3s.map((h3) => (
+                  <li>
+                    <a
+                      href={`#${h3.id}`}
+                      class="block text-gray-500 hover:text-orange-500 transition-colors py-1 scroll-smooth"
+                    >
+                      {h3.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </aside>
+)}

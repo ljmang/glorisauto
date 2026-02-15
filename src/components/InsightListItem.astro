@@ -1,0 +1,81 @@
+---
+/**
+ * 文章列表项组件（用于 insights 列表页）
+ * 样式：左侧图片 + 右侧分类/日期 | 标题 | 描述，横向布局
+ */
+
+import type { InsightAttributes, InsightCategoryAttributes } from '@/types/content';
+import type { Messages } from '@/i18n';
+import { parseImage } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import { t } from '@/i18n';
+import { Image } from 'astro:assets';
+
+interface Props {
+  insight: InsightAttributes;
+  locale: string;
+  messages: Messages;
+}
+
+const { insight, locale, messages } = Astro.props;
+
+const coverImage = parseImage(insight.cover || (insight as { coverImage?: unknown }).coverImage);
+const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
+  ? (insight.insight_category as InsightCategoryAttributes)
+  : null;
+const categorySlug = category?.slug ?? '';
+const href = categorySlug && insight.slug
+  ? toHref(`/about/insights/${categorySlug}/${insight.slug}`, locale)
+  : toHref(`/about/insights/${insight.slug}`, locale);
+const categoryName = category?.name ?? '';
+const publishedDate = insight.publishedAt
+  ? new Date(insight.publishedAt).toLocaleDateString(locale === 'zh-cn' ? 'zh-CN' : 'en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  : '';
+
+const dateStr = publishedDate;
+const categoryAndDate = categoryName && dateStr ? `${categoryName} | ${dateStr}` : categoryName || dateStr || '';
+---
+
+<a
+  href={href}
+  class="group flex flex-col sm:flex-row gap-4 sm:gap-6 py-4 hover:bg-gray-50 transition-colors rounded-lg"
+>
+  <!-- 左侧图片 -->
+  {coverImage && coverImage.src && coverImage.width && coverImage.height ? (
+    <div class="sm:w-48 lg:w-64 shrink-0 aspect-video overflow-hidden">
+      <Image
+        src={coverImage.src}
+        alt={coverImage.alt || insight.title}
+        width={coverImage.width}
+        height={coverImage.height}
+        class="w-100 h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        format="webp"
+        quality={85}
+        loading="lazy"
+      />
+    </div>
+  ) : (
+    <div class="w-100 sm:w-48 shrink-0 aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
+      <span class="text-gray-500 text-sm">{t(messages, 'insights.noCover')}</span>
+    </div>
+  )}
+
+  <!-- 右侧内容 -->
+  <div class="flex-1 min-w-0 flex flex-col justify-center">
+    {categoryAndDate && (
+      <p class="text-xs text-gray-500 mb-2">{categoryAndDate}</p>
+    )}
+    <h3 class="text-xl font-bold mb-2 group-hover:text-orange-500 transition-colors">
+      {insight.title}
+    </h3>
+    {(insight.description || insight.excerpt) && (
+      <p class="text-gray-500 text-sm leading-relaxed line-clamp-3">
+        {insight.description || insight.excerpt}
+      </p>
+    )}
+  </div>
+</a>

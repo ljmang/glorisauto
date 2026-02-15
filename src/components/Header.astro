@@ -1,0 +1,88 @@
+---
+import { type Messages } from "@/i18n";
+import { type Locale } from "@/i18n/config";
+import type { NavItem } from "@/utils/navigationData";
+import LanguageSwitcher from "@/components/LanguageSwitcher.astro";
+import Navigation from "@/components/Navigation.svelte";
+import MobileNavigation from "@/components/MobileNavigation.svelte";
+import SearchBox from "@/components/SearchBox.svelte";
+import { generateSearchIndex } from "@/utils/searchIndex";
+import { PhoneCall, Mail, Search } from "lucide-svelte";
+
+interface Props {
+  messages: Messages;
+  locale: Locale;
+  navData?: NavItem[];
+}
+
+const { messages, locale, navData = [] } = Astro.props;
+const currentPath = Astro.url.pathname;
+const searchIndex = await generateSearchIndex(locale);
+---
+
+<header class="bg-white sticky top-0 z-40 shadow-sm">
+  <!-- connect us: hidden on mobile, shown in mobile nav popup -->
+  <div
+    class="hidden md:flex container mx-auto px-4 gap-4 items-right justify-end text-sm relative"
+  >
+    <!-- phone -->
+    <div class="flex items-center gap-2">
+      <PhoneCall class="w-4 h-4" />
+      <a
+        href="tel:+8618122288163"
+        class="hover:text-orange-500 transition-colors">+86 18122288163</a
+      >
+    </div>
+    <!-- email -->
+    <div class="flex items-center gap-2">
+      <Mail class="w-4 h-4" />
+      <a
+        href="mailto:Sales@glorisauto.com"
+        class="hover:text-orange-500 transition-colors">Sales@glorisauto.com</a
+      >
+    </div>
+    <!-- language switcher -->
+    <div class="flex items-center gap-2">
+      <LanguageSwitcher currentLocale={locale} />
+    </div>
+  </div>
+  <!-- main navigation -->
+  <nav class="container mx-auto px-4 flex items-center justify-between gap-4 relative">
+    <!-- 左侧：logo + 桌面导航 -->
+    <div class="flex items-center gap-4 min-w-0">
+      <a href={`/${locale}`} class="shrink-0">
+        <img
+          src="https://assets.glorisauto.com/uploads/logo_89e1563b6e.webp"
+          alt="GLORIS"
+          class="h-12 object-contain mb-4 mt-2 md:mt-0"
+        />
+      </a>
+      <Navigation client:load locale={locale} currentPath={currentPath} navData={navData} />
+    </div>
+    <!-- 右侧：手机端搜索图标 + 桌面搜索框 + 汉堡 -->
+    <div class="flex items-center gap-1 shrink-0 justify-end">
+      <a
+        href={`/${locale}/search`}
+        class="md:hidden p-2 text-gray-700 hover:text-orange-500 transition-colors"
+        aria-label="Search"
+      >
+        <Search class="w-6 h-6" />
+      </a>
+      <div class="hidden md:block">
+        <SearchBox
+          client:load
+          searchIndex={searchIndex}
+          locale={locale}
+          messages={messages}
+        />
+      </div>
+      <MobileNavigation
+        client:load
+        currentPath={currentPath}
+        locale={locale}
+        messages={messages}
+        navData={navData}
+      />
+    </div>
+  </nav>
+</header>

@@ -1,0 +1,114 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+import { fetchApi, api } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import { buildCategoryTree } from '@/utils/categoryTree';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import ProductCard from '@/components/ProductCard.astro';
+import type { ProductAttributes } from '@/types/content';
+import type { CategoryAttributes } from '@/types/content';
+
+export async function getStaticPaths() {
+  return supportedLocales.map((locale) => ({
+    params: { locale },
+  }));
+}
+
+const params = Astro.params as { locale?: string };
+const locale: Locale = getLocale(params.locale);
+const messages = await loadMessages(locale);
+
+// 分类列表（扁平），再构建为一级/二级树
+const categoriesRes = await fetchApi<{ data?: (CategoryAttributes & { parentID?: number | null; sort?: number })[] }>(api.categories, {
+  locale,
+  pagination: { pageSize: 100 }
+}); 
+console.log(categoriesRes);
+const categories = Array.isArray(categoriesRes?.data) ? categoriesRes.data : [];
+const categoryTree = buildCategoryTree(categories);
+
+// 全部产品
+const productsRes = await fetchApi<{ data?: ProductAttributes[] }>(api.products, {
+  locale,
+  populate: { images: true, category: true },
+  pagination: { pageSize: 100 },
+});
+const products = Array.isArray(productsRes?.data) ? productsRes.data : [];
+
+const breadcrumbItems = [
+  { label: t(messages, 'pageTitle.home'), href: '/' },
+  { label: t(messages, 'pageTitle.products') },
+];
+const pageTitle = t(messages, 'products.allProducts');
+---
+
+<BaseLayout title={t(messages, 'pageTitle.products')} messages={messages} locale={locale}>
+  <div class="container mx-auto px-4 py-8">
+    <Breadcrumb items={breadcrumbItems} locale={locale} />
+
+    <div class="flex flex-col md:flex-row gap-4 md:gap-8">
+      <!-- 左侧：产品分类（滚动后吸顶，top 预留顶栏高度） -->
+      <aside class="md:w-56 shrink-0 font-bold md:sticky md:top-60 md:self-start hidden md:block">
+        <ul class="overflow-hidden">
+          <li>
+            <a
+              href={toHref('/products', locale)}
+              class="block p-2    hover:bg-gray-100 hover:text-orange-500 transition-colors"
+            >
+              {pageTitle}
+            </a>
+          </li>
+          {categoryTree.map((root) => (
+            root.children.length > 0 ? (
+              <li>
+                <a
+                  href={toHref(`/products/${root.slug}`, locale)}
+                  class="block p-2 font-semibold uppercase tracking-wide hover:bg-gray-100 hover:text-orange-500 transition-colors"
+                >
+                  {root.name}
+                </a>
+                <ul class="border-l border-gray-200 ml-2 pl-2">
+                  {root.children.map((child) => (
+                    <li>
+                      <a
+                        href={toHref(`/products/${child.slug}`, locale)}
+                        class="block p-2 hover:text-orange-500 transition-colors font-normal"
+                      >
+                        {child.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ) : (
+              <li>
+                <a
+                  href={toHref(`/products/${root.slug}`, locale)}
+                  class="block p-2 hover:bg-gray-100 hover:text-orange-500 transition-colors"
+                >
+                  {root.name}
+                </a>
+              </li>
+            )
+          ))}
+        </ul>
+      </aside>
+
+      <!-- 右侧：产品列表 -->
+      <main class="flex-1 min-w-0 mb-12 ">
+        <h1 class="text-4xl lg:text-6xl font-black mb-6">{pageTitle}</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          {products.length > 0 ? (
+            products.map((product) => (
+              <ProductCard product={product} locale={locale} />
+            ))
+          ) : (
+            <p class="text-gray-500 col-span-full">{t(messages, 'search.noResults')}</p>
+          )}
+        </div>
+      </main>
+    </div>
+  </div>
+</BaseLayout>

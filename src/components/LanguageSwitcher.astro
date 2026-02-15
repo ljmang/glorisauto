@@ -1,0 +1,59 @@
+---
+import { supportedLocales, localeDisplayConfig, type Locale } from '@/i18n/config';
+
+interface Props {
+  currentLocale: Locale;
+}
+
+const { currentLocale } = Astro.props;
+
+// 当前路径（去掉语言前缀），用于切换语言后跳转
+const currentPath = Astro.url.pathname.replace(`/${currentLocale}`, '') || '/';
+---
+
+<div class="relative" id="lang-switcher-wrap">
+  <details class="relative group/details">
+    <summary
+      class="list-none flex items-center gap-1.5 p-2 text-sm cursor-pointer hover:text-orange-500 transition-colors min-w-[7rem]"
+      aria-haspopup="listbox"
+      aria-expanded="false"
+    >
+      <span class="text-lg leading-none" aria-hidden="true">{localeDisplayConfig[currentLocale].flag}</span>
+      <span class="text-sm font-medium text-gray-700">{localeDisplayConfig[currentLocale].label}</span>
+      <svg class="w-4 h-4 text-gray-500 ml-auto shrink-0 transition-transform group-open/details:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </summary>
+    <ul
+      class="absolute right-0 top-full mt-1 py-1 w-full min-w-[7rem] bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+      role="listbox"
+    >
+      {supportedLocales.map((locale) => (
+        <li role="option" aria-selected={locale === currentLocale}>
+          <a
+            href={`/${locale}${currentPath}`}
+            class={`flex items-center gap-2 px-3 py-2 text-sm no-underline transition-colors ${
+              locale === currentLocale
+                ? 'text-orange-600'
+                : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <span class="text-lg leading-none">{localeDisplayConfig[locale].flag}</span>
+            <span>{localeDisplayConfig[locale].label}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </details>
+</div>
+
+<script is:inline>
+  document.addEventListener('click', function (e) {
+    const wrap = document.getElementById('lang-switcher-wrap');
+    const details = wrap && wrap.querySelector('details');
+    if (!wrap || !details) return;
+    if (!wrap.contains(e.target)) {
+      details.removeAttribute('open');
+    }
+  });
+</script>

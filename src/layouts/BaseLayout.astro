@@ -1,0 +1,46 @@
+---
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import { type Messages, type Locale } from '@/i18n';
+import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
+import { transformNavigations } from '@/utils/navigationData';
+import '@/styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  messages: Messages;
+  locale: Locale;
+}
+
+const { title = 'Astro', description = 'Astro website', messages, locale } = Astro.props;
+
+const navigationsRes = await fetchApiWithLocaleFallback<{ data?: unknown[] }>(api.navigations, { locale, populate: '*', pagination: { pageSize: 100 } });
+const navData = transformNavigations(navigationsRes, locale);
+
+if (import.meta.env.DEV) {
+  console.log('[BaseLayout] locale=', locale, 'navData[0]?.label=', navData[0]?.label);
+}
+---
+
+<!doctype html>
+<html lang={locale === 'zh-cn' ? 'zh-CN' : 'en'} class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-screen flex flex-col bg-gray-50 font-sans font-normal tracking-tight antialiased">
+    <Header messages={messages} locale={locale} navData={navData} />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <Footer messages={messages} locale={locale} />
+  </body>
+</html>

@@ -1,0 +1,83 @@
+---
+/**
+ * Blocks 内容渲染组件
+ * 用于渲染 Strapi Rich Text (Blocks) 内容
+ */
+
+import type { BlockNode } from '@/types/blocks';
+import { renderBlocks } from '@/utils/blocks';
+
+interface Props {
+  blocks: BlockNode[] | null | undefined;
+  class?: string;
+}
+
+const { blocks, class: className = '' } = Astro.props;
+const html = renderBlocks(blocks);
+---
+
+{html && (
+  <div class={`blocks-content ${className}`} set:html={html} />
+)}
+
+<style>
+  @reference "../styles/global.css";
+
+  .blocks-content {
+    @apply prose prose-lg max-w-none;
+  }
+  
+  .blocks-content :global(h1),
+  .blocks-content :global(h2),
+  .blocks-content :global(h3),
+  .blocks-content :global(h4),
+  .blocks-content :global(h5),
+  .blocks-content :global(h6) {
+    @apply font-bold mt-6 mb-4;
+  }
+  
+  .blocks-content :global(p) {
+    @apply mb-4 text-gray-700;
+  }
+  
+  .blocks-content :global(ul),
+  .blocks-content :global(ol) {
+    @apply mb-4 ml-6;
+  }
+  
+  .blocks-content :global(li) {
+    @apply mb-2;
+  }
+  
+  .blocks-content :global(blockquote) {
+    @apply border-l-4 border-gray-300 pl-4 italic my-4;
+  }
+  
+  .blocks-content :global(pre) {
+    @apply bg-gray-100 p-4 rounded overflow-x-auto my-4;
+  }
+  
+  .blocks-content :global(code) {
+    @apply bg-gray-100 px-1 py-0.5 rounded text-sm;
+  }
+  
+  .blocks-content :global(pre code) {
+    @apply bg-transparent p-0;
+  }
+  
+  .blocks-content :global(figure) {
+    @apply my-6;
+  }
+  
+  .blocks-content :global(figure img) {
+    @apply w-full h-auto rounded;
+  }
+  
+  .blocks-content :global(figcaption) {
+    @apply text-sm text-gray-500 mt-2 text-center;
+  }
+  
+  .blocks-content :global(a) {
+    @apply text-cyan-600 hover:text-orange-600 underline;
+  }
+</style>

@@ -1,0 +1,247 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+import { fetchApi, api, parseImages, getMediaUrl } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import type { ProductAttributes } from '@/types/content';
+import type { BlockNode } from '@/types/blocks';
+import BlocksRenderer from '@/components/BlocksRenderer.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import ProductGallery from '@/components/ProductGallery.astro';
+import DownloadFileCard from '@/components/DownloadFileCard.astro';
+import { CircleChevronRight } from "lucide-svelte";
+
+/** 路径：从 Strapi 拉取所有产品，按 locale + category.slug + product.slug 生成 */
+export async function getStaticPaths() {
+  const paths: { params: { locale: string; category: string; slug: string } }[] = [];
+  for (const locale of supportedLocales) {
+    const res = await fetchApi<{ data?: (ProductAttributes & { category?: { slug?: string } })[] }>(api.products, {
+      locale,
+      populate: { images: true, category: true },
+      pagination: { pageSize: 500 },
+    });
+    const list = Array.isArray(res?.data) ? res.data : [];
+    for (const product of list) {
+      const slug = product.slug;
+      const categorySlug = product.category && typeof product.category === 'object' && 'slug' in product.category
+        ? (product.category as { slug?: string }).slug
+        : '';
+      if (slug && categorySlug) {
+        paths.push({ params: { locale, category: categorySlug, slug } });
+      }
+    }
+  }
+  return paths;
+}
+
+const params = Astro.params as { locale?: string; category?: string; slug?: string };
+const locale: Locale = getLocale(params.locale);
+const categorySlug = params.category ?? '';
+const productSlug = params.slug ?? '';
+const messages = await loadMessages(locale);
+
+/** 页面数据：一层 populate；downloadFiles 需 populate file 以拿到 url，help_center 用于 FAQ 内容 */
+const productsRes = await fetchApi<{ data?: ProductAttributes[] }>(api.products, {
+  locale,
+  populate: {
+    images: true,
+    category: true,
+    information: true,
+    technicalDetails: true,
+    options: true,
+    hole: true,
+    downloadFiles: { populate: ['file'] },
+    help_center: { populate: ['help_category'] },
+  },
+  filters: {
+    slug: { $eq: productSlug },
+    category: { slug: { $eq: categorySlug } },
+  },
+  pagination: { pageSize: 1 },
+});
+const product = Array.isArray(productsRes?.data) && productsRes.data.length > 0 ? productsRes.data[0] : null;
+
+const category = (product as { category?: { slug?: string; name?: string } } | null)?.category;
+const categoryName = category?.name ?? categorySlug;
+
+const productImages = product ? parseImages(product.images) : [];
+const informationList = (product as { information?: { title?: string; description?: BlockNode[] }[] } | null)?.information ?? [];
+const technicalDetailsList = (product as { technicalDetails?: { title?: string; description?: string }[] } | null)?.technicalDetails ?? [];
+const optionsList = (product as { options?: { name?: string }[] } | null)?.options ?? [];
+const holeList = (product as { hole?: { name?: string }[] } | null)?.hole ?? [];
+
+/** downloadFiles: Strapi 返回 { title, description?, file: { url, name, ext, size } }[]，需补全 file.url */
+type DownloadFileEntry = { title?: string; description?: string; file?: { url?: string; name?: string; ext?: string; size?: number } };
+const rawDownloads = (product as { downloadFiles?: DownloadFileEntry[] } | null)?.downloadFiles ?? [];
+const downloadFilesList = rawDownloads.map((d) => ({
+  title: d?.title ?? '',
+  description: d?.description,
+  file: d?.file ? { ...d.file, url: d.file.url ? getMediaUrl(d.file.url) : undefined } : undefined,
+}));
+
+/** 关联 Help Center：用于产品 FAQ / 帮助内容 */
+const helpCenter = (product as {
+  help_center?: {
+    title?: string;
+    description?: string;
+    slug?: string;
+    content?: BlockNode[];
+    help_category?: { slug?: string };
+  };
+} | null)?.help_center ?? null;
+
+const helpCenterCategorySlug =
+  (helpCenter as { help_category?: { slug?: string } } | null)?.help_category?.slug ?? '';
+const helpCenterSlug = (helpCenter as { slug?: string } | null)?.slug ?? '';
+const helpCenterHref =
+  helpCenterCategorySlug && helpCenterSlug ? toHref(`/help/${helpCenterCategorySlug}/${helpCenterSlug}`, locale) : '';
+const breadcrumbItems = [
+  { label: t(messages, 'pageTitle.home'), href: '/' },
+  { label: t(messages, 'pageTitle.products'), href: '/products' },
+  { label: categoryName, href: `/products/${categorySlug}` },
+  { label: product?.name ?? productSlug },
+];
+---
+
+<BaseLayout
+  title={product ? `${product.name} - ${t(messages, 'pageTitle.products')}` : t(messages, 'pageTitle.products')}
+  messages={messages}
+  locale={locale}
+>
+  <div class="container mx-auto px-4 py-8">
+    {product ? (
+      <>
+        <Breadcrumb items={breadcrumbItems} locale={locale} />
+
+        <!-- 上：左图右文 -->
+        <section class="mb-12 grid gap-8 lg:grid-cols-2 lg:gap-12">
+          <div class="lg:min-w-0">
+            <ProductGallery images={productImages} productName={product.name ?? ''} />
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold md:text-4xl">{product.name}</h1>
+
+            <!-- 产品介绍：information 首项作为「适用材料」等富文本 -->
+            {informationList.length > 0 && (
+              <div class="mt-6">
+                {informationList.map((item) => (
+                  <div class="mb-4">
+                    {item.title && (
+                      <h2 class="text-lg font-semibold mb-2">{item.title}</h2>
+                    )}
+                    {item.description && item.description.length > 0 && (
+                      <BlocksRenderer blocks={item.description} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {informationList.length === 0 && product.description && (
+              <div class="prose prose-lg  mt-6">
+                <p>{product.description}</p>
+              </div>
+            )}
+
+            <!-- 附加信息：hole 可做「每包数量」等 -->
+            {(holeList.length > 0 || optionsList.length > 0) && (
+              <div class="mt-4 space-y-2 ">
+                {holeList.map((h) => (
+                  <p>{h.name ?? ''}</p>
+                ))}
+              </div>
+            )}
+
+            <!-- 粒度选项（全部同样样式，不需要选中态） -->
+            {optionsList.length > 0 && (
+              <div class="mt-6">
+                <p class="font-semibold mb-2">{t(messages, 'products.gritOptions')}</p>
+                <div class="flex flex-wrap gap-2">
+                  {optionsList.map((opt) => (
+                    <span
+                      class="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400"
+                    >
+                      {opt.name ?? ''}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <!-- 行动按钮 -->
+            <div class="mt-8 flex flex-wrap gap-4">
+              <a
+                href={toHref('/about/dealer', locale)}
+                class="inline-flex items-center justify-center rounded-md bg-orange-500 px-6 py-3 font-medium text-white transition-colors hover:bg-orange-600"
+              >
+                {t(messages, 'products.becomeDealer')}
+              </a>
+              <a
+                href={toHref('/support/contact', locale)}
+                class="inline-flex items-center justify-center rounded-md border border-orange-400 bg-white px-6 py-3 font-medium text-orange-500 transition-colors hover:bg-gray-100"
+              >
+                {t(messages, 'products.leaveMessage')}
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- 技术参数 -->
+        {technicalDetailsList.length > 0 && (
+          <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-4">{t(messages, 'products.technicalDetails')}</h2>
+            <div class="grid gap-x-8  grid-cols-1 lg:grid-cols-2">
+              {technicalDetailsList.map((item) => (
+                <div class="flex iten-center border-b border-gray-500 gap-2">
+                  {item.title != null && item.title !== '' && (
+                    <div class="font-semibold bg-gray-200 p-3 w-1/2">{item.title}</div>
+                  )}
+                  <div class="p-2">{item.description ?? ''}</div> 
+                </div>
+              ))} 
+            </div>
+          </section>
+        )}
+
+        <!-- 下载文档 -->
+        {downloadFilesList.length > 0 && (
+          <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-4">{t(messages, 'products.downloads')}</h2>
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {downloadFilesList.map((item) => (
+                <DownloadFileCard
+                  item={item}
+                  downloadLabel={t(messages, 'footer.support.download')}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <!-- 关联帮助内容 / F&Q：来自 help_center 的 blocks -->
+        {helpCenter && Array.isArray(helpCenter.content) && helpCenter.content.length > 0 && (
+          <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-4">{t(messages, 'products.faq')}</h2>
+            {helpCenter.title && (
+              <h3 class="text-lg font-semibold">{helpCenter.title}</h3>
+            )}
+            <BlocksRenderer blocks={helpCenter.content as BlockNode[]} class="text-gray-700" />
+            {helpCenterHref && (
+              <div class="mt-4">
+                <a
+                  href={helpCenterHref}
+                  class="flex items-center gap-2 font-medium text-cyan-600 hover:text-orange-600"
+                >
+                  {t(messages, 'common.readMore')}
+                  <CircleChevronRight class="w-4 h-4"/>
+                </a>
+              </div>
+            )}
+          </section>
+        )}
+      </>
+    ) : (
+      <p>{t(messages, 'search.noResults')}</p>
+    )}
+  </div>
+</BaseLayout>

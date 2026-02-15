@@ -1,0 +1,120 @@
+---
+/**
+ * 下载分类页：slug 为 flie-category 的 slug，左侧分类导航高亮当前项，右侧为该分类下的下载文件网格
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+import { fetchApi, api, getMediaUrl } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import DownloadFileCard from '@/components/DownloadFileCard.astro';
+
+export async function getStaticPaths() {
+  const paths: { params: { locale: string; slug: string } }[] = [];
+  for (const locale of supportedLocales) {
+    const res = await fetchApi<{ data?: { slug?: string; name?: string }[] }>(api.fileCategories, {
+      locale,
+      pagination: { pageSize: 100 },
+    });
+    const list = Array.isArray(res?.data) ? res.data : [];
+    for (const cat of list) {
+      if (cat.slug) paths.push({ params: { locale, slug: cat.slug } });
+    }
+  }
+  return paths;
+}
+
+const params = Astro.params as { locale?: string; slug?: string };
+const locale: Locale = getLocale(params.locale);
+const categorySlug = params.slug ?? '';
+const messages = await loadMessages(locale);
+
+// 所有文件分类（侧边栏）
+const categoriesRes = await fetchApi<{ data?: { slug?: string; name?: string }[] }>(api.fileCategories, {
+  locale,
+  pagination: { pageSize: 100 },
+});
+const fileCategories = Array.isArray(categoriesRes?.data) ? categoriesRes.data : [];
+const currentCategory = fileCategories.find((c: { slug?: string; name?: string }) => c.slug === categorySlug);
+const categoryName = currentCategory?.name ?? categorySlug;
+
+// 当前分类下的下载文件
+const filesRes = await fetchApi<{
+  data?: { title?: string; description?: string; file?: { url?: string; name?: string; ext?: string; size?: number }; flieCategory?: { slug?: string } }[];
+}>(api.downloadFiles, {
+  locale,
+  populate: { file: true, flieCategory: true },
+  filters: { flieCategory: { slug: { $eq: categorySlug } } },
+  pagination: { pageSize: 200 },
+});
+const rawFiles = Array.isArray(filesRes?.data) ? filesRes.data : [];
+type RawItem = (typeof rawFiles)[number];
+const downloadList = rawFiles.map((d: RawItem) => ({
+  title: d?.title ?? '',
+  description: d?.description,
+  file: d?.file ? { ...d.file, url: d.file.url ? getMediaUrl(d.file.url) : undefined } : undefined,
+}));
+
+const breadcrumbItems = [
+  { label: t(messages, 'pageTitle.home'), href: '/' },
+  { label: t(messages, 'footer.support.title'), href: '/support' },
+  { label: t(messages, 'footer.support.download'), href: '/support/download' },
+  { label: categoryName },
+];
+const allFilesLabel = t(messages, 'footer.support.allFiles');
+const downloadLabel = t(messages, 'footer.support.download');
+---
+
+<BaseLayout
+  title={`${categoryName} - ${t(messages, 'footer.support.download')}`}
+  messages={messages}
+  locale={locale}
+>
+  <div class="container mx-auto px-4 py-8">
+    <Breadcrumb items={breadcrumbItems} locale={locale} />
+
+    <div class="flex flex-col md:flex-row gap-4 md:gap-8">
+      <!-- 左侧：下载分类，当前分类高亮 -->
+      <aside class="md:w-56 shrink-0 md:sticky md:top-60 md:self-start hidden md:block">
+        <ul class="overflow-hidden">
+          <li>
+            <a
+              href={toHref('/support/download', locale)}
+              class="block p-2 hover:bg-gray-100 hover:text-orange-500 transition-colors font-bold"
+            >
+              {allFilesLabel}
+            </a>
+          </li>
+          {fileCategories.map((cat: { slug?: string; name?: string }) => {
+            const isActive = cat.slug === categorySlug;
+            return (
+              <li>
+                <a
+                  href={cat.slug ? toHref(`/support/download/${cat.slug}`, locale) : '#'}
+                  class={`block p-2 hover:bg-gray-100 hover:text-orange-500 transition-colors font-bold ${isActive ? 'text-orange-500' : ''}`}
+                >
+                  {cat.name ?? cat.slug ?? ''}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </aside>
+
+      <!-- 右侧：该分类下的下载文件网格 -->
+      <main class="flex-1 min-w-0 mb-12">
+        <h1 class="text-4xl lg:text-5xl font-black mb-6">{categoryName}</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {downloadList.length > 0 ? (
+            downloadList.map((item: (typeof downloadList)[number]) => (
+              <DownloadFileCard item={item} downloadLabel={downloadLabel} />
+            ))
+          ) : (
+            <p class="text-gray-500 col-span-full">{t(messages, 'search.noResults')}</p>
+          )}
+        </div>
+      </main>
+    </div>
+  </div>
+</BaseLayout>

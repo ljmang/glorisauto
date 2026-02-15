@@ -1,0 +1,4 @@
+# Wrangler 本地开发环境变量（复制为 .dev.vars 使用）
+# 仅在使用 npm run dev:cloudflare / preview:cloudflare 且需覆盖构建时变量时使用
+# 静态站点下 astro build 已读取 .env，通常无需此文件
+# PUBLIC_STRAPI_URL=https://admin.glorisauto.com

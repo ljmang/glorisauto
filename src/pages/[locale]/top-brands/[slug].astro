@@ -1,0 +1,227 @@
+---
+/**
+ * Top Brand 详情页：Hero（复用首页组件）+ 优势轮播（左右切换/手机滑动）+ FAQ（与产品详情页一致）
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Hero from '@/components/Hero.svelte';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import BlocksRenderer from '@/components/BlocksRenderer.astro';
+import AdvantagesCarousel from '@/components/AdvantagesCarousel.svelte';
+import ProductCard from '@/components/ProductCard.astro';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+import { fetchApi, fetchApiWithLocaleFallback, api, parseHeroMedia, getMediaUrl, getMediaUrlFromField } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import { renderBlocks } from '@/utils/blocks';
+import type { BlockNode } from '@/types/blocks';
+import type { TopBrandAttributes, TopBrandDetailAttributes, ProductAttributes } from '@/types/content';
+import { CircleChevronRight } from 'lucide-svelte';
+
+/** 静态路径：仅依赖后端 top-brands 的 slug 字段生成 [locale]/top-brands/[slug] */
+export async function getStaticPaths() {
+  const paths: { params: { locale: string; slug: string } }[] = [];
+  for (const locale of supportedLocales) {
+    const res = await fetchApi<{ data?: TopBrandAttributes[] }>(api.topBrands, {
+      locale,
+      pagination: { pageSize: 100 },
+    });
+    const list = Array.isArray(res?.data) ? res.data : [];
+    for (const item of list) {
+      const slugVal = typeof item.slug === 'string' ? item.slug.trim() : '';
+      if (slugVal) paths.push({ params: { locale, slug: slugVal } });
+    }
+  }
+  return paths;
+}
+
+const params = Astro.params as { locale?: string; slug?: string };
+const locale: Locale = getLocale(params.locale);
+const slug = (params.slug ?? '').trim();
+const messages = await loadMessages(locale);
+
+// 与后端 top-brand schema 一致；相关产品单独请求 products 接口（与产品列表页一致）
+// Populate：SKILL 要求嵌套组件用对象语法 advantages: { populate: '*' }，不写 deep
+const res = await fetchApiWithLocaleFallback<{ data?: TopBrandDetailAttributes[] }>(api.topBrands, {
+  locale,
+  populate: {
+    heroMedia: true,
+    aboutCover: true,
+    help_centers: { populate: ['help_category'] },
+    advantages: { populate: '*' },
+  },
+  filters: { slug: { $eq: slug } },
+  pagination: { pageSize: 1 },
+});
+const rawDoc = Array.isArray(res?.data) && res.data.length > 0 ? res.data[0] : null;
+// Strapi v5 默认为扁平（字段在 data 上）；兼容 v4 的 data.attributes 结构
+const brand: TopBrandDetailAttributes | null =
+  rawDoc && typeof rawDoc === 'object' && 'attributes' in rawDoc
+    ? ((rawDoc as unknown as { attributes?: TopBrandDetailAttributes }).attributes ?? null)
+    : (rawDoc as TopBrandDetailAttributes | null);
+
+// 相关产品：单独请求 products，按 top_brand.slug 过滤（与 products 列表页同一接口与 populate）
+const productsRes =
+  brand &&
+  (await fetchApiWithLocaleFallback<{ data?: ProductAttributes[] }>(api.products, {
+    locale,
+    populate: { images: true, category: true },
+    filters: { top_brand: { slug: { $eq: slug } } },
+    pagination: { pageSize: 100 },
+  }));
+const relatedProducts: ProductAttributes[] = Array.isArray(productsRes?.data) ? productsRes.data : [];
+
+const pageTitle = brand?.heroTitle ?? brand?.name ?? slug;
+const heroMedia = brand ? parseHeroMedia(brand.heroMedia) : null;
+const heroCtaHref = toHref(brand?.heroButtonUrl ?? '/about/dealer', locale);
+
+// 优势列表：组件 share.list-image（title, cover, content），防御式取数
+const advantagesList = brand?.advantages ?? [];
+const advantageItems = advantagesList.map((a) => {
+  const media = a.cover as { url?: string; data?: { url?: string } } | null | undefined;
+  const url = media && typeof media === 'object' && 'data' in media && media.data
+    ? getMediaUrl((media.data as { url?: string }).url)
+    : getMediaUrlFromField(media);
+  return {
+    title: a.title ?? '',
+    description: '',
+    contentHtml: renderBlocks((a as { content?: BlockNode[] }).content ?? null),
+    imageSrc: url || undefined,
+    imageAlt: a.title ?? undefined,
+  };
+});
+
+const rawHelpCenters = brand?.help_centers;
+const helpCenter = Array.isArray(rawHelpCenters) && rawHelpCenters.length > 0 ? rawHelpCenters[0] : null;
+const helpCenterCategorySlug = helpCenter?.help_category?.slug ?? '';
+const helpCenterSlug = helpCenter?.slug ?? '';
+const helpCenterHref =
+  helpCenterCategorySlug && helpCenterSlug ? toHref(`/help/${helpCenterCategorySlug}/${helpCenterSlug}`, locale) : '';
+
+const breadcrumbItems = [
+  { label: t(messages, 'pageTitle.home'), href: '/' },
+  { label: t(messages, 'pageTitle.products'), href: '/products' },
+  { label: 'Top Brands', href: '/top-brands' },
+  { label: pageTitle },
+];
+
+// 品牌介绍区：后端 aboutTItle / aboutSubtitle / aboutContent / aboutCover / aboutButton / aboutButtonUrl
+const hasAbout =
+  (brand?.aboutContent && brand.aboutContent.length > 0) ||
+  !!brand?.aboutSubtitle ||
+  !!brand?.aboutCover;
+const aboutCoverMedia = brand?.aboutCover;
+const aboutCoverUrl =
+  aboutCoverMedia && typeof aboutCoverMedia === 'object' && 'url' in aboutCoverMedia
+    ? getMediaUrl((aboutCoverMedia as { url?: string }).url)
+    : '';
+const aboutCtaHref = toHref(brand?.aboutButtonUrl ?? '#', locale);
+
+---
+
+<BaseLayout
+  title={brand ? `${pageTitle} - Top Brands` : 'Top Brands'}
+  messages={messages}
+  locale={locale}
+>
+  {brand ? (
+    <>
+      <div class="container mx-auto px-4 pt-4 pb-2">
+        <Breadcrumb items={breadcrumbItems} locale={locale} />
+      </div>
+
+      <Hero
+        media={heroMedia}
+        title={brand.heroTitle ?? pageTitle}
+        subtitle={brand.heroSubtitle ?? null}
+        cta={brand.heroButton ?? t(messages, 'products.becomeDealer')}
+        ctaHref={heroCtaHref}
+      />
+
+      {hasAbout && (
+        <section class="container mx-auto px-4 py-16 lg:py-20">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <div class="order-2 lg:order-1">
+              {brand.aboutTItle && (
+                <h2 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">{brand.aboutTItle}</h2>
+                <h3 class="text-lg font-semibold">{brand.aboutSubtitle}</h3>
+              )}
+              {brand?.aboutContent && brand.aboutContent.length > 0 ? (
+                <div class="prose prose-lg max-w-none mb-8 text-gray-700">
+                  <BlocksRenderer blocks={brand.aboutContent as BlockNode[]} />
+                </div>
+              ) : brand?.aboutSubtitle ? (
+                <p class="text-gray-700 text-lg leading-relaxed mb-8 whitespace-pre-wrap">
+                  {brand.aboutSubtitle}
+                </p>
+              ) : null}
+              {(brand?.aboutButton || brand?.aboutButtonUrl) && (
+                <a
+                  href={aboutCtaHref}
+                  class="inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors no-underline"
+                >
+                  {brand.aboutButton ?? t(messages, 'common.readMore')}
+                </a>
+              )}
+            </div>
+            {aboutCoverUrl && (
+              <div class="order-1 lg:order-2 flex justify-center lg:justify-end">
+                <img
+                  src={aboutCoverUrl}
+                  alt={brand.aboutTItle ?? pageTitle}
+                  class="max-h-96 w-auto object-contain rounded-lg"
+                />
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      <div class="container mx-auto px-4 py-8">
+
+        {advantageItems.length > 0 && (
+          <AdvantagesCarousel
+            client:visible
+            items={advantageItems}
+            title=""
+          />
+        )}
+
+        {relatedProducts.length > 0 && (
+          <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-6">{t(messages, 'helpCenter.relatedProducts')}</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {relatedProducts.map((product) => (
+                <ProductCard product={product} locale={locale} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {helpCenter && Array.isArray(helpCenter.content) && helpCenter.content.length > 0 && (
+          <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-4">{t(messages, 'products.faq')}</h2>
+            {helpCenter.title && (
+              <h3 class="text-lg font-semibold">{helpCenter.title}</h3>
+            )}
+            <BlocksRenderer blocks={helpCenter.content as BlockNode[]} class="text-gray-700" />
+            {helpCenterHref && (
+              <div class="mt-4">
+                <a
+                  href={helpCenterHref}
+                  class="flex items-center gap-2 font-medium text-cyan-600 hover:text-orange-600"
+                >
+                  {t(messages, 'common.readMore')}
+                  <CircleChevronRight class="w-4 h-4" />
+                </a>
+              </div>
+            )}
+          </section>
+        )}
+      </div>
+    </>
+  ) : (
+    <div class="container mx-auto px-4 py-12">
+      <p>{t(messages, 'search.noResults')}</p>
+    </div>
+  )}
+</BaseLayout>

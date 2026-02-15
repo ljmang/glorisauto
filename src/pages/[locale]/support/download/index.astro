@@ -1,0 +1,112 @@
+---
+/**
+ * 下载首页：左侧分类导航（全部文件 + 一层分类），右侧全部下载文件卡片网格
+ * 布局与产品首页一致，使用 DownloadFileCard 已有组件
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+import { fetchApi, api, getMediaUrl } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import DownloadFileCard from '@/components/DownloadFileCard.astro';
+
+export async function getStaticPaths() {
+  return supportedLocales.map((locale) => ({
+    params: { locale },
+  }));
+}
+
+const params = Astro.params as { locale?: string };
+const locale: Locale = getLocale(params.locale);
+const messages = await loadMessages(locale);
+
+// 文件分类（一层）：用于侧边栏
+const categoriesRes = await fetchApi<{ data?: { slug?: string; name?: string }[] }>(api.fileCategories, {
+  locale,
+  pagination: { pageSize: 100 },
+});
+const fileCategories = Array.isArray(categoriesRes?.data) ? categoriesRes.data : [];
+
+// 全部下载文件，populate file 以拿到 url
+const filesRes = await fetchApi<{
+  data?: { title?: string; description?: string; file?: { url?: string; name?: string; ext?: string; size?: number }; flieCategory?: { slug?: string } }[];
+}>(api.downloadFiles, {
+  locale,
+  populate: { file: true, flieCategory: true },
+  pagination: { pageSize: 200 },
+});
+const rawFiles = Array.isArray(filesRes?.data) ? filesRes.data : [];
+
+// 转为 DownloadFileCard 所需格式，并补全 file.url
+type RawItem = (typeof rawFiles)[number];
+const downloadList = rawFiles.map((d: RawItem) => ({
+  title: d?.title ?? '',
+  description: d?.description,
+  file: d?.file
+    ? {
+        ...d.file,
+        url: d.file.url ? getMediaUrl(d.file.url) : undefined,
+      }
+    : undefined,
+}));
+
+const breadcrumbItems = [
+  { label: t(messages, 'pageTitle.home'), href: '/' },
+  { label: t(messages, 'footer.support.title'), href: '/support' },
+  { label: t(messages, 'footer.support.download') },
+];
+const pageTitle = t(messages, 'footer.support.download');
+const allFilesLabel = t(messages, 'footer.support.allFiles');
+const downloadLabel = t(messages, 'footer.support.download');
+---
+
+<BaseLayout
+  title={`${pageTitle} - ${t(messages, 'footer.support.title')}`}
+  messages={messages}
+  locale={locale}
+>
+  <div class="container mx-auto px-4 py-8">
+    <Breadcrumb items={breadcrumbItems} locale={locale} />
+
+    <div class="flex flex-col md:flex-row gap-4 md:gap-8">
+      <!-- 左侧：下载分类（一层，与产品页侧栏风格一致） -->
+      <aside class="md:w-56 shrink-0 md:sticky md:top-60 md:self-start hidden md:block ">
+        <ul class="overflow-hidden">
+          <li>
+            <a
+              href={toHref('/support/download', locale)}
+              class="block p-2 hover:bg-gray-100 hover:text-orange-500 transition-colors font-bold text-orange-500"
+            >
+              {allFilesLabel}
+            </a>
+          </li>
+          {fileCategories.map((cat: { slug?: string; name?: string }) => (
+            <li>
+              <a
+                href={cat.slug ? toHref(`/support/download/${cat.slug}`, locale) : '#'}
+                class="block p-2 hover:bg-gray-100 hover:text-orange-500 transition-colors font-bold"
+              >
+                {cat.name ?? cat.slug ?? ''}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </aside>
+
+      <!-- 右侧：下载文件网格 -->
+      <main class="flex-1 min-w-0 mb-12">
+        <h1 class="text-4xl lg:text-5xl font-black mb-6">{pageTitle}</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {downloadList.length > 0 ? (
+            downloadList.map((item: (typeof downloadList)[number]) => (
+              <DownloadFileCard item={item} downloadLabel={downloadLabel} />
+            ))
+          ) : (
+            <p class="text-gray-500 col-span-full">{t(messages, 'search.noResults')}</p>
+          )}
+        </div>
+      </main>
+    </div>
+  </div>
+</BaseLayout>
