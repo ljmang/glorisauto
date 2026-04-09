@@ -6,6 +6,8 @@
 // Strapi 基础类型
 export type {
   StrapiMedia,
+  StrapiSeo,
+  StrapiLinkItem,
   StrapiResponse,
   StrapiItem,
   StrapiContent,
@@ -15,6 +17,8 @@ export type {
 export type {
   HomeAttributes,
   HomeContent,
+  SiteSeoAttributes,
+  SiteSeoContent,
   ProductAttributes,
   ProductContent,
   CategoryAttributes,

@@ -23,6 +23,32 @@ export interface StrapiMedia {
   publishedAt?: string;
 }
 
+export interface StrapiLinkItem {
+  label?: string | null;
+  url?: string | null;
+}
+
+export interface StrapiSeo {
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  metaKeywords?: string | null;
+  keywords?: string | null;
+  metaImage?: StrapiMedia | null;
+  metaRobots?: string | null;
+  canonicalURL?: string | null;
+  metaViewport?: string | null;
+  ogTitle?: string | null;
+  ogDescription?: string | null;
+  ogImage?: StrapiMedia | null;
+  twitterTitle?: string | null;
+  twitterDescription?: string | null;
+  twitterImage?: StrapiMedia | null;
+  twitterCard?: 'summary' | 'summary_large_image' | null;
+  hideFromSearch?: boolean | null;
+  focusKeyword?: string | null;
+  schemaType?: string | null;
+}
+
 /** Strapi 标准响应结构 */
 export interface StrapiResponse<T> {
   data: T | null;
@@ -45,12 +71,7 @@ export interface StrapiItem<T = Record<string, unknown>> {
   publishedAt: string | null;
   locale?: string;
   localizations?: Array<Partial<StrapiItem<T>>>;
-  seo?: {
-    metaTitle?: string;
-    metaDescription?: string;
-    keywords?: string;
-    metaImage?: StrapiMedia;
-  } | null;
+  seo?: StrapiSeo | null;
 }
 
 /** 完整的 Strapi 内容项（包含属性和元数据） */

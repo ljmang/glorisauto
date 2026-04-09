@@ -21,11 +21,11 @@ const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
 
 // 分类列表（扁平），再构建为一级/二级树
-const categoriesRes = await fetchApi<{ data?: (CategoryAttributes & { parentID?: number | null; sort?: number })[] }>(api.categories, {
+const categoriesRes = await fetchApi<{ data?: CategoryAttributes[] }>(api.categories, {
   locale,
+  populate: { parent: true },
   pagination: { pageSize: 100 }
 }); 
-console.log(categoriesRes);
 const categories = Array.isArray(categoriesRes?.data) ? categoriesRes.data : [];
 const categoryTree = buildCategoryTree(categories);
 
@@ -44,7 +44,14 @@ const breadcrumbItems = [
 const pageTitle = t(messages, 'products.allProducts');
 ---
 
-<BaseLayout title={t(messages, 'pageTitle.products')} messages={messages} locale={locale}>
+<BaseLayout
+  title={t(messages, 'pageTitle.products')}
+  description={pageTitle}
+  pageType="collection"
+  breadcrumbs={breadcrumbItems}
+  messages={messages}
+  locale={locale}
+>
   <div class="container mx-auto px-4 py-8">
     <Breadcrumb items={breadcrumbItems} locale={locale} />
 

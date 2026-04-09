@@ -2,7 +2,7 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import InsightListItem from '@/components/InsightListItem.astro';
-import { supportedLocales, type Locale } from '@/i18n/config';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
@@ -18,7 +18,8 @@ interface Props {
   locale: Locale;
 }
 
-const { locale } = Astro.params as { locale: Locale };
+const params = Astro.params as { locale?: string };
+const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
 
 const [categoriesRes, insightsRes] = await Promise.all([
@@ -51,12 +52,18 @@ const pageTitle = t(messages, 'footer.about.insights');
 const allArticlesLabel = t(messages, 'insights.allArticles');
 ---
 
-<BaseLayout title={pageTitle} messages={messages} locale={locale}>
+<BaseLayout
+  title={pageTitle}
+  pageType="collection"
+  breadcrumbs={breadcrumbItems}
+  messages={messages}
+  locale={locale}
+>
   <div class="container mx-auto px-4 py-8">
     <Breadcrumb items={breadcrumbItems} locale={locale} />
 
     <div class="flex flex-col md:flex-row gap-4 md:gap-8">
-      <!-- 左侧：分类导航（与产品分类样式一致） -->
+      <!-- 左侧：分类导航 -->
       <aside class="md:w-56 shrink-0 font-bold md:sticky md:top-60 md:self-start hidden md:block">
         <nav class="space-y-1" aria-label={t(messages, 'insights.allArticles')}>
           <a
@@ -87,29 +94,11 @@ const allArticlesLabel = t(messages, 'insights.allArticles');
           )}
         </div>
 
-        <!-- 分页（暂时隐藏，后续可添加） -->
         {insights.length > 0 && (
           <nav aria-label="Pagination" class="mt-12 flex justify-center items-center gap-2">
-            <button
-              type="button"
-              class="px-3 py-2 text-gray-600 hover:text-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              disabled
-            >
-              &lt;
-            </button>
-            <a
-              href={toHref('/about/insights?page=1', locale)}
-              class="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700 transition-colors"
-            >
-              1
-            </a>
-            <button
-              type="button"
-              class="px-3 py-2 text-gray-600 hover:text-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              disabled
-            >
-              &gt;
-            </button>
+            <button type="button" class="px-3 py-2 text-gray-600 hover:text-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" disabled>&lt;</button>
+            <a href={toHref('/about/insights?page=1', locale)} class="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700 transition-colors">1</a>
+            <button type="button" class="px-3 py-2 text-gray-600 hover:text-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" disabled>&gt;</button>
           </nav>
         )}
       </main>

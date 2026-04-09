@@ -1,7 +1,8 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { supportedLocales, type Locale } from '@/i18n/config';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
+import { toHref } from '@/utils/navigationData';
 
 export async function getStaticPaths() {
   return supportedLocales.map((locale) => ({
@@ -13,16 +14,20 @@ interface Props {
   locale: Locale;
 }
 
-const { locale } = Astro.params;
+const params = Astro.params as { locale?: string };
+const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
 ---
 
-<BaseLayout title="Thank You" messages={messages} locale={locale}>
-	<div class="text-center py-12">
-		<h1 class="text-4xl font-bold text-gray-900 mb-6">Thank You</h1>
-		<p class="text-gray-700 text-lg mb-8">{t(messages, 'form.submitSuccess')}</p>
-		<a href={`/${locale}`} class="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-			{t(messages, 'pageTitle.home')}
-		</a>
-	</div>
+<BaseLayout title={t(messages, 'pageTitle.thankYou')} seo={{ hideFromSearch: true }} messages={messages} locale={locale}>
+  <div class="container mx-auto px-4 py-24 text-center">
+    <h1 class="text-4xl font-bold text-gray-900 mb-6">{t(messages, 'pageTitle.thankYou')}</h1>
+    <p class="text-gray-700 text-lg mb-8">{t(messages, 'form.submitSuccess')}</p>
+    <a
+      href={toHref('/', locale)}
+      class="inline-block px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
+    >
+      {t(messages, 'pageTitle.home')}
+    </a>
+  </div>
 </BaseLayout>

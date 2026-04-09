@@ -1,7 +1,8 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { supportedLocales, type Locale } from '@/i18n/config';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
+import { toHref } from '@/utils/navigationData';
 
 export async function getStaticPaths() {
   return supportedLocales.map((locale) => ({
@@ -13,15 +14,35 @@ interface Props {
   locale: Locale;
 }
 
-const { locale } = Astro.params;
+const params = Astro.params as { locale?: string };
+const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
+
+const sections = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9'] as const;
 ---
 
 <BaseLayout title={t(messages, 'footer.privacy')} messages={messages} locale={locale}>
-	<div class="container mx-auto px-4 py-12 max-w-4xl">
-		<h1 class="text-4xl font-bold text-gray-900 mb-8">{t(messages, 'footer.privacy')}</h1>
-		<div class="prose prose-lg">
-			<p class="text-gray-700">隐私政策内容...</p>
-		</div>
-	</div>
+  <div class="container mx-auto px-4 py-12 max-w-4xl">
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">{t(messages, 'footer.privacy')}</h1>
+    <p class="text-sm text-gray-500 mb-8">{t(messages, 'privacyPolicy.lastUpdated')}</p>
+
+    <div class="prose prose-lg max-w-none text-gray-700">
+      <p class="lead">{t(messages, 'privacyPolicy.intro')}</p>
+
+      {sections.map((key) => (
+        <section class="mt-10">
+          <h2 class="text-xl font-semibold text-gray-900 mt-8 mb-3 first:mt-0">
+            {t(messages, `privacyPolicy.${key}Title`)}
+          </h2>
+          <p class="text-gray-700 leading-relaxed">{t(messages, `privacyPolicy.${key}Body`)}</p>
+        </section>
+      ))}
+
+      <p class="mt-10 pt-6 border-t border-gray-200">
+        <a href={toHref('/cookie-preferences', locale)} class="text-orange-600 hover:text-orange-700 font-medium">
+          {t(messages, 'privacyPolicy.cookieLink')}
+        </a>
+      </p>
+    </div>
+  </div>
 </BaseLayout>

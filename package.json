@@ -5,14 +5,22 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "build:ssr": "astro build",
+    "build:pages": "BUILD_TARGET=pages astro build",
     "preview": "astro preview",
+    "preview:ssr": "astro preview",
     "astro": "astro",
     "test:strapi": "node scripts/test-strapi.mjs",
-    "dev:cloudflare": "astro build && wrangler pages dev dist --compatibility-date=2024-01-01",
-    "preview:cloudflare": "astro build && wrangler pages dev dist --compatibility-date=2024-01-01"
+    "fonts:copy": "node scripts/copy-fonts.mjs",
+    "postinstall": "npm run fonts:copy",
+    "dev:cloudflare": "BUILD_TARGET=pages astro build && wrangler pages dev dist --compatibility-date=2024-01-01",
+    "preview:cloudflare": "BUILD_TARGET=pages astro build && wrangler pages dev dist --compatibility-date=2024-01-01",
+    "preview:pages": "BUILD_TARGET=pages astro build && wrangler pages dev dist --compatibility-date=2024-01-01"
   },
   "dependencies": {
+    "@astrojs/node": "^9.5.5",
     "@astrojs/svelte": "^7.2.5",
+    "@fontsource/noto-sans": "^5.2.10",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.17.1",
     "fuse.js": "^7.1.0",

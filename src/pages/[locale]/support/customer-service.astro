@@ -1,17 +1,17 @@
 ---
+/**
+ * 联系我们：与经销商页使用同一接口（become-dealer），仅渲染表单 + 联系方式，表单 type 为「联系我们」
+ */
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
-import InsightCard from '@/components/InsightCard.astro';
 import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
-import { fetchApiWithLocaleFallback, api, parseHeroMedia, parseImage, getStrapiUrl } from '@/utils/strapiApi';
+import { fetchApiWithLocaleFallback, api, getStrapiUrl, parseHeroMedia } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
-import type { BecomeDealerAttributes, InsightAttributes } from '@/types/content';
+import type { BecomeDealerAttributes } from '@/types/content';
 import type { StrapiResponse } from '@/types';
 import { Image } from 'astro:assets';
-import { extractTextFromBlocks } from '@/utils/blocks';
 import { MessageCircle, Phone, Mail, MapPin } from 'lucide-svelte';
-import { countryOptions, getCountryLabel } from '@/data/countries';
 
 export async function getStaticPaths() {
   return supportedLocales.map((locale) => ({
@@ -29,35 +29,21 @@ const messages = await loadMessages(locale);
 
 const dealerRes = await fetchApiWithLocaleFallback<StrapiResponse<BecomeDealerAttributes>>(api.becomeDealer, {
   locale,
-  populate: {
-    heroMedia: true,
-    seo: {
-      populate: {
-        metaImage: true,
-        ogImage: true,
-        twitterImage: true,
-      },
-    },
-    focus: { populate: { cover: true } },
-    insights: { populate: { cover: true, insight_category: true } },
-  },
+  populate: { heroMedia: true },
 });
 
-const dealer = dealerRes?.data ?? null;
-const heroMedia = dealer ? parseHeroMedia(dealer.heroMedia) : null;
-const focusItems = dealer?.focus ?? [];
-const advantageInsights = (dealer?.insights ?? []) as (InsightAttributes & { cover?: unknown })[];
+const contact = dealerRes?.data ?? null;
+const heroMedia = contact ? parseHeroMedia(contact.heroMedia) : null;
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
-  { label: t(messages, 'footer.about.title'), href: '/about' },
-  { label: dealer?.title ?? t(messages, 'footer.about.becomeDealer'), href: undefined },
+  { label: t(messages, 'footer.support.title'), href: '/support' },
+  { label: t(messages, 'pageTitle.customerService'), href: undefined },
 ];
 
-/** Message 接口 type：成为代理商 / 客户服务 */
-const MESSAGE_TYPE_DEALER = '成为代理商';
+/** Message 接口 type：联系我们（客户服务） */
+const MESSAGE_TYPE_CONTACT = '联系我们';
 
-/** 表单提交用的 API 基地址（服务端计算，避免客户端用 import.meta） */
 const formApiBase = (() => {
   try {
     return getStrapiUrl();
@@ -67,16 +53,7 @@ const formApiBase = (() => {
 })();
 ---
 
-<BaseLayout
-  title={dealer?.title ?? t(messages, 'footer.about.becomeDealer')}
-  description={dealer?.joinUsTitle}
-  image={dealer?.heroMedia}
-  seo={dealer?.seo}
-  pageType="about"
-  breadcrumbs={breadcrumbItems}
-  messages={messages}
-  locale={locale}
->
+<BaseLayout title={t(messages, 'pageTitle.contact')} messages={messages} locale={locale}>
   <div class="container mx-auto px-4 pb-12">
     <div class="pt-4 pb-2">
       <Breadcrumb items={breadcrumbItems} locale={locale} />
@@ -87,7 +64,7 @@ const formApiBase = (() => {
       <section class="relative min-h-[400px] lg:min-h-[500px] rounded-lg overflow-hidden mb-12">
         <Image
           src={heroMedia.src}
-          alt={dealer?.title ?? t(messages, 'footer.about.becomeDealer')}
+          alt={t(messages, 'pageTitle.contact')}
           width={1920}
           height={600}
           class="w-full h-full object-cover absolute inset-0"
@@ -98,63 +75,30 @@ const formApiBase = (() => {
         <div class="absolute inset-0 bg-black/30" />
         <div class="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
           <h1 class="text-3xl lg:text-4xl font-bold text-white drop-shadow-lg">
-            {dealer?.title ?? t(messages, 'footer.about.becomeDealer')}
+            {contact?.customerServiceTitle ?? 'Customer Service'}
           </h1>
         </div>
       </section>
     )}
 
-    <!-- 3 张资质卡片（使用接口返回的 cover 图片） -->
-    {focusItems.length > 0 && (
-      <section class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-16">
-        {focusItems.slice(0, 3).map((item) => {
-          const coverImg = parseImage(item.cover);
-          const subtitle = extractTextFromBlocks(item.content, 120);
-          return (
-            <div class="bg-gray-50 rounded-xl p-6 lg:p-12 text-center shadow-sm bg-white">
-              {coverImg?.src ? (
-                <div class="flex justify-center mb-4">
-                  <Image
-                    src={coverImg.src}
-                    alt={coverImg.alt || item.title || ''}
-                    width={coverImg.width ?? 256}
-                    height={coverImg.height ?? 256}
-                    class="w-20 h-20 object-contain"
-                    format="webp"
-                    quality={85}
-                  />
-                </div>
-              ) : (
-                <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-200 flex items-center justify-center" />
-              )}
-              <h2 class="text-xl font-bold  mb-2">{item.title}</h2>
-              {subtitle && <p class="text-gray-600 text-sm leading-relaxed">{subtitle}</p>}
-            </div>
-          );
-        })}
-      </section>
-    )}
-
-    <!-- Join Us Now：表单 + 客服信息 -->
+    <!-- 表单 + 联系方式 -->
     <section class="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-12 mb-16">
       <div class="lg:col-span-3">
-        <h2 class="text-2xl font-bold  mb-6">
-          {dealer?.joinUsTitle ?? 'Join Us Now'}
-        </h2>
+        <!-- <h2 class="text-2xl font-bold mb-6">{t(messages, 'pageTitle.contact')}</h2> -->
         <form
-          id="dealer-form"
+          id="contact-form"
           class="space-y-4"
           data-thank-you={toHref('/thank-you', locale)}
-          data-type={MESSAGE_TYPE_DEALER}
+          data-type={MESSAGE_TYPE_CONTACT}
           data-api-base={formApiBase}
         >
           <div>
-            <label for="dealer-name" class="block text-sm font-medium text-gray-700 mb-1">
-              {dealer?.yourName ?? t(messages, 'form.name')} *
+            <label for="contact-name" class="block text-sm font-medium text-gray-700 mb-1">
+              {contact?.yourName ?? t(messages, 'form.name')} *
             </label>
             <input
               type="text"
-              id="dealer-name"
+              id="contact-name"
               name="name"
               required
               class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -162,12 +106,12 @@ const formApiBase = (() => {
             />
           </div>
           <div>
-            <label for="dealer-email" class="block text-sm font-medium text-gray-700 mb-1">
-              {dealer?.yourEmail ?? t(messages, 'form.email')} *
+            <label for="contact-email" class="block text-sm font-medium text-gray-700 mb-1">
+              {contact?.yourEmail ?? t(messages, 'form.email')} *
             </label>
             <input
               type="email"
-              id="dealer-email"
+              id="contact-email"
               name="email"
               required
               class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -175,40 +119,23 @@ const formApiBase = (() => {
             />
           </div>
           <div>
-            <label for="dealer-country" class="block text-sm font-medium text-gray-700 mb-1">
-              {dealer?.country ?? 'Country/Region'} *
-            </label>
-            <select
-              id="dealer-country"
-              name="country"
-              required
-              class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white"
-            >
-              <option value="">{locale.startsWith('zh') ? '请选择国家/地区' : 'Select Country/Region'}</option>
-              {countryOptions.map((opt) => (
-                <option value={opt.value}>{getCountryLabel(opt, locale)}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label for="dealer-phone" class="block text-sm font-medium text-gray-700 mb-1">
-              {dealer?.yourPhone ?? t(messages, 'form.phone')} *
+            <label for="contact-phone" class="block text-sm font-medium text-gray-700 mb-1">
+              {contact?.yourPhone ?? t(messages, 'form.phone')}
             </label>
             <input
               type="tel"
-              id="dealer-phone"
+              id="contact-phone"
               name="phone"
-              required
               class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               placeholder={t(messages, 'form.phonePlaceholder')}
             />
           </div>
           <div>
-            <label for="dealer-message" class="block text-sm font-medium text-gray-700 mb-1">
-              {dealer?.message ?? t(messages, 'form.message')} *
+            <label for="contact-message" class="block text-sm font-medium text-gray-700 mb-1">
+              {contact?.message ?? t(messages, 'form.message')} *
             </label>
             <textarea
-              id="dealer-message"
+              id="contact-message"
               name="message"
               required
               rows={5}
@@ -218,38 +145,37 @@ const formApiBase = (() => {
           </div>
           <button
             type="submit"
-            id="dealer-submit"
-            class="w-full lg:w-auto px-8 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+            id="contact-submit"
+            class="w-full lg:w-120 px-8 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
           >
             {t(messages, 'common.submit')}
           </button>
         </form>
       </div>
       <div class="lg:col-span-2">
-        <h3 class="text-xl font-bold  mb-4">
-          {dealer?.customerServiceTitle ?? 'Customer Service'}
+        <h3 class="text-xl font-bold mb-4">
+          {t(messages, 'pageTitle.contact')}
         </h3>
-        {dealer?.customerServicePhone && (
+        {contact?.customerServicePhone && (
           <p class="flex items-center gap-2 text-gray-700 mb-2">
             <Phone class="w-5 h-5 text-orange-500 shrink-0" />
-            <a href={`tel:${dealer.customerServicePhone.replace(/\s/g, '')}`} class="hover:text-orange-600">
-              {dealer.customerServicePhone}
+            <a href={`tel:${contact.customerServicePhone.replace(/\s/g, '')}`} class="hover:text-orange-600">
+              {contact.customerServicePhone}
             </a>
           </p>
         )}
-        {dealer?.customerServiceEmail && (
+        {contact?.customerServiceEmail && (
           <p class="flex items-center gap-2 text-gray-700 mb-4">
             <Mail class="w-5 h-5 text-orange-500 shrink-0" />
-            <a href={`mailto:${dealer.customerServiceEmail}`} class="hover:text-orange-600 break-all">
-              {dealer.customerServiceEmail}
+            <a href={`mailto:${contact.customerServiceEmail}`} class="hover:text-orange-600 break-all">
+              {contact.customerServiceEmail}
             </a>
           </p>
         )}
-        <!-- WhatsApp 与 Chat Now 两个按钮 -->
         <div class="flex flex-wrap gap-3 mb-4">
-          {dealer?.customerServicePhone && (
+          {contact?.customerServicePhone && (
             <a
-              href={`https://wa.me/${dealer.customerServicePhone.replace(/\D/g, '')}`}
+              href={`https://wa.me/${contact.customerServicePhone.replace(/\D/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-green-500 text-green-600 hover:bg-green-50 transition-colors"
@@ -257,7 +183,7 @@ const formApiBase = (() => {
               <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
               </svg>
-              <span>{dealer.customerServiceWhatsapp ?? 'WhatsApp'}</span>
+              <span>{contact.customerServiceWhatsapp ?? 'WhatsApp'}</span>
             </a>
           )}
           <a
@@ -266,72 +192,61 @@ const formApiBase = (() => {
             aria-label="Chat Now"
           >
             <MessageCircle class="w-5 h-5 shrink-0" />
-            <span>{dealer?.customerServiceChat ?? 'Chat Now'}</span>
+            <span>{contact?.customerServiceChat ?? 'Chat Now'}</span>
           </a>
         </div>
-        {dealer?.addressTitle && (
+        {contact?.addressTitle && (
           <>
-            <p class="text-sm font-medium text-gray-700 mb-1">{dealer.addressTitle}</p>
-            <p class="flex items-start gap-2 text-gray-600 mb-2">
+            <p class="mb-1">{contact.addressTitle}</p>
+            <p class="flex items-start gap-2  mb-2">
               <MapPin class="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-              <span>{dealer.addressContent}</span>
+              <span>{contact.addressContent}</span>
             </p>
-            {dealer.addressGoogleMaps && (
+            {contact.addressGoogleMaps && (
               <a
-                href={dealer.addressGoogleMapsUrl || 'https://www.google.com/maps'}
+                href={contact.addressGoogleMapsUrl || 'https://www.google.com/maps'}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="text-orange-600 hover:underline text-sm"
               >
-                {dealer.addressGoogleMaps}
+                {contact.addressGoogleMaps}
               </a>
             )}
           </>
         )}
       </div>
     </section>
-
-    <!-- What Gloris Brings：4 张 insights 卡片 -->
-    {advantageInsights.length > 0 && (
-      <section class="mb-12">
-        <h2 class="text-2xl font-bold  text-center mb-8">
-          {dealer?.advantagesTitle ?? 'What Gloris Brings to Our Partner Dealers'}
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {advantageInsights.slice(0, 4).map((insight) => (
-            <InsightCard insight={insight} locale={locale} />
-          ))}
-        </div>
-      </section>
-    )}
   </div>
 </BaseLayout>
 
 <script define:vars={{ locale }}>
   (function () {
-    const form = document.getElementById('dealer-form');
+    const form = document.getElementById('contact-form');
     if (!form) return;
 
     const thankYouUrl = form.getAttribute('data-thank-you') || `/${locale}/thank-you`;
-    const messageType = form.getAttribute('data-type') || '成为代理商';
+    const messageType = form.getAttribute('data-type') || '联系我们';
     const base = form.getAttribute('data-api-base') || '';
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const name = form.querySelector('[name="name"]')?.value?.trim();
-      const email = form.querySelector('[name="email"]')?.value?.trim();
-      const country = form.querySelector('[name="country"]')?.value?.trim();
-      const phone = form.querySelector('[name="phone"]')?.value?.trim();
-      const message = form.querySelector('[name="message"]')?.value?.trim();
+      const nameEl = form.querySelector('[name="name"]');
+      const emailEl = form.querySelector('[name="email"]');
+      const phoneEl = form.querySelector('[name="phone"]');
+      const messageEl = form.querySelector('[name="message"]');
+      const name = nameEl?.value?.trim();
+      const email = emailEl?.value?.trim();
+      const phone = phoneEl?.value?.trim() || '';
+      const message = messageEl?.value?.trim();
 
-      if (!name || !email || !country || !phone || !message) return;
+      if (!name || !email || !message) return;
       if (!base) {
         alert(document.documentElement.lang === 'zh-CN' ? '提交配置异常，请稍后重试' : 'Submission is not configured. Please try again later.');
         return;
       }
 
-      const btn = document.getElementById('dealer-submit');
+      const btn = document.getElementById('contact-submit');
       if (btn) {
         btn.disabled = true;
         btn.textContent = document.documentElement.lang === 'zh-CN' ? '提交中…' : 'Submitting…';
@@ -346,7 +261,6 @@ const formApiBase = (() => {
               type: messageType,
               name,
               email,
-              country,
               phone,
               message,
             },
@@ -362,7 +276,7 @@ const formApiBase = (() => {
       } catch (_) {
         alert(document.documentElement.lang === 'zh-CN' ? '提交失败，请稍后重试' : 'Submission failed. Please try again later.');
       } finally {
-        const btn = document.getElementById('dealer-submit');
+        const btn = document.getElementById('contact-submit');
         if (btn) {
           btn.disabled = false;
           btn.textContent = document.documentElement.lang === 'zh-CN' ? '提交' : 'Submit';

@@ -1,6 +1,6 @@
 ---
 /**
- * Insights 文章详情页：标题、发布时间、简介、markdown 内容 + 相关产品、文章、FAQ
+ * Insights 文章详情页：标题、发布时间、简介、markdown 内容 + 相关产品、相关文章
  */
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
@@ -11,7 +11,8 @@ import { supportedLocales, type Locale, getLocale, defaultLocale } from '@/i18n/
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
-import type { InsightAttributes, InsightCategoryAttributes, ProductAttributes, HelpCenterAttributes } from '@/types/content';
+import type { InsightAttributes, InsightCategoryAttributes, ProductAttributes } from '@/types/content';
+import { renderMarkdownWithTOC } from '@/utils/markdown';
 
 export async function getStaticPaths() {
   const paths: { params: { locale: string; category: string; slug: string } }[] = [];
@@ -40,12 +41,18 @@ const categorySlug = params.category ?? '';
 const articleSlug = params.slug ?? '';
 const messages = await loadMessages(locale);
 
-// 获取当前文章（populate insight_category, products, articles）
 const articleRes = await fetchApiWithLocaleFallback<{ data?: InsightAttributes[] }>(api.insights, {
   locale,
   populate: {
     insight_category: true,
     cover: true,
+    seo: {
+      populate: {
+        metaImage: true,
+        ogImage: true,
+        twitterImage: true,
+      },
+    },
     products: { populate: { images: true, category: true } },
     articles: { populate: { cover: true } },
   },
@@ -66,11 +73,9 @@ const categoryName = article.insight_category && typeof article.insight_category
   ? (article.insight_category as InsightCategoryAttributes).name
   : categorySlug;
 
-// 相关产品、文章
 const relatedProducts = (article as { products?: ProductAttributes[] })?.products ?? [];
 const relatedArticles = (article as { articles?: InsightAttributes[] })?.articles ?? [];
 
-// 格式化发布时间
 const publishedDate = article.publishedAt
   ? new Date(article.publishedAt).toLocaleDateString(locale === 'zh-cn' ? 'zh-CN' : 'en-US', {
       year: 'numeric',
@@ -87,112 +92,42 @@ const breadcrumbItems = [
 ];
 const pageTitle = `${article.title} - ${t(messages, 'footer.about.insights')}`;
 
-// TOC 数据结构
-interface TOCItem {
-  id: string;
-  text: string;
-  level: 2 | 3;
-}
-
-// 从 HTML 中提取 h2 和 h3 标题，生成目录数据
-function extractTOC(html: string): TOCItem[] {
-  const tocItems: TOCItem[] = [];
-  // 使用正则表达式匹配 h2 和 h3 标签
-  const h2Regex = /<h2[^>]*id="([^"]+)"[^>]*>(.*?)<\/h2>/gi;
-  const h3Regex = /<h3[^>]*id="([^"]+)"[^>]*>(.*?)<\/h3>/gi;
-  
-  // 提取 h2
-  let match;
-  while ((match = h2Regex.exec(html)) !== null) {
-    const id = match[1];
-    const text = match[2].replace(/<[^>]+>/g, '').trim(); // 移除 HTML 标签
-    if (id && text) {
-      tocItems.push({ id, text, level: 2 });
-    }
-  }
-  
-  // 提取 h3
-  while ((match = h3Regex.exec(html)) !== null) {
-    const id = match[1];
-    const text = match[2].replace(/<[^>]+>/g, '').trim(); // 移除 HTML 标签
-    if (id && text) {
-      tocItems.push({ id, text, level: 3 });
-    }
-  }
-  
-  return tocItems;
-}
-
-// 使用 Astro 内置的 remark/rehype 处理 markdown，添加 rehype-slug 为标题生成 id
-async function renderMarkdown(markdown: string | null | undefined): Promise<{ html: string; toc: TOCItem[] }> {
-  if (!markdown) return { html: '', toc: [] };
-  
-  const { unified } = await import('unified');
-  const { default: remarkParse } = await import('remark-parse');
-  const { default: remarkRehype } = await import('remark-rehype');
-  const { default: rehypeStringify } = await import('rehype-stringify');
-  const { default: remarkGfm } = await import('remark-gfm');
-  const { default: rehypeSlug } = await import('rehype-slug');
-  
-  const result = await unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .use(remarkRehype, { allowDangerousHtml: false })
-    .use(rehypeSlug) // 为标题自动生成 id
-    .use(rehypeStringify)
-    .process(markdown);
-  
-  const html = String(result);
-  const toc = extractTOC(html);
-  
-  return { html, toc };
-}
-
-// 渲染 markdown 并提取 TOC
-const markdownResult = article.content ? await renderMarkdown(article.content) : { html: '', toc: [] };
+const markdownResult = article.content ? await renderMarkdownWithTOC(article.content) : { html: '', toc: [] };
 const articleHtml = markdownResult.html;
 const tocItems = markdownResult.toc;
 ---
 
-<BaseLayout title={pageTitle} messages={messages} locale={locale}>
+<BaseLayout
+  title={pageTitle}
+  description={article.description || article.excerpt}
+  image={article.cover}
+  seo={article.seo}
+  pageType="article"
+  breadcrumbs={breadcrumbItems}
+  publishedTime={article.publishedAt}
+  modifiedTime={article.updatedAt}
+  messages={messages}
+  locale={locale}
+>
   <div class="container mx-auto px-4 py-8">
     <Breadcrumb items={breadcrumbItems} locale={locale} />
 
-    <!-- 两列布局：左侧文章内容，右侧目录 -->
     <div class="flex flex-col lg:flex-row gap-8">
-      <!-- 左侧：文章内容 -->
       <article class="flex-1 min-w-0">
-        <!-- 文章标题 -->
         <h1 class="text-4xl lg:text-5xl font-black mb-4">{article.title}</h1>
-
-        <!-- 发布时间 -->
-        {publishedDate && (
-          <p class="text-sm text-gray-500 mb-6">{publishedDate}</p>
-        )}
-
-        <!-- 简介 -->
+        {publishedDate && <p class="text-sm text-gray-500 mb-6">{publishedDate}</p>}
         {(article.description || article.excerpt) && (
-          <p class="text-lg text-gray-700 mb-8 leading-relaxed">
-            {article.description || article.excerpt}
-          </p>
+          <p class="text-lg text-gray-700 mb-8 leading-relaxed">{article.description || article.excerpt}</p>
         )}
-
-        <!-- 文章正文（Markdown） -->
         {articleHtml && (
-          <div
-            class="prose prose-lg max-w-none mb-12"
-            set:html={articleHtml}
-          />
+          <div class="prose prose-lg max-w-none mb-12" set:html={articleHtml} />
         )}
       </article>
-
-      <!-- 右侧：目录导航（仅桌面端显示） -->
       {tocItems.length > 0 && (
         <TableOfContents items={tocItems} locale={locale} messages={messages} />
       )}
     </div>
 
-    <!-- 相关产品 -->
     {relatedProducts.length > 0 && (
       <section class="mt-16 mb-12">
         <h2 class="text-3xl font-bold mb-6">{t(messages, 'helpCenter.relatedProducts')}</h2>
@@ -204,20 +139,22 @@ const tocItems = markdownResult.toc;
       </section>
     )}
 
-    <!-- 相关文章 -->
     {relatedArticles.length > 0 && (
       <section class="mt-12 mb-12">
         <h2 class="text-3xl font-bold mb-6">{t(messages, 'helpCenter.relatedArticles')}</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {relatedArticles.map((insight) => {
+            const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
+              ? insight.insight_category
+              : null;
+            const insightCategorySlug = category?.slug ?? categorySlug;
             const insightHref = insight.slug
-              ? toHref(`/about/insights/${categorySlug}/${insight.slug}`, locale)
+              ? toHref(`/about/insights/${insightCategorySlug}/${insight.slug}`, locale)
               : '#';
             return <InsightCard insight={insight} locale={locale} href={insightHref} />;
           })}
         </div>
       </section>
     )}
-
   </div>
 </BaseLayout>

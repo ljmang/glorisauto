@@ -1,14 +1,60 @@
 ---
 import { supportedLocales, localeDisplayConfig, type Locale } from '@/i18n/config';
+import { fetchApi, api } from '@/utils/strapiApi';
 
 interface Props {
   currentLocale: Locale;
 }
 
+interface InsightLocalization {
+  locale?: string;
+  slug?: string;
+  insight_category?: {
+    slug?: string;
+  } | null;
+}
+
+interface InsightLookupResult {
+  slug?: string;
+  localizations?: InsightLocalization[];
+}
+
 const { currentLocale } = Astro.props;
 
-// 当前路径（去掉语言前缀），用于切换语言后跳转
 const currentPath = Astro.url.pathname.replace(`/${currentLocale}`, '') || '/';
+const localeToStrapi: Record<Locale, string> = { en: 'en', 'zh-cn': 'zh' };
+const strapiToLocale: Record<string, Locale> = { en: 'en', zh: 'zh-cn' };
+
+const resolvedPathByLocale: Record<Locale, string> = {
+  en: currentPath,
+  'zh-cn': currentPath,
+};
+
+const match = currentPath.match(/^\/about\/insights\/([^/]+)\/([^/]+)\/?$/);
+if (match) {
+  const [, categorySlug, articleSlug] = match;
+  const strapiLocale = localeToStrapi[currentLocale];
+  const res = await fetchApi<{ data?: InsightLookupResult[] }>(api.insights, {
+    locale: strapiLocale,
+    populate: { localizations: { populate: { insight_category: true } } },
+    filters: {
+      $and: [
+        { slug: { $eq: articleSlug } },
+        { insight_category: { slug: { $eq: categorySlug } } },
+      ],
+    },
+    pagination: { pageSize: 1 },
+  });
+
+  const item = Array.isArray(res?.data) ? res.data[0] : undefined;
+  const localizations = Array.isArray(item?.localizations) ? item.localizations : [];
+
+  for (const loc of localizations) {
+    const targetLocale = loc.locale ? strapiToLocale[loc.locale] : undefined;
+    if (!targetLocale || !loc.slug || !loc.insight_category?.slug) continue;
+    resolvedPathByLocale[targetLocale] = `/about/insights/${loc.insight_category.slug}/${loc.slug}`;
+  }
+}
 ---
 
 <div class="relative" id="lang-switcher-wrap">
@@ -31,7 +77,7 @@ const currentPath = Astro.url.pathname.replace(`/${currentLocale}`, '') || '/';
       {supportedLocales.map((locale) => (
         <li role="option" aria-selected={locale === currentLocale}>
           <a
-            href={`/${locale}${currentPath}`}
+            href={`/${locale}${resolvedPathByLocale[locale]}`}
             class={`flex items-center gap-2 px-3 py-2 text-sm no-underline transition-colors ${
               locale === currentLocale
                 ? 'text-orange-600'

@@ -1,0 +1,260 @@
+---
+/**
+ * 帮助中心首页：分类标签 + 按分类分组的 FAQ 列表
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+import { fetchApi, api } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import type { HelpCategoryAttributes, HelpCenterAttributes } from '@/types/content';
+
+export async function getStaticPaths() {
+  return supportedLocales.map((locale: Locale) => ({
+    params: { locale },
+  }));
+}
+
+const params = Astro.params as { locale?: string };
+const locale: Locale = getLocale(params.locale);
+const messages = await loadMessages(locale);
+
+// 1. 获取所有分类（按 sort 排序）
+const categoriesRes = await fetchApi<{ data?: HelpCategoryAttributes[] }>(api.helpCategories, {
+  locale,
+  pagination: { pageSize: 100 },
+});
+const categories = (categoriesRes?.data ?? []).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
+
+// 2. 获取所有文章（populate help_category）
+const articlesRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
+  locale,
+  populate: { help_category: true, products: true },
+  pagination: { pageSize: 500 },
+});
+const articles = articlesRes?.data ?? [];
+
+// 3. 按分类分组文章
+const articlesByCategory = new Map<string, HelpCenterAttributes[]>();
+articles.forEach((article) => {
+  const categorySlug = article.help_category?.slug ?? 'uncategorized';
+  if (!articlesByCategory.has(categorySlug)) {
+    articlesByCategory.set(categorySlug, []);
+  }
+  articlesByCategory.get(categorySlug)!.push(article);
+});
+
+const activeCategories = categories.filter((category) => {
+  const slug = category.slug ?? '';
+  return slug !== '' && (articlesByCategory.get(slug)?.length ?? 0) > 0;
+});
+
+const featuredArticles = [...articles]
+  .filter((article) => article.recommend)
+  .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
+  .slice(0, 6);
+
+const productHelpLinksMap = new Map<
+  string,
+  { name: string; href: string; articleTitle: string; categoryName: string }
+>();
+
+for (const article of [...articles].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))) {
+  const articleCategorySlug = article.help_category?.slug ?? '';
+  const articleCategoryName = article.help_category?.name ?? '';
+  const articleSlug = article.slug ?? '';
+  if (!articleCategorySlug || !articleSlug || !Array.isArray(article.products)) continue;
+
+  const articleHref = toHref(`/help/${articleCategorySlug}/${articleSlug}`, locale);
+  for (const product of article.products) {
+    const productName = product?.name ?? '';
+    const productSlug = product?.slug ?? productName;
+    if (!productName || !productSlug || productHelpLinksMap.has(productSlug)) continue;
+
+    productHelpLinksMap.set(productSlug, {
+      name: productName,
+      href: articleHref,
+      articleTitle: article.title,
+      categoryName: articleCategoryName,
+    });
+  }
+}
+
+const productHelpLinks = Array.from(productHelpLinksMap.values()).sort((a, b) =>
+  a.name.localeCompare(b.name, locale === 'zh-cn' ? 'zh-CN' : 'en')
+);
+
+// 4. 每个分类内的文章按 sort 排序
+articlesByCategory.forEach((items) => {
+  items.sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
+});
+
+const breadcrumbItems = [
+  { label: t(messages, 'pageTitle.home'), href: '/' },
+  { label: t(messages, 'footer.support.helpCenter') },
+];
+const pageTitle = t(messages, 'footer.support.helpCenter');
+---
+
+<BaseLayout
+  title={pageTitle}
+  pageType="collection"
+  breadcrumbs={breadcrumbItems}
+  messages={messages}
+  locale={locale}
+>
+  <div class="container mx-auto px-4 py-8">
+    <Breadcrumb items={breadcrumbItems} locale={locale} />
+
+    <h1 class="text-4xl lg:text-5xl font-black mb-8">{pageTitle}</h1>
+
+    <!-- 搜索框 -->
+    <div class="mb-8">
+      <div class="relative max-w-2xl">
+        <input
+          type="text"
+          placeholder={t(messages, 'search.placeholder') || 'Search...'}
+          class="w-full px-4 py-3 pl-12 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+        />
+        <svg
+          class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+
+    {featuredArticles.length > 0 && (
+      <section class="mb-10">
+        <div class="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold">{t(messages, 'helpCenter.featuredTitle')}</h2>
+            <p class="mt-1 text-sm text-gray-600">{t(messages, 'helpCenter.featuredDescription')}</p>
+          </div>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {featuredArticles.map((article) => {
+            const articleCategorySlug = article.help_category?.slug ?? 'uncategorized';
+            const articleHref = toHref(`/help/${articleCategorySlug}/${article.slug}`, locale);
+            return (
+              <a
+                href={articleHref}
+                class="group rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-sm"
+              >
+                {article.help_category?.name && (
+                  <div class="mb-3">
+                    <span class="inline-flex rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600">
+                      {article.help_category.name}
+                    </span>
+                  </div>
+                )}
+                <h3 class="text-lg font-semibold text-gray-900 transition-colors group-hover:text-orange-500">
+                  {article.title}
+                </h3>
+                {article.description && (
+                  <p class="mt-2 text-sm leading-6 text-gray-600">{article.description}</p>
+                )}
+                <div class="mt-4 text-sm font-medium text-cyan-600 transition-colors group-hover:text-orange-500">
+                  {t(messages, 'helpCenter.openArticle')}
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </section>
+    )}
+
+    {productHelpLinks.length > 0 && (
+      <section class="mb-10 rounded-2xl bg-gray-50 px-5 py-6">
+        <div class="mb-4">
+          <h2 class="text-2xl font-bold">{t(messages, 'helpCenter.browseByProductTitle')}</h2>
+          <p class="mt-1 text-sm text-gray-600">{t(messages, 'helpCenter.browseByProductDescription')}</p>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {productHelpLinks.map((item) => (
+            <a
+              href={item.href}
+              class="rounded-xl border border-gray-200 bg-white px-4 py-4 transition-colors hover:border-orange-300 hover:bg-orange-50/30"
+            >
+              <div class="text-sm font-semibold text-gray-900">{item.name}</div>
+              <div class="mt-1 text-xs text-gray-500">{item.articleTitle}</div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- 分类标签 -->
+    <div class="mb-8 flex flex-wrap gap-2 pb-4">
+      <a
+        href={toHref('/help', locale)}
+        class="px-4 py-2 text-sm font-medium hover:text-orange-500 border-b-2 border-orange-500 transition-colors"
+      >
+        {t(messages, 'common.all')}
+      </a>
+      {activeCategories.map((cat) => (
+        <a
+          href={toHref(`/help/${cat.slug}`, locale)}
+          class="px-4 py-2 text-sm font-medium hover:text-orange-500 transition-colors"
+        >
+          {cat.name}
+        </a>
+      ))}
+    </div>
+
+    <!-- FAQ 列表：按分类分组 -->
+    <div class="space-y-12">
+      {activeCategories.map((category) => {
+        const categoryArticles = articlesByCategory.get(category.slug) ?? [];
+        if (categoryArticles.length === 0) return null;
+
+        return (
+          <section>
+            <h2 class="text-2xl font-bold mb-4">{category.name}</h2>
+            <ul class="space-y-2">
+              {categoryArticles.map((article) => {
+                const articleHref = toHref(`/help/${category.slug}/${article.slug}`, locale);
+                return (
+                  <li>
+                    <a
+                      href={articleHref}
+                      class="text-cyan-600 hover:text-orange-500 hover:underline transition-colors block py-1"
+                    >
+                      {article.title}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
+
+      <!-- 未分类的文章 -->
+      {articlesByCategory.has('uncategorized') && articlesByCategory.get('uncategorized')!.length > 0 && (
+        <section>
+          <h2 class="text-2xl font-bold mb-4">{t(messages, 'helpCenter.other')}</h2>
+          <ul class="space-y-2">
+            {articlesByCategory.get('uncategorized')!.map((article) => {
+              const articleHref = toHref(`/help/uncategorized/${article.slug}`, locale);
+              return (
+                <li>
+                  <a
+                    href={articleHref}
+                    class="text-cyan-600 hover:text-orange-500 hover:underline transition-colors block py-1"
+                  >
+                    {article.title}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+    </div>
+  </div>
+</BaseLayout>

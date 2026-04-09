@@ -23,11 +23,24 @@ const messages = await loadMessages(locale);
 
 const supportRes = await fetchApiWithLocaleFallback<{ data: SupportAttributes | null }>(api.support, {
   locale,
-  populate: { module: { populate: { cover: true } } },
+  populate: {
+    module: { populate: { cover: true } },
+    seo: {
+      populate: {
+        metaImage: true,
+        ogImage: true,
+        twitterImage: true,
+      },
+    },
+  },
 });
 const rawModules = supportRes?.data?.module ?? [];
 const supportCards = [...rawModules]
   .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
+  .map((m) => {
+    const normalizedUrl = (m.url ?? '').replace(/^\/support\/help(?=\/|$)/, '/help');
+    return { ...m, url: normalizedUrl };
+  })
   .map((m) => ({
     insight: {
       title: m.title ?? '',
@@ -46,6 +59,9 @@ const pageTitle = supportRes?.data?.title ?? t(messages, 'footer.support.title')
 
 <BaseLayout
   title={pageTitle}
+  seo={supportRes?.data?.seo}
+  pageType="collection"
+  breadcrumbs={breadcrumbItems}
   messages={messages}
   locale={locale}
 >

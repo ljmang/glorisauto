@@ -1,224 +1,42 @@
 ---
-/**
- * 帮助中心文章详情页：文章内容 + 相关产品和文章
- */
-import BaseLayout from '@/layouts/BaseLayout.astro';
-import { supportedLocales, type Locale, getLocale, defaultLocale } from '@/i18n/config';
-import { loadMessages, t } from '@/i18n';
-import { fetchApi, api, parseImage } from '@/utils/strapiApi';
+import { getLocale, supportedLocales, type Locale } from '@/i18n/config';
+import { fetchApi, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
-import Breadcrumb from '@/components/Breadcrumb.astro';
-import BlocksRenderer from '@/components/BlocksRenderer.astro';
-import ProductCard from '@/components/ProductCard.astro';
-import InsightCard from '@/components/InsightCard.astro';
-import { Image } from 'astro:assets';
-import type { HelpCategoryAttributes, HelpCenterAttributes, ProductAttributes, InsightAttributes } from '@/types/content';
-import type { BlockNode, ImageNode } from '@/types/blocks';
+import type { HelpCenterAttributes } from '@/types/content';
 
 export async function getStaticPaths() {
-  // 获取所有 help-center 文章（用默认语言）
-  const articlesRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
-    locale: defaultLocale,
-    populate: { help_category: true },
-    pagination: { pageSize: 500 },
-  });
-  const articles = articlesRes?.data ?? [];
-
-  return supportedLocales.flatMap((locale) =>
-    articles
-      .filter((article) => article.help_category?.slug && article.slug)
-      .map((article) => ({
-        params: {
-          locale,
-          category: article.help_category!.slug!,
-          slug: article.slug,
-        },
-      }))
-  );
+  const paths: { params: { locale: string; category: string; slug: string } }[] = [];
+  for (const locale of supportedLocales) {
+    const res = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
+      locale,
+      populate: { help_category: true },
+      pagination: { pageSize: 500 },
+    });
+    const articles = Array.isArray(res?.data) ? res.data : [];
+    for (const article of articles) {
+      const categorySlug = article.help_category?.slug;
+      if (categorySlug && article.slug) {
+        paths.push({
+          params: {
+            locale,
+            category: categorySlug,
+            slug: article.slug,
+          },
+        });
+      }
+    }
+  }
+  return paths;
 }
 
 const params = Astro.params as { locale?: string; category?: string; slug?: string };
 const locale: Locale = getLocale(params.locale);
-const categorySlug = params.category ?? '';
-const articleSlug = params.slug ?? '';
-const messages = await loadMessages(locale);
+const category = params.category ?? '';
+const slug = params.slug ?? '';
 
-// 1. 获取所有分类（用于分类标签）
-const categoriesRes = await fetchApi<{ data?: HelpCategoryAttributes[] }>(api.helpCategories, {
-  locale,
-  pagination: { pageSize: 100 },
-});
-const categories = (categoriesRes?.data ?? []).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
-
-// 2. 获取当前文章（populate help_category, products, articles）
-const articleRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
-  locale,
-  populate: {
-    help_category: true,
-    products: { populate: { images: true, category: true } },
-    articles: { populate: { cover: true } },
-  },
-  filters: {
-    $and: [
-      { help_category: { slug: { $eq: categorySlug } } },
-      { slug: { $eq: articleSlug } },
-    ],
-  },
-});
-const article = articleRes?.data?.[0];
-
-if (!article) {
-  return Astro.redirect(toHref('/support/help', locale));
+if (!category || !slug) {
+  return Astro.redirect(toHref('/help', locale), 301);
 }
 
-const categoryName = article.help_category?.name ?? categorySlug;
-
-// 3. 从 content blocks 中提取第一张图片作为配图
-function extractFirstImage(blocks: BlockNode[] | null | undefined): ImageNode | null {
-  if (!blocks || !Array.isArray(blocks)) return null;
-  for (const block of blocks) {
-    if (block.type === 'image' && 'image' in block) {
-      return block as ImageNode;
-    }
-    if (block.children && Array.isArray(block.children)) {
-      const found = extractFirstImage(block.children);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-const coverImageNode = extractFirstImage(article.content);
-const coverImage = coverImageNode?.image ? parseImage(coverImageNode.image) : null;
-
-// 4. 相关产品和文章
-const relatedProducts = (article as { products?: ProductAttributes[] })?.products ?? [];
-const relatedArticles = (article as { articles?: InsightAttributes[] })?.articles ?? [];
-
-const breadcrumbItems = [
-  { label: t(messages, 'pageTitle.home'), href: '/' },
-  { label: t(messages, 'footer.support.title'), href: '/support' },
-  { label: t(messages, 'footer.support.helpCenter'), href: '/support/help' },
-  { label: categoryName, href: `/support/help/${categorySlug}` },
-  { label: article.title },
-];
-const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')}`;
+return Astro.redirect(toHref(`/help/${category}/${slug}`, locale), 301);
 ---
-
-<BaseLayout title={pageTitle} messages={messages} locale={locale}>
-  <div class="container mx-auto px-4 py-8">
-    <Breadcrumb items={breadcrumbItems} locale={locale} />
-
-    <!-- 顶部：标题、搜索框、分类标签 -->
-    <div class="mb-8">
-      <h1 class="text-2xl lg:text-3xl font-black mb-6">{t(messages, 'footer.support.helpCenter')}</h1>
-
-      <!-- 搜索框 -->
-      <div class="mb-6">
-        <div class="relative max-w-2xl">
-          <input
-            type="text"
-            placeholder={t(messages, 'search.placeholder') || 'Search...'}
-            class="w-full px-4 py-3 pl-12 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          />
-          <svg
-            class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-      </div>
-
-      <!-- 分类标签 -->
-      <div class="flex flex-wrap gap-2 border-b border-gray-200 pb-4">
-        <a
-          href={toHref('/support/help', locale)}
-          class="px-4 py-2 text-sm font-medium hover:text-orange-500 transition-colors"
-        >
-          {t(messages, 'common.all')}
-        </a>
-        {categories.map((cat) => {
-          const isActive = cat.slug === categorySlug;
-          return (
-            <a
-              href={toHref(`/support/help/${cat.slug}`, locale)}
-              class={`px-4 py-2 text-sm font-medium transition-colors ${
-                isActive
-                  ? 'text-orange-500 border-b-2 border-orange-500'
-                  : 'hover:text-orange-500'
-              }`}
-            >
-              {cat.name}
-            </a>
-          );
-        })}
-      </div>
-    </div>
-
-    <!-- 文章内容 -->
-    <article class="max-w-4xl">
-      <!-- 文章标题 -->
-      <h2 class="text-4xl lg:text-5xl font-black mb-6">{article.title}</h2>
-
-      <!-- 文章配图 -->
-      {coverImage && coverImage.src && coverImage.width && coverImage.height && (
-        <div class="mb-8 w-full aspect-video overflow-hidden rounded-lg">
-          <Image
-            src={coverImage.src}
-            alt={coverImage.alt || article.title}
-            width={coverImage.width}
-            height={coverImage.height}
-            class="w-full h-full object-cover"
-            format="webp"
-            quality={85}
-            loading="eager"
-          />
-        </div>
-      )}
-
-      <!-- 文章正文 -->
-      {article.content && Array.isArray(article.content) && article.content.length > 0 && (
-        <div class="prose prose-lg max-w-none mb-12">
-          <BlocksRenderer blocks={article.content as BlockNode[]} />
-        </div>
-      )}
-    </article>
-
-    <!-- 相关产品 -->
-    {relatedProducts.length > 0 && (
-      <section class="mt-16 mb-12">
-        <h2 class="text-3xl font-bold mb-6">{t(messages, 'helpCenter.relatedProducts')}</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {relatedProducts.map((product) => (
-            <ProductCard product={product} locale={locale} />
-          ))}
-        </div>
-      </section>
-    )}
-
-    <!-- 相关文章 -->
-    {relatedArticles.length > 0 && (
-      <section class="mt-12 mb-12">
-        <h2 class="text-3xl font-bold mb-6">{t(messages, 'helpCenter.relatedArticles')}</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {relatedArticles.map((insight) => {
-            // 相关文章的链接：如果是 help-center 关联的，应该链接到 help center 文章
-            // 否则链接到 insights 详情页（包含分类 slug）
-            const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
-              ? (insight.insight_category as { slug?: string })
-              : null;
-            const categorySlug = category?.slug ?? '';
-            const insightHref = insight.slug
-              ? categorySlug
-                ? toHref(`/about/insights/${categorySlug}/${insight.slug}`, locale)
-                : toHref(`/about/insights/${insight.slug}`, locale)
-              : '#';
-            return <InsightCard insight={insight} locale={locale} href={insightHref} />;
-          })}
-        </div>
-      </section>
-    )}
-  </div>
-</BaseLayout>

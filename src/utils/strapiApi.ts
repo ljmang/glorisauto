@@ -143,9 +143,9 @@ export function parseImageUrls(field: unknown): string[] {
 
 export const api = {
   home: 'home',
-  aboutUs: 'about-uses',
-  brandStory: 'brand-stories',
-  becomeDealer: 'become-dealers',
+  aboutUs: 'about-us',
+  brandStory: 'brand-story',
+  becomeDealer: 'become-dealer',
   contactUs: 'contact-uses',
   products: 'products',
   categories: 'categories',
@@ -158,9 +158,10 @@ export const api = {
   downloadFiles: 'download-files',
   trainings: 'trainings',
   productionBases: 'production-bases',
-  navigations: 'navigations',
+  navigation: 'navigation',
   fileCategories: 'flie-categories',
   support: 'support',
+  siteSeo: 'site-seo',
 } as const;
 
 export function byId(collection: string, id: string | number): string {

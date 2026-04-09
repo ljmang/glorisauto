@@ -1,7 +1,15 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { supportedLocales, type Locale } from '@/i18n/config';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import InsightCard from '@/components/InsightCard.astro';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
+import { fetchApiWithLocaleFallback, api, parseImage } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import type { AboutUsAttributes, InsightAttributes } from '@/types/content';
+import type { StrapiResponse } from '@/types';
+import { Image } from 'astro:assets';
+import { CircleChevronRight, Phone, Mail } from 'lucide-svelte';
 
 export async function getStaticPaths() {
   return supportedLocales.map((locale) => ({
@@ -13,15 +21,306 @@ interface Props {
   locale: Locale;
 }
 
-const { locale } = Astro.params;
+const params = Astro.params as { locale?: string };
+const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
+
+// 并行获取 about-us 和 insights 数据
+const [aboutUsRes, insightsRes] = await Promise.all([
+  fetchApiWithLocaleFallback<StrapiResponse<AboutUsAttributes>>(api.aboutUs, {
+    locale,
+    populate: {
+      heroMedia: true,
+      seo: {
+        populate: {
+          metaImage: true,
+          ogImage: true,
+          twitterImage: true,
+        },
+      },
+      insights: { populate: { cover: true, insight_category: true } },
+    },
+  }),
+  fetchApiWithLocaleFallback<{ data?: InsightAttributes[] }>(api.insights, {
+    locale,
+    populate: { cover: true, insight_category: true },
+    pagination: { pageSize: 100 },
+  }),
+]);
+
+// 处理 about-us 数据（单类型）
+const aboutUs = aboutUsRes?.data;
+const heroMedia = aboutUs ? parseImage(aboutUs.heroMedia) : null;
+
+// 获取关联的文章（从about-us的insights字段）
+const relatedArticles = aboutUs?.insights || [];
+
+// 处理 insights 数据：按发布时间降序排序，取最新的3条
+const allInsights = Array.isArray(insightsRes?.data) ? insightsRes.data : [];
+const latestInsights = allInsights
+  .filter((insight) => insight.publishedAt)
+  .sort((a, b) => {
+    const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+    const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+    return dateB - dateA;
+  })
+  .slice(0, 3);
+
+const breadcrumbItems = [
+  { label: t(messages, 'pageTitle.home'), href: '/' },
+  { label: t(messages, 'pageTitle.about'), href: undefined },
+];
+
+// 后端无 googleMaps 时使用默认广州
+const defaultMapEmbedUrl = 'https://maps.google.com/maps?q=23.1291,113.2644&z=12&output=embed';
+const defaultMapLinkUrl = 'https://www.google.com/maps?q=23.1291,113.2644';
+
+const googleMaps = aboutUs?.googleMaps?.trim() || '';
+const mapLinkUrl = googleMaps || defaultMapLinkUrl;
+// 打开链接转成 iframe 嵌入地址：加 output=embed，域名用 maps.google.com
+const mapEmbedUrl = googleMaps
+  ? googleMaps.includes('output=embed')
+    ? googleMaps
+    : `https://maps.google.com/maps?${new URL(googleMaps).searchParams.toString()}&z=12&output=embed`
+  : defaultMapEmbedUrl;
 ---
 
-<BaseLayout title={t(messages, 'pageTitle.about')} messages={messages} locale={locale}>
-	<div class="container mx-auto px-4 py-12 max-w-4xl">
-		<h1 class="text-4xl font-bold text-gray-900 mb-8">{t(messages, 'pageTitle.about')}</h1>
-		<div class="prose prose-lg">
-			<p class="text-gray-700">关于我们内容...</p>
-		</div>
-	</div>
+<BaseLayout
+  title={t(messages, 'pageTitle.about')}
+  description={aboutUs?.description}
+  image={aboutUs?.heroMedia}
+  seo={aboutUs?.seo}
+  pageType="about"
+  breadcrumbs={breadcrumbItems}
+  messages={messages}
+  locale={locale}
+>
+  {aboutUs && (
+    <>
+      <!-- 面包屑导航 -->
+      <div class="container mx-auto px-4 pt-4 pb-2">
+        <Breadcrumb items={breadcrumbItems} locale={locale} />
+      </div>
+
+      <!-- 1. 顶部：品牌故事介绍 - 全宽背景图，白色半透明框 -->
+      {heroMedia && heroMedia.src && (
+        <section class="relative container mx-auto px-4 min-h-[600px]">
+          <Image
+            src={heroMedia.src}
+            alt={heroMedia.alt || aboutUs.title || t(messages, 'pageTitle.about')}
+            width={heroMedia.width || 2720}
+            height={heroMedia.height || 1120}
+            class="w-full h-full object-cover absolute inset-0"
+            format="webp"
+            quality={85}
+            loading="eager"
+          />
+          <!-- 白色半透明内容框 -->
+          <div class="absolute bottom-0 left-0 right-0 lg:left-8 lg:right-auto lg:w-[640px] bg-white/95 p-8 lg:p-12">
+            {aboutUs.title && (
+              <h1 class="text-3xl lg:text-4xl font-bold  mb-3">
+                {aboutUs.title}
+              </h1>
+            )}
+            {aboutUs.subTitle && (
+              <h2 class="text-xl lg:text-2xl font-semibold  mb-4">
+                {aboutUs.subTitle}
+              </h2>
+            )}
+            {aboutUs.description && (
+              <p class="text-base lg:text-lg  mb-6 leading-relaxed">
+                {aboutUs.description}
+              </p>
+            )}
+            <a
+              href={toHref('/about/insights/news/brand-story', locale)}
+              class="inline-flex items-center gap-2 text-cyan-600 hover:text-orange-600 transition-colors font-semibold"
+            >
+              {t(messages, 'common.readMore')}
+              <CircleChevronRight class="w-4 h-4" />
+            </a>
+          </div>
+        </section>
+      )}
+
+      <div class="container mx-auto px-4 py-12 lg:py-16">
+        <!-- 2. 中间：关联的文章 -->
+        {relatedArticles.length > 0 && (
+          <section class="mb-16 lg:mb-20 space-y-16 lg:space-y-20">
+            {relatedArticles.slice(0, 2).map((article, index) => {
+              const coverImage = parseImage(article.cover || (article as { coverImage?: unknown }).coverImage);
+              const isEven = index % 2 === 0;
+              const category = article.insight_category && typeof article.insight_category === 'object' && 'slug' in article.insight_category
+                ? article.insight_category
+                : null;
+              const categorySlug = category?.slug ?? '';
+              const href = categorySlug && article.slug
+                ? toHref(`/about/insights/${categorySlug}/${article.slug}`, locale)
+                : toHref(`/about/insights/${article.slug}`, locale);
+
+              return (
+                <div class={`grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center ${!isEven ? 'lg:flex-row-reverse' : ''}`}>
+                  <!-- 图片 -->
+                  {coverImage && coverImage.src && coverImage.width && coverImage.height ? (
+                    <div class={isEven ? 'order-1' : 'order-2'}>
+                      <Image
+                        src={coverImage.src}
+                        alt={coverImage.alt || article.title}
+                        width={coverImage.width}
+                        height={coverImage.height}
+                        class="w-full h-auto object-cover"
+                        format="webp"
+                        quality={85}
+                        loading="lazy"
+                      />
+                    </div>
+                  ) : null}
+                  
+                  <!-- 内容 -->
+                  <div class={isEven ? 'order-2' : 'order-1'}>
+                    <h3 class="text-2xl lg:text-3xl font-bold  mb-4">
+                      {article.title}
+                    </h3>
+                    {(article.description || article.excerpt) && (
+                      <p class="text-base lg:text-lg  mb-6 leading-relaxed">
+                        {article.description || article.excerpt}
+                      </p>
+                    )}
+                    <a
+                      href={href}
+                      class="inline-flex items-center gap-2 text-cyan-600 hover:text-orange-600 transition-colors font-semibold"
+                    >
+                      {t(messages, 'common.readMore')}
+                      <CircleChevronRight class="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+        )}
+
+        <!-- 3. 联系我们 -->
+        {aboutUs.contactGlorisTitle && (
+          <section class="mb-16 lg:mb-20">
+            <h2 class="text-3xl lg:text-4xl font-bold  mb-8">
+              {aboutUs.contactGlorisTitle}
+            </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+              <!-- 左侧：联系信息 -->
+              <div class="space-y-6">
+                {aboutUs.messageTitle && (
+                  <div>
+                    <h3 class="text-xl font-bold  mb-2">
+                      {aboutUs.messageTitle}
+                    </h3>
+                    {aboutUs.messageDescription && (
+                      <p class=" mb-3">
+                        {aboutUs.messageDescription}
+                      </p>
+                    )}
+                    <a
+                      href={toHref('/contact', locale)}
+                      class="inline-flex items-center gap-2 text-cyan-600 hover:text-orange-600 transition-colors font-semibold"
+                    >
+                      {aboutUs.messageButton || t(messages, 'common.readMore')}
+                      <CircleChevronRight class="w-4 h-4" />
+                    </a>
+                  </div>
+                )}
+
+                {aboutUs.phoneTitle && (
+                  <div>
+                    <h3 class="text-xl font-bold  mb-2">
+                      {aboutUs.phoneTitle}
+                    </h3>
+                    {aboutUs.phoneDescription && (
+                      <p class=" mb-1">
+                        {aboutUs.phoneDescription}
+                      </p>
+                    )}
+                    {aboutUs.phoneNumber && (
+                      <p class=" mb-1">
+                        <a href={`tel:${aboutUs.phoneNumber}`} class="hover:text-orange-600 flex items-center gap-2">
+                          <Phone class="w-4 h-4" />
+                          {aboutUs.phoneNumber}
+                        </a>
+                      </p>
+                    )}
+                    {aboutUs.phoneEmail && (
+                      <p class="">
+                        <a href={`mailto:${aboutUs.phoneEmail}`} class="hover:text-orange-600 flex items-center gap-2">
+                          <Mail class="w-4 h-4" />
+                          {aboutUs.phoneEmail}
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {aboutUs.addressTitle && (
+                  <div>
+                    <h3 class="text-xl font-bold  mb-2">
+                      {aboutUs.addressTitle}
+                    </h3>
+                    {aboutUs.addressDescription && (
+                      <p class="">
+                        {aboutUs.addressDescription}
+                      </p>
+                    )}
+                    <a
+                      href={mapLinkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-block mt-3 text-cyan-600 hover:text-orange-600 transition-colors"
+                    >
+                      View on Google Map
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              <!-- 右侧：Google 地图（默认广州） -->
+              <div class="w-full h-[400px] rounded-lg overflow-hidden bg-gray-200">
+                <iframe
+                  src={mapEmbedUrl}
+                  width="100%"
+                  height="100%"
+                  style="border:0;"
+                  allowfullscreen
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  title="Google Map - Guangzhou"
+                ></iframe>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <!-- 4. 最新文章 -->
+        {latestInsights.length > 0 && (
+          <section class="mt-16 pt-16 border-t border-gray-200">
+            <div class="flex items-center justify-between mb-8">
+              <h2 class="text-3xl lg:text-4xl font-bold ">
+                {t(messages, 'footer.about.insights')}
+              </h2>
+              <a
+                href={toHref('/about/insights', locale)}
+                class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+              >
+                {t(messages, 'common.viewAll')}
+                <CircleChevronRight class="w-4 h-4" />
+              </a>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {latestInsights.map((insight) => (
+                <InsightCard insight={insight} locale={locale} />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    </>
+  )}
 </BaseLayout>

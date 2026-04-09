@@ -1,20 +1,28 @@
-# Cloudflare Pages Redirects Configuration
-# Format: from_path to_path status_code
+# Cloudflare Pages redirects
+# Keep default-language shortcuts working for top-level entry URLs.
 
-# 根路径重定向到默认语言 (en)
 / /en 302
-
-# 主要路由重定向到默认语言版本
 /about /en/about 302
 /products /en/products 302
-/insights /en/insights 302
 /support /en/support 302
+/help /en/help 302
+/top-brands /en/products 302
 /privacy-policy /en/privacy-policy 302
+/cookie-preferences /en/cookie-preferences 302
 /thank-you /en/thank-you 302
 
-# 子路由重定向（通配符匹配）
+/en/top-brands /en/products 302
+/en/top-brands/* /en/products 302
+/zh-cn/top-brands /zh-cn/products 302
+/zh-cn/top-brands/* /zh-cn/products 302
+
+# Legacy insights shortcuts.
+/insights /en/about/insights 301
+/insights/* /en/about/insights/:splat 301
+
+# Section-level fallbacks.
 /about/* /en/about/:splat 302
 /products/* /en/products/:splat 302
-/insights/* /en/insights/:splat 302
 /support/* /en/support/:splat 302
 /help/* /en/help/:splat 302
+/top-brands/* /en/products 302

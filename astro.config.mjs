@@ -1,14 +1,18 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import svelte from '@astrojs/svelte';
+import node from '@astrojs/node';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const isPagesStatic = process.env.BUILD_TARGET === 'pages';
 
 // https://astro.build/config
 export default defineConfig({
+  output: isPagesStatic ? 'static' : 'server',
+  ...(isPagesStatic ? {} : { adapter: node({ mode: 'standalone' }) }),
   integrations: [svelte()],
   vite: {
     plugins: [tailwindcss()],
@@ -19,9 +23,7 @@ export default defineConfig({
     },
   },
   image: {
-    // 允许优化的远程图片域名
     domains: ['assets.glorisauto.com'],
-    // 远程图片配置
     remotePatterns: [
       {
         protocol: 'https',

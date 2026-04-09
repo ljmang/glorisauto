@@ -1,0 +1,60 @@
+/**
+ * 与 insights [slug].astro 一致的 Markdown 处理（unified + remark/rehype）
+ * 供品牌故事、洞察文章等页面复用
+ */
+
+/** 将 markdown 转为 HTML，使用与 Astro 一致的 remark/rehype 管道 */
+export async function markdownToHtml(markdown: string | null | undefined): Promise<string> {
+  if (!markdown) return '';
+  const { unified } = await import('unified');
+  const { default: remarkParse } = await import('remark-parse');
+  const { default: remarkRehype } = await import('remark-rehype');
+  const { default: rehypeStringify } = await import('rehype-stringify');
+  const { default: remarkGfm } = await import('remark-gfm');
+  const { default: rehypeSlug } = await import('rehype-slug');
+
+  const result = await unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkRehype, { allowDangerousHtml: false })
+    .use(rehypeSlug)
+    .use(rehypeStringify)
+    .process(markdown);
+
+  return String(result);
+}
+
+export interface TOCItem {
+  id: string;
+  text: string;
+  level: 2 | 3;
+}
+
+/** 从渲染后的 HTML 中提取 h2/h3 作为目录 */
+export function extractTOCFromHtml(html: string): TOCItem[] {
+  const tocItems: TOCItem[] = [];
+  const h2Regex = /<h2[^>]*id="([^"]+)"[^>]*>(.*?)<\/h2>/gi;
+  const h3Regex = /<h3[^>]*id="([^"]+)"[^>]*>(.*?)<\/h3>/gi;
+
+  let match;
+  while ((match = h2Regex.exec(html)) !== null) {
+    const id = match[1];
+    const text = match[2].replace(/<[^>]+>/g, '').trim();
+    if (id && text) tocItems.push({ id, text, level: 2 });
+  }
+  while ((match = h3Regex.exec(html)) !== null) {
+    const id = match[1];
+    const text = match[2].replace(/<[^>]+>/g, '').trim();
+    if (id && text) tocItems.push({ id, text, level: 3 });
+  }
+  return tocItems;
+}
+
+/** 渲染 markdown 并返回 HTML + 目录（供 insights [slug].astro 使用） */
+export async function renderMarkdownWithTOC(
+  markdown: string | null | undefined
+): Promise<{ html: string; toc: TOCItem[] }> {
+  const html = await markdownToHtml(markdown);
+  const toc = extractTOCFromHtml(html);
+  return { html, toc };
+}

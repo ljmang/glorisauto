@@ -9,18 +9,77 @@ const STRAPI_LOCALE_MAP: Record<string, string> = {
   'zh-cn': 'zh',
 };
 
+type CacheEntry = {
+  expiresAt: number;
+  value: unknown;
+};
+
+const responseCache = new Map<string, CacheEntry>();
+const inFlightRequests = new Map<string, Promise<unknown>>();
+
 function toStrapiLocale(locale: string | undefined): string | undefined {
   if (!locale) return undefined;
   return STRAPI_LOCALE_MAP[locale] ?? locale;
 }
 
 const getBase = (): string => {
+  if (
+    import.meta.env.SSR &&
+    typeof process !== 'undefined' &&
+    typeof process.env.STRAPI_INTERNAL_URL === 'string' &&
+    process.env.STRAPI_INTERNAL_URL
+  ) {
+    return process.env.STRAPI_INTERNAL_URL.replace(/\/$/, '');
+  }
+
   const url = import.meta.env.PUBLIC_STRAPI_URL;
   if (!url || typeof url !== 'string') {
     throw new Error('PUBLIC_STRAPI_URL is not set');
   }
   return url.replace(/\/$/, '');
 };
+
+const getFetchTimeoutMs = (): number => {
+  const raw = import.meta.env.STRAPI_FETCH_TIMEOUT_MS;
+  const value = Number(raw);
+  if (Number.isFinite(value) && value > 0) return value;
+  return 30000;
+};
+
+const getCacheTtlMs = (): number => {
+  if (
+    import.meta.env.SSR &&
+    typeof process !== 'undefined' &&
+    typeof process.env.STRAPI_CACHE_TTL_MS === 'string'
+  ) {
+    const runtimeValue = Number(process.env.STRAPI_CACHE_TTL_MS);
+    if (Number.isFinite(runtimeValue) && runtimeValue >= 0) return runtimeValue;
+  }
+
+  const raw = import.meta.env.STRAPI_CACHE_TTL_MS;
+  const value = Number(raw);
+  if (Number.isFinite(value) && value >= 0) return value;
+  return import.meta.env.PROD ? 60000 : 0;
+};
+
+function getCachedValue<T>(key: string): T | null {
+  const entry = responseCache.get(key);
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    responseCache.delete(key);
+    return null;
+  }
+  return entry.value as T;
+}
+
+function setCachedValue<T>(key: string, value: T): void {
+  const ttl = getCacheTtlMs();
+  if (ttl <= 0) return;
+  responseCache.set(key, {
+    expiresAt: Date.now() + ttl,
+    value,
+  });
+}
 
 /** API 根地址，例如 https://admin.glorisauto.com/api */
 export function getStrapiUrl(): string {
@@ -131,31 +190,68 @@ export async function fetchApi<T = unknown>(
     setFilterParams(filters as Record<string, unknown>, 'filters');
   }
 
-  const res = await fetch(url.toString(), {
-    headers: { Accept: 'application/json', ...customHeaders },
-  });
+  const requestKey = url.toString();
+  const cached = getCachedValue<T>(requestKey);
+  if (cached !== null) {
+    return cached;
+  }
 
-  // 检查响应内容类型
-  const contentType = res.headers.get('content-type') || '';
-  let body: T;
-  
-  if (contentType.includes('application/json')) {
+  const existingRequest = inFlightRequests.get(requestKey);
+  if (existingRequest) {
+    return existingRequest as Promise<T>;
+  }
+
+  const requestPromise = (async (): Promise<T> => {
+    const controller = new AbortController();
+    const timeoutMs = getFetchTimeoutMs();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let res: Response;
     try {
-      body = (await res.json()) as T;
+      res = await fetch(requestKey, {
+        headers: { Accept: 'application/json', ...customHeaders },
+        signal: controller.signal,
+      });
     } catch (err) {
-      const text = await res.text();
-      throw new Error(`Strapi API ${res.status}: Failed to parse JSON response. Response: ${text.substring(0, 200)}`);
+      if (err instanceof Error && err.name === 'AbortError') {
+        throw new Error(`Strapi API timeout after ${timeoutMs}ms: ${requestKey}`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
     }
-  } else {
-    // 如果返回的不是 JSON（可能是 HTML 错误页面），尝试读取文本
-    const text = await res.text();
-    throw new Error(`Strapi API ${res.status}: Expected JSON but got ${contentType}. Response: ${text.substring(0, 200)}`);
-  }
 
-  if (!res.ok) {
-    if (res.status === 404) return body;
-    throw new Error(`Strapi API ${res.status}: ${res.statusText} - ${JSON.stringify(body)}`);
-  }
+    const contentType = res.headers.get('content-type') || '';
+    let body: T;
 
-  return body;
+    if (contentType.includes('application/json')) {
+      try {
+        body = (await res.json()) as T;
+      } catch (err) {
+        const text = await res.text();
+        throw new Error(`Strapi API ${res.status}: Failed to parse JSON response. Response: ${text.substring(0, 200)}`);
+      }
+    } else {
+      const text = await res.text();
+      throw new Error(`Strapi API ${res.status}: Expected JSON but got ${contentType}. Response: ${text.substring(0, 200)}`);
+    }
+
+    if (!res.ok) {
+      if (res.status === 404) {
+        setCachedValue(requestKey, body);
+        return body;
+      }
+      throw new Error(`Strapi API ${res.status}: ${res.statusText} - ${JSON.stringify(body)}`);
+    }
+
+    setCachedValue(requestKey, body);
+    return body;
+  })();
+
+  inFlightRequests.set(requestKey, requestPromise);
+
+  try {
+    return await requestPromise;
+  } finally {
+    inFlightRequests.delete(requestKey);
+  }
 }

@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Hero from "@/components/Hero.svelte";
-import { supportedLocales, type Locale } from "@/i18n/config";
+import { supportedLocales, type Locale, getLocale } from "@/i18n/config";
 import { loadMessages, t } from "@/i18n";
 import {
 	fetchApi,
@@ -26,7 +26,8 @@ export async function getStaticPaths() {
 }
 
 // 2. 从 params 获取 locale，并断言类型 (因为 params 默认是 string)
-const { locale } = Astro.params as { locale: Locale };
+const params = Astro.params as { locale?: string };
+const locale: Locale = getLocale(params.locale);
 
 const messages = await loadMessages(locale);
 
@@ -36,17 +37,34 @@ const homeData = await fetchApi<StrapiResponse<HomeAttributes>>(api.home, {
 	populate: {
 		heroMedia: true,
 		aboutGlorisCover: true,
+		seo: {
+			populate: {
+				metaImage: true,
+				ogImage: true,
+				twitterImage: true,
+			},
+		},
 		glorisNews: {
-			populate: "*", // 尝试 populate 组件内的所有字段
+			populate: {
+				cover: true,
+			},
 		},
 		products: {
-			populate: "*",
+			populate: {
+				images: true,
+				category: true,
+			},
 		},
 		insights: {
-			populate: "*",
+			populate: {
+				cover: true,
+				insight_category: true,
+			},
 		},
 		downloadFiles: {
-			populate: "*",
+			populate: {
+				file: true,
+			},
 		},
 	},
 });
@@ -70,10 +88,27 @@ type DownloadFileItem = {
 const downloadFileList = ((data.downloadFiles as DownloadFileItem[]) || []).filter(
 	(item) => item?.file?.url,
 );
+const homeProducts = (((data.products as (ProductAttributes & { sort?: number | null })[]) || [])
+	.map((product, index) => ({ product, index }))
+	.sort((a, b) => {
+		const aSort = a.product.sort;
+		const bSort = b.product.sort;
+		const aHasSort = typeof aSort === "number";
+		const bHasSort = typeof bSort === "number";
+
+		if (aHasSort && bHasSort && aSort !== bSort) return aSort - bSort;
+		if (aHasSort !== bHasSort) return aHasSort ? -1 : 1;
+		return a.index - b.index;
+	})
+	.map(({ product }) => product));
 ---
 
 <BaseLayout
 	title={t(messages, "pageTitle.home")}
+	description={data.heroDescription}
+	image={data.aboutGlorisCover ?? data.heroMedia}
+	seo={data.seo}
+	pageType="website"
 	messages={messages}
 	locale={locale}
 >

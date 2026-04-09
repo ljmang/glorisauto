@@ -18,13 +18,14 @@ interface Props {
 const { locale } = Astro.params;
 const messages = await loadMessages(locale);
 const searchIndex = await generateSearchIndex(locale);
-
-// 从 URL 参数获取搜索关键词
-const url = new URL(Astro.request.url);
-const query = url.searchParams.get('q') || '';
 ---
 
-<BaseLayout title={`${t(messages, 'pageTitle.search')} - ${query || ''}`} messages={messages} locale={locale}>
+<BaseLayout
+  title={t(messages, 'pageTitle.search')}
+  seo={{ hideFromSearch: true }}
+  messages={messages}
+  locale={locale}
+>
 	<div class="container mx-auto px-4 py-12 max-w-4xl">
 		<h1 class="text-4xl font-bold text-gray-900 mb-8">{t(messages, 'pageTitle.search')}</h1>
 		
@@ -32,7 +33,7 @@ const query = url.searchParams.get('q') || '';
 			<SearchResults 
 				client:load
 				searchIndex={searchIndex}
-				initialQuery={query}
+				initialQuery=""
 				locale={locale}
 				messages={messages}
 			/>

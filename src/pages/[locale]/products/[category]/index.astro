@@ -32,14 +32,25 @@ const categorySlug = params.category ?? '';
 const messages = await loadMessages(locale);
 
 // 分类列表并构建树
-const categoriesRes = await fetchApi<{ data?: (CategoryAttributes & { parentID?: number | null; sort?: number })[] }>(api.categories, {
+const categoriesRes = await fetchApi<{ data?: CategoryAttributes[] }>(api.categories, {
   locale,
+  populate: {
+    parent: true,
+    seo: {
+      populate: {
+        metaImage: true,
+        ogImage: true,
+        twitterImage: true,
+      },
+    },
+  },
   pagination: { pageSize: 100 },
 });
 const categories = Array.isArray(categoriesRes?.data) ? categoriesRes.data : [];
 const categoryTree = buildCategoryTree(categories);
 const currentCategory = categories.find((c) => c.slug === categorySlug);
 const categoryName = currentCategory?.name ?? categorySlug;
+const categoryDescription = currentCategory?.description?.trim() ?? "";
 
 // 若当前是一级分类（有子分类），则展示该一级 + 其下全部二级分类的产品；否则只展示当前分类产品
 const rootWithSlug = categoryTree.find((r) => r.slug === categorySlug);
@@ -66,6 +77,10 @@ const allProductsLabel = t(messages, 'products.allProducts');
 
 <BaseLayout
   title={`${categoryName} - ${t(messages, 'pageTitle.products')}`}
+  description={categoryDescription}
+  seo={currentCategory?.seo}
+  pageType="collection"
+  breadcrumbs={breadcrumbItems}
   messages={messages}
   locale={locale}
 >
@@ -126,6 +141,9 @@ const allProductsLabel = t(messages, 'products.allProducts');
       <!-- 右侧：产品列表 -->
       <main class="flex-1 min-w-0 mb-12">
         <h1 class="text-4xl lg:text-5xl font-black mb-6">{categoryName}</h1>
+        {categoryDescription && (
+          <p class="text-base leading-7 text-gray-600 mb-8 whitespace-pre-line">{categoryDescription}</p>
+        )}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {products.length > 0 ? (
             products.map((product) => (

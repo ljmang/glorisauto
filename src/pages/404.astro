@@ -16,7 +16,7 @@ const locale = pathSegments.length > 0 && pathSegments[0] === detectedLocale
 const messages = await loadMessages(locale);
 ---
 
-<BaseLayout title={t(messages, 'error404.title')} messages={messages} locale={locale}>
+<BaseLayout title={t(messages, 'error404.title')} seo={{ hideFromSearch: true }} messages={messages} locale={locale}>
 	<div class="text-center py-20 px-4">
 		<div class="max-w-2xl mx-auto">
 			<h1 class="text-6xl font-bold text-gray-900 mb-4">404</h1>

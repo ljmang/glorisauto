@@ -2,6 +2,10 @@
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import { type Messages, type Locale } from '@/i18n';
+import type { SiteSeoAttributes } from '@/types/content';
+import type { StrapiResponse, StrapiSeo } from '@/types';
+import type { BreadcrumbMetaItem, JsonLdNode, SeoPageType } from '@/utils/seo';
+import { resolveSeoMeta } from '@/utils/seo';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
 import { transformNavigations } from '@/utils/navigationData';
 import '@/styles/global.css';
@@ -9,38 +13,140 @@ import '@/styles/global.css';
 interface Props {
   title?: string;
   description?: string;
+  image?: unknown;
   messages: Messages;
   locale: Locale;
+  seo?: StrapiSeo | null;
+  pageType?: SeoPageType;
+  breadcrumbs?: BreadcrumbMetaItem[];
+  jsonLd?: JsonLdNode | JsonLdNode[] | null;
+  publishedTime?: string;
+  modifiedTime?: string;
+  authorName?: string;
 }
 
-const { title = 'Astro', description = 'Astro website', messages, locale } = Astro.props;
+const {
+  title,
+  description,
+  image,
+  messages,
+  locale,
+  seo = null,
+  pageType,
+  breadcrumbs,
+  jsonLd = null,
+  publishedTime,
+  modifiedTime,
+  authorName,
+} = Astro.props;
 
-const navigationsRes = await fetchApiWithLocaleFallback<{ data?: unknown[] }>(api.navigations, { locale, populate: '*', pagination: { pageSize: 100 } });
-const navData = transformNavigations(navigationsRes, locale);
+type NavItem = ReturnType<typeof transformNavigations>;
 
-if (import.meta.env.DEV) {
-  console.log('[BaseLayout] locale=', locale, 'navData[0]?.label=', navData[0]?.label);
+async function getNavData(currentLocale: Locale): Promise<NavItem> {
+  const navigationsRes = await fetchApiWithLocaleFallback<{ data?: unknown }>(api.navigation, {
+    locale: currentLocale,
+    populate: {
+      items: {
+        populate: {
+          children: {
+            populate: {
+              children: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  return transformNavigations(navigationsRes, currentLocale);
 }
+
+async function getSiteSeo(currentLocale: Locale): Promise<SiteSeoAttributes | null> {
+  try {
+    const response = await fetchApiWithLocaleFallback<StrapiResponse<SiteSeoAttributes>>(api.siteSeo, {
+      locale: currentLocale,
+      populate: {
+        defaultShareImage: true,
+        companyLogo: true,
+        sameAsLinks: true,
+      },
+    });
+    return response?.data ?? null;
+  } catch (error) {
+    console.error('[BaseLayout] failed to load site SEO, falling back to page defaults:', error);
+    return null;
+  }
+}
+
+const [navData, siteSeo] = await Promise.all([getNavData(locale), getSiteSeo(locale)]);
+
+const resolvedSeo = resolveSeoMeta({
+  title,
+  description,
+  image,
+  seo,
+  siteSeo,
+  locale,
+  pathname: Astro.url.pathname,
+  currentOrigin: Astro.url.origin,
+  pageType,
+  breadcrumbs,
+  extraJsonLd: jsonLd,
+  publishedTime,
+  modifiedTime,
+  authorName,
+});
+
+const htmlLang = locale === 'zh-cn' ? 'zh-CN' : 'en';
+const ogLocale = locale === 'zh-cn' ? 'zh_CN' : 'en_US';
+const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'Gloris Auto';
 ---
 
 <!doctype html>
-<html lang={locale === 'zh-cn' ? 'zh-CN' : 'en'} class="scroll-smooth">
+<html lang={htmlLang} class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <meta name="description" content={description} />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content={resolvedSeo.viewport} />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="robots" content={resolvedSeo.robots} />
+    {resolvedSeo.description && <meta name="description" content={resolvedSeo.description} />}
+    {resolvedSeo.keywords && <meta name="keywords" content={resolvedSeo.keywords} />}
+    {siteSeo?.googleVerification && <meta name="google-site-verification" content={siteSeo.googleVerification} />}
+    {siteSeo?.bingVerification && <meta name="msvalidate.01" content={siteSeo.bingVerification} />}
+    <link rel="canonical" href={resolvedSeo.canonicalUrl} />
+    {resolvedSeo.alternates.map((alternate) => (
+      <link rel="alternate" hreflang={alternate.hrefLang} href={alternate.href} />
+    ))}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
+    <title>{resolvedSeo.title}</title>
+
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:locale" content={ogLocale} />
+    <meta property="og:type" content={resolvedSeo.ogType} />
+    <meta property="og:title" content={resolvedSeo.ogTitle} />
+    {resolvedSeo.ogDescription && <meta property="og:description" content={resolvedSeo.ogDescription} />}
+    <meta property="og:url" content={resolvedSeo.canonicalUrl} />
+    {resolvedSeo.ogImage && <meta property="og:image" content={resolvedSeo.ogImage} />}
+
+    <meta name="twitter:card" content={resolvedSeo.twitterCard} />
+    <meta name="twitter:title" content={resolvedSeo.twitterTitle} />
+    {resolvedSeo.twitterDescription && <meta name="twitter:description" content={resolvedSeo.twitterDescription} />}
+    {resolvedSeo.twitterImage && <meta name="twitter:image" content={resolvedSeo.twitterImage} />}
+
+    {pageType === 'article' && publishedTime && <meta property="article:published_time" content={publishedTime} />}
+    {pageType === 'article' && (modifiedTime || publishedTime) && (
+      <meta property="article:modified_time" content={modifiedTime || publishedTime} />
+    )}
+
+    {resolvedSeo.jsonLd.map((schema, index) => (
+      <script type="application/ld+json" set:html={JSON.stringify(schema)} data-schema={String(index)} />
+    ))}
   </head>
   <body class="min-h-screen flex flex-col bg-gray-50 font-sans font-normal tracking-tight antialiased">
     <Header messages={messages} locale={locale} navData={navData} />
     <main class="flex-1">
       <slot />
     </main>
-    <Footer messages={messages} locale={locale} />
+    <Footer messages={messages} locale={locale} navData={navData} />
   </body>
 </html>

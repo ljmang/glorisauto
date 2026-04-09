@@ -3,7 +3,7 @@
  * 对应各个 Content Type 的数据结构
  */
 
-import type { StrapiMedia, StrapiContent } from './strapi';
+import type { StrapiMedia, StrapiContent, StrapiLinkItem, StrapiSeo } from './strapi';
 import type { BlockNode, NewsItem } from './blocks';
 
 /** Home 页面内容类型 */
@@ -26,20 +26,45 @@ export interface HomeAttributes {
   products?: unknown[];
   insights?: unknown[];
   downloadFiles?: unknown[];
+  seo?: StrapiSeo | null;
 }
 
 export type HomeContent = StrapiContent<HomeAttributes>;
+
+export interface SiteSeoAttributes {
+  siteName?: string;
+  siteUrl?: string;
+  defaultTitle?: string;
+  titleTemplate?: string;
+  defaultDescription?: string;
+  defaultShareImage?: StrapiMedia | null;
+  defaultRobots?: string;
+  companyName?: string;
+  companyLogo?: StrapiMedia | null;
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  sameAsLinks?: StrapiLinkItem[];
+  defaultLocale?: string;
+  supportedLocales?: string[] | null;
+  googleVerification?: string;
+  bingVerification?: string;
+}
+
+export type SiteSeoContent = StrapiContent<SiteSeoAttributes>;
 
 /** Product 产品类型 */
 export interface ProductAttributes {
   name: string;
   slug: string;
   description?: string;
+  productFeatures?: string;
   shortDescription?: string;
   images?: StrapiMedia | StrapiMedia[];
   category?: unknown;
   price?: number;
   specifications?: Record<string, unknown>;
+  seo?: StrapiSeo | null;
 }
 
 export type ProductContent = StrapiContent<ProductAttributes>;
@@ -50,6 +75,13 @@ export interface CategoryAttributes {
   slug: string;
   description?: string;
   image?: StrapiMedia | null;
+  parent?: {
+    id?: number;
+    slug?: string;
+    name?: string;
+  } | null;
+  sort?: number;
+  seo?: StrapiSeo | null;
 }
 
 export type CategoryContent = StrapiContent<CategoryAttributes>;
@@ -60,6 +92,7 @@ export interface InsightCategoryAttributes {
   slug: string;
   description?: string;
   sort?: number;
+  seo?: StrapiSeo | null;
 }
 
 export type InsightCategoryContent = StrapiContent<InsightCategoryAttributes>;
@@ -76,6 +109,8 @@ export interface InsightAttributes {
   category?: unknown;
   insight_category?: InsightCategoryAttributes | null;
   publishedAt?: string;
+  updatedAt?: string;
+  seo?: StrapiSeo | null;
 }
 
 export type InsightContent = StrapiContent<InsightAttributes>;
@@ -93,6 +128,7 @@ export interface TopBrandAttributes {
   heroButtonUrl?: string;
   name?: string;
   description?: string;
+  seo?: StrapiSeo | null;
 }
 
 export type TopBrandContent = StrapiContent<TopBrandAttributes>;
@@ -130,11 +166,30 @@ export interface TopBrandDetailAttributes extends TopBrandAttributes {
   }[];
 }
 
-/** About Us 相关类型 */
+/** About Us 相关类型（与 Strapi about-us 单类型一致） */
 export interface AboutUsAttributes {
   title: string;
+  subTitle?: string;
+  description?: string;
+  heroMedia?: StrapiMedia | StrapiMedia[] | null;
   content?: string;
   coverImage?: StrapiMedia | null;
+  /** 关联的 insights 文章 */
+  insights?: InsightAttributes[];
+  /** Google 地图链接 */
+  googleMaps?: string | null;
+  /** 联系我们区块 */
+  contactGlorisTitle?: string;
+  messageTitle?: string;
+  messageDescription?: string;
+  messageButton?: string;
+  phoneTitle?: string;
+  phoneDescription?: string;
+  phoneNumber?: string;
+  phoneEmail?: string;
+  addressTitle?: string;
+  addressDescription?: string;
+  seo?: StrapiSeo | null;
 }
 
 export type AboutUsContent = StrapiContent<AboutUsAttributes>;
@@ -144,6 +199,42 @@ export interface BrandStoryAttributes extends AboutUsAttributes {
 }
 
 export type BrandStoryContent = StrapiContent<BrandStoryAttributes>;
+
+/** Become Dealer 成为经销商单类型（Strapi become-dealer） */
+export interface BecomeDealerFocusItem {
+  id?: number;
+  title?: string;
+  content?: BlockNode[];
+  url?: string | null;
+  /** 资质卡片图片 */
+  cover?: StrapiMedia | StrapiMedia[] | null;
+}
+
+export interface BecomeDealerAttributes {
+  title?: string;
+  heroMedia?: StrapiMedia | StrapiMedia[] | null;
+  joinUsTitle?: string;
+  yourName?: string;
+  yourEmail?: string;
+  country?: string;
+  yourPhone?: string;
+  message?: string;
+  customerServiceTitle?: string;
+  customerServicePhone?: string;
+  customerServiceEmail?: string;
+  customerServiceWhatsapp?: string;
+  customerServiceChat?: string;
+  addressTitle?: string;
+  addressContent?: string;
+  addressGoogleMaps?: string;
+  addressGoogleMapsUrl?: string;
+  advantagesTitle?: string;
+  focus?: BecomeDealerFocusItem[];
+  insights?: (InsightAttributes & { cover?: unknown })[];
+  seo?: StrapiSeo | null;
+}
+
+export type BecomeDealerContent = StrapiContent<BecomeDealerAttributes>;
 
 /** Contact Us 联系表单类型 */
 export interface ContactUsAttributes {
@@ -163,6 +254,7 @@ export interface DownloadFileAttributes {
   file?: StrapiMedia | null;
   category?: unknown;
   downloadCount?: number;
+  seo?: StrapiSeo | null;
 }
 
 export type DownloadFileContent = StrapiContent<DownloadFileAttributes>;
@@ -180,6 +272,7 @@ export interface SupportAttributes {
   title?: string;
   slug?: string;
   module?: SupportModuleItem[];
+  seo?: StrapiSeo | null;
 }
 
 export type SupportContent = StrapiContent<SupportAttributes>;
@@ -190,6 +283,7 @@ export interface HelpCategoryAttributes {
   slug: string;
   description?: string;
   sort?: number;
+  seo?: StrapiSeo | null;
 }
 
 export type HelpCategoryContent = StrapiContent<HelpCategoryAttributes>;
@@ -202,7 +296,11 @@ export interface HelpCenterAttributes {
   content?: BlockNode[];
   sort?: number;
   recommend?: boolean;
+  publishedAt?: string;
+  updatedAt?: string;
   help_category?: HelpCategoryAttributes | null;
+  products?: ProductAttributes[];
+  seo?: StrapiSeo | null;
 }
 
 export type HelpCenterContent = StrapiContent<HelpCenterAttributes>;

@@ -2,14 +2,80 @@
 import { type Messages, t } from '@/i18n';
 import { type Locale } from '@/i18n/config';
 import { Linkedin, Instagram, Facebook, Youtube } from '@/components/icons';
+import { toHref, type NavItem, type NavLink } from '@/utils/navigationData';
 
 interface Props {
   messages: Messages;
   locale: Locale;
+  navData?: NavItem[];
 }
 
-const { messages, locale } = Astro.props;
+type FooterSection = {
+  title: string;
+  links: NavLink[];
+};
+
+const { messages, locale, navData = [] } = Astro.props;
 const currentYear = new Date().getFullYear().toString();
+
+function linksFromNavItem(item: NavItem): NavLink[] {
+  if (Array.isArray(item.columns) && item.columns.length > 0) {
+    const links = item.columns
+      .map((column) => ({
+        label: column.title,
+        href: column.href || column.items[0]?.href || item.href,
+      }))
+      .filter((link): link is NavLink => Boolean(link.label && link.href));
+
+    if (links.length > 0) return links;
+  }
+
+  if (item.href) {
+    return [{ label: item.label, href: item.href }];
+  }
+
+  return [];
+}
+
+const fallbackSections: FooterSection[] = [
+  {
+    title: t(messages, 'footer.products.title'),
+    links: [
+      { label: t(messages, 'footer.products.abrasivePaper'), href: toHref('/products/abrasive-paper', locale) },
+      { label: t(messages, 'footer.products.films'), href: toHref('/products/films', locale) },
+      { label: t(messages, 'footer.products.compoundsPolishes'), href: toHref('/products/compounds-polishes', locale) },
+      { label: t(messages, 'footer.products.automotiveWindowFilm'), href: toHref('/products/automotive-window-film', locale) },
+      { label: t(messages, 'footer.products.paintProtectionFilms'), href: toHref('/products/paint-protection-films', locale) },
+    ],
+  },
+  {
+    title: t(messages, 'footer.support.title'),
+    links: [
+      { label: t(messages, 'footer.support.download'), href: toHref('/support/download', locale) },
+      { label: t(messages, 'footer.support.helpCenter'), href: toHref('/help', locale) },
+      { label: t(messages, 'footer.support.training'), href: toHref('/support/training', locale) },
+    ],
+  },
+  {
+    title: t(messages, 'footer.about.title'),
+    links: [
+      { label: t(messages, 'footer.about.brandStory'), href: toHref('/about/brand-story', locale) },
+      { label: t(messages, 'footer.about.productionBase'), href: toHref('/about/insights/news/our-factory', locale) },
+      { label: t(messages, 'footer.about.becomeDealer'), href: toHref('/about/dealer', locale) },
+      { label: t(messages, 'footer.about.contactUs'), href: toHref('/support/customer-service', locale) },
+      { label: t(messages, 'footer.about.insights'), href: toHref('/about/insights', locale) },
+    ],
+  },
+];
+
+const footerSections: FooterSection[] = navData.length > 0
+  ? navData
+      .map((item) => ({
+        title: item.label,
+        links: linksFromNavItem(item),
+      }))
+      .filter((section) => section.links.length > 0)
+  : fallbackSections;
 ---
 
 <footer class="bg-black text-white mt-auto">
@@ -23,136 +89,25 @@ const currentYear = new Date().getFullYear().toString();
         </a>
       </div>
 
-      <!-- Products Column -->
-      <div>
-        <h3 class="text-white font-semibold mb-4 uppercase">
-          {t(messages, 'footer.products.title')}
-        </h3>
-        <ul class="space-y-2 list-none p-0 m-0">
-          <li>
-            <a
-              href={`/${locale}/products/abrasive-paper`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.products.abrasivePaper')}
-            </a>
-          </li>
-          <li>
-            <a
-              href={`/${locale}/products/films`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.products.films')}
-            </a>
-          </li>
-          <li>
-            <a
-              href={`/${locale}/products/compounds-polishes`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.products.compoundsPolishes')}
-            </a>
-          </li>
-          <li>
-            <a
-              href={`/${locale}/products/automotive-window-film`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.products.automotiveWindowFilm')}
-            </a>
-          </li>
-          <li>
-            <a
-              href={`/${locale}/products/paint-protection-films`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.products.paintProtectionFilms')}
-            </a>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Support Column -->
-      <div>
-        <h3 class="text-white font-semibold mb-4 uppercase">
-          {t(messages, 'footer.support.title')}
-        </h3>
-        <ul class="space-y-2 list-none p-0 m-0">
-          <li>
-            <a
-              href={`/${locale}/support/downloads`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.support.download')}
-            </a>
-          </li>
-          <li>
-            <a
-              href={`/${locale}/help`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.support.helpCenter')}
-            </a>
-          </li>
-          <li>
-            <a
-              href={`/${locale}/support/training`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.support.training')}
-            </a>
-          </li>
-        </ul>
-      </div>
-
-      <!-- About Us Column -->
-      <div>
-        <h3 class="text-white font-semibold mb-4 uppercase">
-          {t(messages, 'footer.about.title')}
-        </h3>
-        <ul class="space-y-2 list-none p-0 m-0">
-          <li>
-            <a
-              href={`/${locale}/about/brand`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.about.brandStory')}
-            </a>
-          </li>
-          <li>
-            <a
-              href={`/${locale}/about/production`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.about.productionBase')}
-            </a>
-          </li>
-          <li>
-            <a
-              href={`/${locale}/about/dealer`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.about.becomeDealer')}
-            </a>
-          </li>
-          <li>
-            <a
-              href={`/${locale}/support/contact`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.about.contactUs')}
-            </a>
-          </li>
-          <li>
-            <a
-              href={`/${locale}/about/insights`}
-              class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
-            >
-              {t(messages, 'footer.about.insights')}
-            </a>
-          </li>
-        </ul>
-      </div>
+      {footerSections.map((section) => (
+        <div>
+          <h3 class="text-white font-semibold mb-4 uppercase">
+            {section.title}
+          </h3>
+          <ul class="space-y-2 list-none p-0 m-0">
+            {section.links.map((link) => (
+              <li>
+                <a
+                  href={link.href}
+                  class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
 
     <!-- Social Media & Bottom Bar -->
