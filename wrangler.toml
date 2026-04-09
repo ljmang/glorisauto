@@ -10,9 +10,15 @@ pages_build_output_dir = "dist"
 # Public env used during Astro static builds and Pages runtime.
 [vars]
 PUBLIC_STRAPI_URL = "https://admin.glorisauto.com"
+STRAPI_BUILD_URL = "http://8.138.154.183:1337"
+STRAPI_FETCH_RETRIES = "3"
 
 [env.preview.vars]
 PUBLIC_STRAPI_URL = "https://admin.glorisauto.com"
+STRAPI_BUILD_URL = "http://8.138.154.183:1337"
+STRAPI_FETCH_RETRIES = "3"
 
 [env.production.vars]
 PUBLIC_STRAPI_URL = "https://admin.glorisauto.com"
+STRAPI_BUILD_URL = "http://8.138.154.183:1337"
+STRAPI_FETCH_RETRIES = "3"

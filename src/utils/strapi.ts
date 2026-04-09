@@ -17,6 +17,10 @@ type CacheEntry = {
 const responseCache = new Map<string, CacheEntry>();
 const inFlightRequests = new Map<string, Promise<unknown>>();
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function toStrapiLocale(locale: string | undefined): string | undefined {
   if (!locale) return undefined;
   return STRAPI_LOCALE_MAP[locale] ?? locale;
@@ -32,6 +36,15 @@ const getBase = (): string => {
     return process.env.STRAPI_INTERNAL_URL.replace(/\/$/, '');
   }
 
+  if (
+    import.meta.env.SSR &&
+    typeof process !== 'undefined' &&
+    typeof process.env.STRAPI_BUILD_URL === 'string' &&
+    process.env.STRAPI_BUILD_URL
+  ) {
+    return process.env.STRAPI_BUILD_URL.replace(/\/$/, '');
+  }
+
   const url = import.meta.env.PUBLIC_STRAPI_URL;
   if (!url || typeof url !== 'string') {
     throw new Error('PUBLIC_STRAPI_URL is not set');
@@ -44,6 +57,22 @@ const getFetchTimeoutMs = (): number => {
   const value = Number(raw);
   if (Number.isFinite(value) && value > 0) return value;
   return 30000;
+};
+
+const getRetryCount = (): number => {
+  if (
+    import.meta.env.SSR &&
+    typeof process !== 'undefined' &&
+    typeof process.env.STRAPI_FETCH_RETRIES === 'string'
+  ) {
+    const runtimeValue = Number(process.env.STRAPI_FETCH_RETRIES);
+    if (Number.isFinite(runtimeValue) && runtimeValue >= 0) return runtimeValue;
+  }
+
+  const raw = import.meta.env.STRAPI_FETCH_RETRIES;
+  const value = Number(raw);
+  if (Number.isFinite(value) && value >= 0) return value;
+  return import.meta.env.PROD ? 3 : 1;
 };
 
 const getCacheTtlMs = (): number => {
@@ -202,49 +231,69 @@ export async function fetchApi<T = unknown>(
   }
 
   const requestPromise = (async (): Promise<T> => {
-    const controller = new AbortController();
     const timeoutMs = getFetchTimeoutMs();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    let res: Response;
-    try {
-      res = await fetch(requestKey, {
-        headers: { Accept: 'application/json', ...customHeaders },
-        signal: controller.signal,
-      });
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        throw new Error(`Strapi API timeout after ${timeoutMs}ms: ${requestKey}`);
-      }
-      throw err;
-    } finally {
-      clearTimeout(timer);
-    }
+    const maxRetries = getRetryCount();
+    let lastError: Error | null = null;
 
-    const contentType = res.headers.get('content-type') || '';
-    let body: T;
+    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-    if (contentType.includes('application/json')) {
       try {
-        body = (await res.json()) as T;
-      } catch (err) {
-        const text = await res.text();
-        throw new Error(`Strapi API ${res.status}: Failed to parse JSON response. Response: ${text.substring(0, 200)}`);
-      }
-    } else {
-      const text = await res.text();
-      throw new Error(`Strapi API ${res.status}: Expected JSON but got ${contentType}. Response: ${text.substring(0, 200)}`);
-    }
+        const res = await fetch(requestKey, {
+          headers: { Accept: 'application/json', ...customHeaders },
+          signal: controller.signal,
+        });
 
-    if (!res.ok) {
-      if (res.status === 404) {
+        const contentType = res.headers.get('content-type') || '';
+        let body: T;
+
+        if (!contentType.includes('application/json')) {
+          const text = await res.text();
+          throw new Error(`Strapi API ${res.status}: Expected JSON but got ${contentType}. Response: ${text.substring(0, 200)}`);
+        }
+
+        try {
+          body = (await res.json()) as T;
+        } catch (err) {
+          const text = await res.text();
+          throw new Error(`Strapi API ${res.status}: Failed to parse JSON response. Response: ${text.substring(0, 200)}`);
+        }
+
+        if (!res.ok) {
+          if (res.status === 404) {
+            setCachedValue(requestKey, body);
+            return body;
+          }
+
+          if (res.status >= 500 && attempt < maxRetries) {
+            await sleep(500 * (attempt + 1));
+            continue;
+          }
+
+          throw new Error(`Strapi API ${res.status}: ${res.statusText} - ${JSON.stringify(body)}`);
+        }
+
         setCachedValue(requestKey, body);
         return body;
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          lastError = new Error(`Strapi API timeout after ${timeoutMs}ms: ${requestKey}`);
+        } else {
+          lastError = err instanceof Error ? err : new Error(String(err));
+        }
+
+        if (attempt >= maxRetries) {
+          throw lastError;
+        }
+
+        await sleep(500 * (attempt + 1));
+      } finally {
+        clearTimeout(timer);
       }
-      throw new Error(`Strapi API ${res.status}: ${res.statusText} - ${JSON.stringify(body)}`);
     }
 
-    setCachedValue(requestKey, body);
-    return body;
+    throw lastError ?? new Error(`Strapi API request failed: ${requestKey}`);
   })();
 
   inFlightRequests.set(requestKey, requestPromise);
