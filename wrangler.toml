@@ -7,5 +7,12 @@ compatibility_flags = ["nodejs_compat"]
 # 静态站点：构建产物目录（与 astro build 输出一致）
 pages_build_output_dir = "dist"
 
-# 开发环境可在 Cloudflare Dashboard 或 .dev.vars 中配置环境变量
-# 例如: PUBLIC_STRAPI_URL = "https://admin.glorisauto.com"
+# Public env used during Astro static builds and Pages runtime.
+[vars]
+PUBLIC_STRAPI_URL = "https://admin.glorisauto.com"
+
+[env.preview.vars]
+PUBLIC_STRAPI_URL = "https://admin.glorisauto.com"
+
+[env.production.vars]
+PUBLIC_STRAPI_URL = "https://admin.glorisauto.com"
