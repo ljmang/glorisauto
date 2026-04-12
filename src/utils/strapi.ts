@@ -6,7 +6,7 @@
 /** 前端 locale → Strapi 后台 locale，须与 Settings → Internationalization 中一致（你后台中文为 zh） */
 const STRAPI_LOCALE_MAP: Record<string, string> = {
   'en': 'en',
-  'zh-cn': 'zh',
+  'zh-cn': 'zh-cn',
 };
 
 type CacheEntry = {
