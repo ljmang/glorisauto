@@ -5,6 +5,7 @@ import { supportedLocales, type Locale, getLocale } from "@/i18n/config";
 import { loadMessages, t } from "@/i18n";
 import {
 	fetchApi,
+	fetchApiWithLocaleFallback,
 	api,
 	parseHeroMedia,
 	parseImage,
@@ -70,6 +71,42 @@ const homeData = await fetchApi<StrapiResponse<HomeAttributes>>(api.home, {
 });
 // 4. 安全的数据解构 (即使 API 挂了，页面也不会白屏，而是显示默认值)
 const data = homeData?.data || ({} as Partial<HomeAttributes>);
+
+const normalizeInsightsCount = (value: number | undefined, fallback: number) =>
+	typeof value === "number" && Number.isFinite(value) && value > 0
+		? Math.floor(value)
+		: fallback;
+
+const homeInsightsMode = data.insightsMode === "latest" ? "latest" : "manual";
+const homeInsightsCount = normalizeInsightsCount(data.insightsCount, 3);
+const manualInsights = Array.isArray(data.insights)
+	? (data.insights as InsightAttributes[])
+	: [];
+
+const latestInsightsRes =
+	Boolean(data.insightsTitle) && homeInsightsMode === "latest"
+		? await fetchApiWithLocaleFallback<{ data?: InsightAttributes[] }>(
+				api.insights,
+				{
+					locale,
+					populate: {
+						cover: true,
+						insight_category: true,
+					},
+					sort: ["publishedAt:desc"],
+					pagination: { pageSize: homeInsightsCount },
+				},
+			)
+		: null;
+
+const latestInsights = Array.isArray(latestInsightsRes?.data)
+	? latestInsightsRes.data.filter((insight) => Boolean(insight?.slug))
+	: [];
+const displayInsights =
+	homeInsightsMode === "latest"
+		? latestInsights
+		: manualInsights.slice(0, homeInsightsCount);
+const showInsights = Boolean(data.insightsTitle) && displayInsights.length > 0;
 
 // 处理数据
 const heroMediaProp = parseHeroMedia(data.heroMedia);
@@ -193,7 +230,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 						</a>
 					</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-						{((data.products as ProductAttributes[]) || []).map(
+						{homeProducts.map(
 							(product) => (
 								<ProductCard
 									product={product}
@@ -208,7 +245,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 
 		<!-- Insights 文章/洞察展示 -->
 		{
-			data.insightsTitle && (
+			showInsights && (
 				<div class="w-full">
 					<div class="flex items-center justify-between mb-6">
 						<h2 class="text-3xl font-bold">
@@ -223,7 +260,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 						</a>
 					</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-						{((data.insights as InsightAttributes[]) || []).map(
+						{displayInsights.map(
 							(insight) => (
 								<InsightCard
 									insight={insight}

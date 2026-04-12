@@ -3,28 +3,16 @@
  * 帮助中心分类页：显示指定分类下的所有文章
  */
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApi, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
+import { getHelpCategoryStaticPaths } from '@/utils/helpStaticPaths';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import type { HelpCategoryAttributes, HelpCenterAttributes } from '@/types/content';
 
 export async function getStaticPaths() {
-  const paths: { params: { locale: string; category: string } }[] = [];
-  for (const locale of supportedLocales) {
-    const res = await fetchApi<{ data?: HelpCategoryAttributes[] }>(api.helpCategories, {
-      locale,
-      pagination: { pageSize: 100 },
-    });
-    const categories = Array.isArray(res?.data) ? res.data : [];
-    for (const category of categories) {
-      if (category.slug) {
-        paths.push({ params: { locale, category: category.slug } });
-      }
-    }
-  }
-  return paths;
+  return getHelpCategoryStaticPaths();
 }
 
 const params = Astro.params as { locale?: string; category?: string };

@@ -8,6 +8,7 @@ import type { BreadcrumbMetaItem, JsonLdNode, SeoPageType } from '@/utils/seo';
 import { resolveSeoMeta } from '@/utils/seo';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
 import { transformNavigations } from '@/utils/navigationData';
+import { fetchSiteSeo } from '@/utils/siteConfig';
 import '@/styles/global.css';
 
 interface Props {
@@ -62,15 +63,7 @@ async function getNavData(currentLocale: Locale): Promise<NavItem> {
 
 async function getSiteSeo(currentLocale: Locale): Promise<SiteSeoAttributes | null> {
   try {
-    const response = await fetchApiWithLocaleFallback<StrapiResponse<SiteSeoAttributes>>(api.siteSeo, {
-      locale: currentLocale,
-      populate: {
-        defaultShareImage: true,
-        companyLogo: true,
-        sameAsLinks: true,
-      },
-    });
-    return response?.data ?? null;
+    return await fetchSiteSeo(currentLocale);
   } catch (error) {
     console.error('[BaseLayout] failed to load site SEO, falling back to page defaults:', error);
     return null;
@@ -148,16 +141,5 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
       <slot />
     </main>
     <Footer messages={messages} locale={locale} navData={navData} />
-    <script is:inline>
-      var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
-      (function () {
-        var s1 = document.createElement('script'), s0 = document.getElementsByTagName('script')[0];
-        s1.async = true;
-        s1.src = 'https://embed.tawk.to/69d745e76839171c36f07831/default';
-        s1.charset = 'UTF-8';
-        s1.setAttribute('crossorigin', '*');
-        s0.parentNode.insertBefore(s1, s0);
-      })();
-    </script>
   </body>
 </html>

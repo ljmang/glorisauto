@@ -3,10 +3,11 @@
  * 帮助中心文章详情页：文章内容 + 相关产品和文章
  */
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApi, api, parseImage } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
+import { getHelpArticleStaticPaths } from '@/utils/helpStaticPaths';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import BlocksRenderer from '@/components/BlocksRenderer.astro';
 import ProductCard from '@/components/ProductCard.astro';
@@ -16,28 +17,7 @@ import type { HelpCategoryAttributes, HelpCenterAttributes, ProductAttributes, I
 import type { BlockNode, ImageNode } from '@/types/blocks';
 
 export async function getStaticPaths() {
-  const paths: { params: { locale: string; category: string; slug: string } }[] = [];
-  for (const locale of supportedLocales) {
-    const res = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
-      locale,
-      populate: { help_category: true },
-      pagination: { pageSize: 500 },
-    });
-    const articles = Array.isArray(res?.data) ? res.data : [];
-    for (const article of articles) {
-      const categorySlug = article.help_category?.slug;
-      if (categorySlug && article.slug) {
-        paths.push({
-          params: {
-            locale,
-            category: categorySlug,
-            slug: article.slug,
-          },
-        });
-      }
-    }
-  }
-  return paths;
+  return getHelpArticleStaticPaths();
 }
 
 const params = Astro.params as { locale?: string; category?: string; slug?: string };

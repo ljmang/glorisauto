@@ -17,54 +17,61 @@ export async function getStaticPaths() {
   }));
 }
 
-interface Props {
-  locale: Locale;
-}
-
 const params = Astro.params as { locale?: string };
 const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
 
-// 并行获取 about-us 和 insights 数据
-const [aboutUsRes, insightsRes] = await Promise.all([
-  fetchApiWithLocaleFallback<StrapiResponse<AboutUsAttributes>>(api.aboutUs, {
-    locale,
-    populate: {
-      heroMedia: true,
-      seo: {
-        populate: {
-          metaImage: true,
-          ogImage: true,
-          twitterImage: true,
-        },
+const normalizeInsightsCount = (value: number | undefined, fallback: number) =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : fallback;
+
+const aboutUsRes = await fetchApiWithLocaleFallback<StrapiResponse<AboutUsAttributes>>(api.aboutUs, {
+  locale,
+  populate: {
+    heroMedia: true,
+    seo: {
+      populate: {
+        metaImage: true,
+        ogImage: true,
+        twitterImage: true,
       },
-      insights: { populate: { cover: true, insight_category: true } },
     },
-  }),
-  fetchApiWithLocaleFallback<{ data?: InsightAttributes[] }>(api.insights, {
-    locale,
-    populate: { cover: true, insight_category: true },
-    pagination: { pageSize: 100 },
-  }),
-]);
+    insights: { populate: { cover: true, insight_category: true } },
+  },
+});
 
 // 处理 about-us 数据（单类型）
 const aboutUs = aboutUsRes?.data;
 const heroMedia = aboutUs ? parseImage(aboutUs.heroMedia) : null;
+const aboutInsightsMode = aboutUs?.insightsMode === 'latest' ? 'latest' : 'manual';
+const featuredInsightsCount = normalizeInsightsCount(aboutUs?.insightsCount, 2);
+const latestInsightsCount = normalizeInsightsCount(aboutUs?.latestInsightsCount, 3);
 
-// 获取关联的文章（从about-us的insights字段）
-const relatedArticles = aboutUs?.insights || [];
+const latestInsightsRes = aboutUs
+  ? await fetchApiWithLocaleFallback<{ data?: InsightAttributes[] }>(api.insights, {
+      locale,
+      populate: { cover: true, insight_category: true },
+      sort: ['publishedAt:desc'],
+      pagination: {
+        pageSize: featuredInsightsCount + latestInsightsCount,
+      },
+    })
+  : null;
 
-// 处理 insights 数据：按发布时间降序排序，取最新的3条
-const allInsights = Array.isArray(insightsRes?.data) ? insightsRes.data : [];
-const latestInsights = allInsights
-  .filter((insight) => insight.publishedAt)
-  .sort((a, b) => {
-    const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-    const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-    return dateB - dateA;
-  })
-  .slice(0, 3);
+const manualFeaturedArticles = Array.isArray(aboutUs?.insights) ? aboutUs.insights : [];
+const allLatestInsights = Array.isArray(latestInsightsRes?.data)
+  ? latestInsightsRes.data.filter((insight) => Boolean(insight?.slug))
+  : [];
+const featuredArticles = (
+  aboutInsightsMode === 'latest' ? allLatestInsights : manualFeaturedArticles
+).slice(0, featuredInsightsCount);
+const featuredInsightSlugs = new Set(
+  featuredArticles.map((article) => article.slug).filter((slug): slug is string => Boolean(slug))
+);
+const latestInsights = allLatestInsights
+  .filter((insight) => !featuredInsightSlugs.has(insight.slug))
+  .slice(0, latestInsightsCount);
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -144,10 +151,10 @@ const mapEmbedUrl = googleMaps
       )}
 
       <div class="container mx-auto px-4 py-12 lg:py-16">
-        <!-- 2. 中间：关联的文章 -->
-        {relatedArticles.length > 0 && (
+        <!-- 2. 中间：手动文章或最新文章 -->
+        {featuredArticles.length > 0 && (
           <section class="mb-16 lg:mb-20 space-y-16 lg:space-y-20">
-            {relatedArticles.slice(0, 2).map((article, index) => {
+            {featuredArticles.map((article, index) => {
               const coverImage = parseImage(article.cover || (article as { coverImage?: unknown }).coverImage);
               const isEven = index % 2 === 0;
               const category = article.insight_category && typeof article.insight_category === 'object' && 'slug' in article.insight_category

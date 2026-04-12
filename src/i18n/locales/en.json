@@ -15,7 +15,7 @@
     "technicalDetails": "Technical details",
     "features": "Product Features",
     "downloads": "Downloads",
-    "faq": "F&Q",
+    "faq": "FAQ",
     "becomeDealer": "Become Our Dealer",
     "leaveMessage": "Leave a Message",
     "gritOptions": "Grit Options",
@@ -150,7 +150,7 @@
     "other": "Other",
     "relatedProducts": "Related products",
     "relatedArticles": "Related articles",
-    "relatedFaq": "Related F&Q",
+    "relatedFaq": "Related FAQ",
     "noArticles": "No articles found in this category."
   },
   "insights": {

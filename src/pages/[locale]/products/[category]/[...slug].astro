@@ -5,6 +5,7 @@ import { loadMessages, t } from '@/i18n';
 import { fetchApi, api, parseImages, getMediaUrl } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { markdownToHtml } from '@/utils/markdown';
+import { hasMeaningfulText, sanitizeInlineText, sanitizeMarkdown } from '@/utils/contentSanitizers';
 import type { ProductAttributes } from '@/types/content';
 import type { BlockNode } from '@/types/blocks';
 import BlocksRenderer from '@/components/BlocksRenderer.astro';
@@ -73,15 +74,33 @@ const category = (product as { category?: { slug?: string; name?: string } } | n
 const categoryName = category?.name ?? categorySlug;
 
 const productImages = product ? parseImages(product.images) : [];
-const informationList = (product as { information?: { title?: string; description?: BlockNode[] }[] } | null)?.information ?? [];
-const technicalDetailsList = (product as { technicalDetails?: { title?: string; description?: string }[] } | null)?.technicalDetails ?? [];
-const optionsList = (product as { options?: { name?: string }[] } | null)?.options ?? [];
-const holeList = (product as { hole?: { name?: string }[] } | null)?.hole ?? [];
-const productFeaturesMarkdown = (product as { productFeatures?: string } | null)?.productFeatures ?? '';
+const rawInformationList = (product as { information?: { title?: string; description?: BlockNode[] }[] } | null)?.information ?? [];
+const informationList = rawInformationList
+  .map((item) => ({
+    title: sanitizeInlineText(item?.title ?? ''),
+    description: item?.description ?? [],
+  }))
+  .filter((item) => item.title || item.description.length > 0);
+const rawTechnicalDetailsList =
+  (product as { technicalDetails?: { title?: string; description?: string }[] } | null)?.technicalDetails ?? [];
+const technicalDetailsList = rawTechnicalDetailsList
+  .map((item) => ({
+    title: sanitizeInlineText(item?.title ?? ''),
+    description: sanitizeInlineText(item?.description ?? ''),
+  }))
+  .filter((item) => hasMeaningfulText(item.title) && hasMeaningfulText(item.description));
+const optionsList = ((product as { options?: { name?: string }[] } | null)?.options ?? [])
+  .map((item) => ({ name: sanitizeInlineText(item?.name ?? '') }))
+  .filter((item) => item.name);
+const holeList = ((product as { hole?: { name?: string }[] } | null)?.hole ?? [])
+  .map((item) => ({ name: sanitizeInlineText(item?.name ?? '') }))
+  .filter((item) => item.name);
+const productFeaturesMarkdown = sanitizeMarkdown((product as { productFeatures?: string } | null)?.productFeatures ?? '');
 const productFeaturesHtml = await markdownToHtml(productFeaturesMarkdown);
 const productFeaturesHtmlWithScrollableTables = productFeaturesHtml
   .replace(/<table>/g, '<div class="product-features-table-scroll"><table>')
   .replace(/<\/table>/g, '</table></div>');
+const productDescription = sanitizeInlineText(product?.description ?? '');
 
 type DownloadFileEntry = {
   title?: string;
@@ -90,8 +109,8 @@ type DownloadFileEntry = {
 };
 const rawDownloads = (product as { downloadFiles?: DownloadFileEntry[] } | null)?.downloadFiles ?? [];
 const downloadFilesList = rawDownloads.map((d) => ({
-  title: d?.title ?? '',
-  description: d?.description,
+  title: sanitizeInlineText(d?.title ?? ''),
+  description: sanitizeInlineText(d?.description ?? ''),
   file: d?.file ? { ...d.file, url: d.file.url ? getMediaUrl(d.file.url) : undefined } : undefined,
 }));
 
@@ -160,7 +179,7 @@ const breadcrumbItems = [
 
 <BaseLayout
   title={product ? `${product.name} - ${t(messages, 'pageTitle.products')}` : t(messages, 'pageTitle.products')}
-  description={product?.description}
+  description={productDescription}
   image={product?.images}
   seo={product?.seo}
   pageType="product"
@@ -191,9 +210,9 @@ const breadcrumbItems = [
               </div>
             )}
 
-            {informationList.length === 0 && product.description && (
+            {informationList.length === 0 && productDescription && (
               <div class='prose prose-lg mt-6'>
-                <p>{product.description}</p>
+                <p>{productDescription}</p>
               </div>
             )}
 

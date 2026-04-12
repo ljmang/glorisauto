@@ -1,32 +1,10 @@
 ---
-import { getLocale, supportedLocales, type Locale } from '@/i18n/config';
-import { fetchApi, api } from '@/utils/strapiApi';
+import { getLocale, type Locale } from '@/i18n/config';
+import { getHelpArticleStaticPaths } from '@/utils/helpStaticPaths';
 import { toHref } from '@/utils/navigationData';
-import type { HelpCenterAttributes } from '@/types/content';
 
 export async function getStaticPaths() {
-  const paths: { params: { locale: string; category: string; slug: string } }[] = [];
-  for (const locale of supportedLocales) {
-    const res = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
-      locale,
-      populate: { help_category: true },
-      pagination: { pageSize: 500 },
-    });
-    const articles = Array.isArray(res?.data) ? res.data : [];
-    for (const article of articles) {
-      const categorySlug = article.help_category?.slug;
-      if (categorySlug && article.slug) {
-        paths.push({
-          params: {
-            locale,
-            category: categorySlug,
-            slug: article.slug,
-          },
-        });
-      }
-    }
-  }
-  return paths;
+  return getHelpArticleStaticPaths();
 }
 
 const params = Astro.params as { locale?: string; category?: string; slug?: string };

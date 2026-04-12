@@ -85,20 +85,19 @@
     return t(`search.types.${type}`) || type;
   }
 
-  // 获取所有类型
-  const types = ['product', 'insight', 'help', 'about', 'support'] as const;
-
-  function getInitialQueryFromLocation(): string {
+  function getQueryFromUrl(): string {
     if (typeof window === 'undefined') return '';
     return new URL(window.location.href).searchParams.get('q') || '';
   }
+
+  // 获取所有类型
+  const types = ['product', 'insight', 'help', 'about', 'support'] as const;
 
   // 仅在客户端初始化
   import { onMount } from 'svelte';
   onMount(() => {
     mounted = true;
-    // 设置初始查询值
-    query = initialQuery || getInitialQueryFromLocation();
+    query = initialQuery || getQueryFromUrl();
     initFuse();
     if (query) {
       performSearch(query);

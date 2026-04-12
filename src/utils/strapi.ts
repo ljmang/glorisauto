@@ -129,6 +129,7 @@ export interface FetchApiOptions {
   populate?: Record<string, PopulateValue> | string;
   filters?: Record<string, unknown>;
   pagination?: { page?: number; pageSize?: number };
+  sort?: string | string[];
   headers?: Record<string, string>;
 }
 
@@ -140,7 +141,7 @@ export async function fetchApi<T = unknown>(
   path: string,
   options: FetchApiOptions = {}
 ): Promise<T> {
-  const { locale, populate, filters, pagination, headers: customHeaders = {} } = options;
+  const { locale, populate, filters, pagination, sort, headers: customHeaders = {} } = options;
   const base = getStrapiUrl();
   const pathClean = path.replace(/^\//, '');
   const url = new URL(`${base}/${pathClean}`);
@@ -149,6 +150,15 @@ export async function fetchApi<T = unknown>(
   if (strapiLocale) url.searchParams.set('locale', strapiLocale);
   if (pagination?.pageSize != null) url.searchParams.set('pagination[pageSize]', String(pagination.pageSize));
   if (pagination?.page != null) url.searchParams.set('pagination[page]', String(pagination.page));
+  if (sort) {
+    if (Array.isArray(sort)) {
+      sort.forEach((value, index) => {
+        url.searchParams.set(`sort[${index}]`, value);
+      });
+    } else {
+      url.searchParams.set('sort', sort);
+    }
+  }
   if (populate) {
     if (typeof populate === 'string') {
       url.searchParams.set('populate', populate);

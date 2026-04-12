@@ -6,6 +6,8 @@
 import type { StrapiMedia, StrapiContent, StrapiLinkItem, StrapiSeo } from './strapi';
 import type { BlockNode, NewsItem } from './blocks';
 
+export type InsightDisplayMode = 'manual' | 'latest';
+
 /** Home 页面内容类型 */
 export interface HomeAttributes {
   heroTitle: string;
@@ -21,10 +23,12 @@ export interface HomeAttributes {
   glorisNewsTitle?: string;
   productsTitle?: string;
   insightsTitle?: string;
+  insightsMode?: InsightDisplayMode;
+  insightsCount?: number;
   downloadFilesTitle?: string;
   glorisNews?: NewsItem[];
   products?: unknown[];
-  insights?: unknown[];
+  insights?: InsightAttributes[];
   downloadFiles?: unknown[];
   seo?: StrapiSeo | null;
 }
@@ -49,9 +53,19 @@ export interface SiteSeoAttributes {
   supportedLocales?: string[] | null;
   googleVerification?: string;
   bingVerification?: string;
+  productsCollectionPage?: CollectionPageCopyFields | null;
+  helpCenterCollectionPage?: CollectionPageCopyFields | null;
+  insightsCollectionPage?: CollectionPageCopyFields | null;
 }
 
 export type SiteSeoContent = StrapiContent<SiteSeoAttributes>;
+
+export interface CollectionPageCopyFields {
+  heading?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  intro?: string;
+}
 
 /** Product 产品类型 */
 export interface ProductAttributes {
@@ -174,8 +188,12 @@ export interface AboutUsAttributes {
   heroMedia?: StrapiMedia | StrapiMedia[] | null;
   content?: string;
   coverImage?: StrapiMedia | null;
+  insightsMode?: InsightDisplayMode;
+  insightsCount?: number;
   /** 关联的 insights 文章 */
   insights?: InsightAttributes[];
+  /** 关于我们底部最新文章数量 */
+  latestInsightsCount?: number;
   /** Google 地图链接 */
   googleMaps?: string | null;
   /** 联系我们区块 */

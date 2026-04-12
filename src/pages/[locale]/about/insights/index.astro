@@ -6,6 +6,8 @@ import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
+import { resolveCollectionPageCopy } from '@/utils/collectionPageCopy';
+import { fetchSiteSeo } from '@/utils/siteConfig';
 import type { InsightAttributes, InsightCategoryAttributes } from '@/types/content';
 
 export async function getStaticPaths() {
@@ -22,7 +24,7 @@ const params = Astro.params as { locale?: string };
 const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
 
-const [categoriesRes, insightsRes] = await Promise.all([
+const [categoriesRes, insightsRes, siteSeo] = await Promise.all([
   fetchApiWithLocaleFallback<{ data?: InsightCategoryAttributes[] }>(api.insightCategories, {
     locale,
     pagination: { pageSize: 100 },
@@ -32,6 +34,7 @@ const [categoriesRes, insightsRes] = await Promise.all([
     populate: { cover: true, insight_category: true },
     pagination: { pageSize: 100 },
   }),
+  fetchSiteSeo(locale),
 ]);
 
 const categories = (Array.isArray(categoriesRes?.data) ? categoriesRes.data : [])
@@ -50,10 +53,12 @@ const breadcrumbItems = [
 ];
 const pageTitle = t(messages, 'footer.about.insights');
 const allArticlesLabel = t(messages, 'insights.allArticles');
+const pageCopy = resolveCollectionPageCopy(locale, 'insights', siteSeo);
 ---
 
 <BaseLayout
-  title={pageTitle}
+  title={pageCopy.seoTitle}
+  description={pageCopy.seoDescription}
   pageType="collection"
   breadcrumbs={breadcrumbItems}
   messages={messages}
@@ -85,7 +90,10 @@ const allArticlesLabel = t(messages, 'insights.allArticles');
 
       <!-- 右侧：文章列表 -->
       <main class="flex-1 min-w-0 mb-12">
-        <h1 class="text-4xl lg:text-5xl font-black mb-6">{pageTitle}</h1>
+        <h1 class="text-4xl lg:text-5xl font-black mb-4">{pageCopy.heading}</h1>
+        <p class="max-w-4xl text-base leading-7 text-gray-600 mb-8 lg:text-lg lg:leading-8">
+          {pageCopy.intro}
+        </p>
         <div class="space-y-6">
           {insights.length > 0 ? (
             insights.map((insight) => <InsightListItem insight={insight} locale={locale} messages={messages} />)

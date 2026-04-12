@@ -5,6 +5,8 @@ import { loadMessages, t } from '@/i18n';
 import { fetchApi, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { buildCategoryTree } from '@/utils/categoryTree';
+import { resolveCollectionPageCopy } from '@/utils/collectionPageCopy';
+import { fetchSiteSeo } from '@/utils/siteConfig';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ProductCard from '@/components/ProductCard.astro';
 import type { ProductAttributes } from '@/types/content';
@@ -20,21 +22,24 @@ const params = Astro.params as { locale?: string };
 const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
 
+const [categoriesRes, productsRes, siteSeo] = await Promise.all([
+  fetchApi<{ data?: CategoryAttributes[] }>(api.categories, {
+    locale,
+    populate: { parent: true },
+    pagination: { pageSize: 100 }
+  }),
+  fetchApi<{ data?: ProductAttributes[] }>(api.products, {
+    locale,
+    populate: { images: true, category: true },
+    pagination: { pageSize: 100 },
+  }),
+  fetchSiteSeo(locale),
+]);
+
 // 分类列表（扁平），再构建为一级/二级树
-const categoriesRes = await fetchApi<{ data?: CategoryAttributes[] }>(api.categories, {
-  locale,
-  populate: { parent: true },
-  pagination: { pageSize: 100 }
-}); 
 const categories = Array.isArray(categoriesRes?.data) ? categoriesRes.data : [];
 const categoryTree = buildCategoryTree(categories);
 
-// 全部产品
-const productsRes = await fetchApi<{ data?: ProductAttributes[] }>(api.products, {
-  locale,
-  populate: { images: true, category: true },
-  pagination: { pageSize: 100 },
-});
 const products = Array.isArray(productsRes?.data) ? productsRes.data : [];
 
 const breadcrumbItems = [
@@ -42,11 +47,12 @@ const breadcrumbItems = [
   { label: t(messages, 'pageTitle.products') },
 ];
 const pageTitle = t(messages, 'products.allProducts');
+const pageCopy = resolveCollectionPageCopy(locale, 'products', siteSeo);
 ---
 
 <BaseLayout
-  title={t(messages, 'pageTitle.products')}
-  description={pageTitle}
+  title={pageCopy.seoTitle}
+  description={pageCopy.seoDescription}
   pageType="collection"
   breadcrumbs={breadcrumbItems}
   messages={messages}
@@ -105,7 +111,10 @@ const pageTitle = t(messages, 'products.allProducts');
 
       <!-- 右侧：产品列表 -->
       <main class="flex-1 min-w-0 mb-12 ">
-        <h1 class="text-4xl lg:text-6xl font-black mb-6">{pageTitle}</h1>
+        <h1 class="text-4xl lg:text-6xl font-black mb-4">{pageCopy.heading}</h1>
+        <p class="max-w-4xl text-base leading-7 text-gray-600 mb-8 lg:text-lg lg:leading-8">
+          {pageCopy.intro}
+        </p>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {products.length > 0 ? (
             products.map((product) => (

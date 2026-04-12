@@ -7,12 +7,15 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const isPagesStatic = process.env.BUILD_TARGET === 'pages';
+const isPagesBuild =
+  /^(1|true)$/i.test(process.env.CF_PAGES ?? '') ||
+  process.env.BUILD_TARGET === 'pages';
 
 // https://astro.build/config
 export default defineConfig({
-  output: isPagesStatic ? 'static' : 'server',
-  ...(isPagesStatic ? {} : { adapter: node({ mode: 'standalone' }) }),
+  site: 'https://www.glorisauto.com',
+  output: isPagesBuild ? 'static' : 'server',
+  ...(isPagesBuild ? {} : { adapter: node({ mode: 'standalone' }) }),
   integrations: [svelte()],
   vite: {
     plugins: [tailwindcss()],

@@ -8,6 +8,7 @@
 import type { ProductAttributes } from '@/types/content';
 import { parseImage } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
+import { sanitizeInlineText } from '@/utils/contentSanitizers';
 import { Image } from 'astro:assets';
 
 interface Props {
@@ -27,6 +28,7 @@ const categorySlug =
 const href = categorySlug
   ? toHref(`/products/${categorySlug}/${product.slug}`, locale)
   : toHref(`/products/${product.slug}`, locale);
+const productDescription = sanitizeInlineText(product.description);
 ---
 
 <a
@@ -58,9 +60,9 @@ const href = categorySlug
     <h3 class="text-xl font-bold group-hover:text-orange-500 transition-colors">
       {product.name}
     </h3>
-    {product.description ? (
+    {productDescription ? (
       <p class="text-gray-700 leading-relaxed line-clamp-3">
-        {product.description}
+        {productDescription}
       </p>
     ) : null}
   </div>

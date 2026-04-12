@@ -7,6 +7,8 @@ import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApi, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
+import { resolveCollectionPageCopy } from '@/utils/collectionPageCopy';
+import { fetchSiteSeo } from '@/utils/siteConfig';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import type { HelpCategoryAttributes, HelpCenterAttributes } from '@/types/content';
 
@@ -20,19 +22,22 @@ const params = Astro.params as { locale?: string };
 const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
 
+const [categoriesRes, articlesRes, siteSeo] = await Promise.all([
+  fetchApi<{ data?: HelpCategoryAttributes[] }>(api.helpCategories, {
+    locale,
+    pagination: { pageSize: 100 },
+  }),
+  fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
+    locale,
+    populate: { help_category: true, products: true },
+    pagination: { pageSize: 500 },
+  }),
+  fetchSiteSeo(locale),
+]);
+
 // 1. 获取所有分类（按 sort 排序）
-const categoriesRes = await fetchApi<{ data?: HelpCategoryAttributes[] }>(api.helpCategories, {
-  locale,
-  pagination: { pageSize: 100 },
-});
 const categories = (categoriesRes?.data ?? []).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
 
-// 2. 获取所有文章（populate help_category）
-const articlesRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
-  locale,
-  populate: { help_category: true, products: true },
-  pagination: { pageSize: 500 },
-});
 const articles = articlesRes?.data ?? [];
 
 // 3. 按分类分组文章
@@ -95,10 +100,12 @@ const breadcrumbItems = [
   { label: t(messages, 'footer.support.helpCenter') },
 ];
 const pageTitle = t(messages, 'footer.support.helpCenter');
+const pageCopy = resolveCollectionPageCopy(locale, 'help', siteSeo);
 ---
 
 <BaseLayout
-  title={pageTitle}
+  title={pageCopy.seoTitle}
+  description={pageCopy.seoDescription}
   pageType="collection"
   breadcrumbs={breadcrumbItems}
   messages={messages}
@@ -107,7 +114,12 @@ const pageTitle = t(messages, 'footer.support.helpCenter');
   <div class="container mx-auto px-4 py-8">
     <Breadcrumb items={breadcrumbItems} locale={locale} />
 
-    <h1 class="text-4xl lg:text-5xl font-black mb-8">{pageTitle}</h1>
+    <div class="max-w-4xl mb-8">
+      <h1 class="text-4xl lg:text-5xl font-black">{pageCopy.heading}</h1>
+      <p class="mt-4 text-base leading-7 text-gray-600 lg:text-lg lg:leading-8">
+        {pageCopy.intro}
+      </p>
+    </div>
 
     <!-- 搜索框 -->
     <div class="mb-8">
