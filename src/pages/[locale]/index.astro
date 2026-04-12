@@ -4,7 +4,6 @@ import Hero from "@/components/Hero.svelte";
 import { supportedLocales, type Locale, getLocale } from "@/i18n/config";
 import { loadMessages, t } from "@/i18n";
 import {
-	fetchApi,
 	fetchApiWithLocaleFallback,
 	api,
 	parseHeroMedia,
@@ -33,7 +32,7 @@ const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
 
 // 3. 使用泛型获取数据，避免 unknown
-const homeData = await fetchApi<StrapiResponse<HomeAttributes>>(api.home, {
+const homeData = await fetchApiWithLocaleFallback<StrapiResponse<HomeAttributes>>(api.home, {
 	locale,
 	populate: {
 		heroMedia: true,
@@ -107,6 +106,24 @@ const displayInsights =
 		? latestInsights
 		: manualInsights.slice(0, homeInsightsCount);
 const showInsights = Boolean(data.insightsTitle) && displayInsights.length > 0;
+const aboutGlorisLinkLabel =
+	data.aboutGlorisLinkLabel?.trim() || t(messages, "common.readMore");
+const aboutGlorisLinkHref = toHref(data.aboutGlorisLink?.trim() || "/about", locale);
+const productsLinkLabel =
+	data.productsLinkLabel?.trim() || t(messages, "common.viewAll");
+const productsLinkHref = toHref(data.productsLink?.trim() || "/products", locale);
+const insightsLinkLabel =
+	data.insightsLinkLabel?.trim() || t(messages, "common.viewAll");
+const insightsLinkHref = toHref(
+	data.insightsLink?.trim() || "/about/insights",
+	locale,
+);
+const downloadFilesLinkLabel =
+	data.downloadFilesLinkLabel?.trim() || t(messages, "common.viewAll");
+const downloadFilesLinkHref = toHref(
+	data.downloadFilesLink?.trim() || "/support/download",
+	locale,
+);
 
 // 处理数据
 const heroMediaProp = parseHeroMedia(data.heroMedia);
@@ -182,53 +199,65 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 						/>
 					)
 			}
-			<div class="flex flex-col gap-3 lg:gap-6 p-4 lg:p-16">
-				<h3 class="text-4xl font-bold">
-					{data.aboutGlorisTitleH1}
-				</h3>
+				<div class="flex flex-col gap-3 lg:gap-6 p-4 lg:p-16">
+					{
+						data.aboutGlorisTitle && (
+							<p class="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-600">
+								{data.aboutGlorisTitle}
+							</p>
+						)
+					}
+					<h3 class="text-4xl font-bold">
+						{data.aboutGlorisTitleH1}
+					</h3>
 				<h4 class="text-2xl font-bold">
 					{data.aboutGlorisTitleH2}
 				</h4>
 				<p class="text-lg text-gray-700">
 					{data.aboutGlorisDescription}
 				</p>
-				<a
-					href={toHref("/about", locale)}
-					class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
-				>
-					{t(messages, "common.readMore")}
-					<CircleChevronRight class="w-4 h-4" />
-				</a>
+					<a
+						href={aboutGlorisLinkHref}
+						class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+					>
+						{aboutGlorisLinkLabel}
+						<CircleChevronRight class="w-4 h-4" />
+					</a>
+				</div>
 			</div>
-		</div>
 
 		<!-- Gloris News 新闻卡片 -->
-		{
-			data.glorisNewsTitle && (
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-					{((data.glorisNews as NewsItem[]) || []).map((news) => (
-						<NewsCard news={news} locale={locale} />
-					))}
-				</div>
-			)
-		}
+			{
+				data.glorisNewsTitle && (
+					<div class="w-full space-y-6">
+						<h2 class="text-3xl font-bold">
+							{data.glorisNewsTitle as string}
+						</h2>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							{((data.glorisNews as NewsItem[]) || []).map((news) => (
+								<NewsCard news={news} locale={locale} />
+							))}
+						</div>
+					</div>
+				)
+			}
 
 		<!-- Products 产品展示 -->
 		{
 			data.productsTitle && (
 				<div class="w-full">
 					<div class="flex items-center justify-between mb-6">
-						<h2 class="text-3xl font-bold">
-							{data.productsTitle as string}
-						</h2>
-						<a
-							href={toHref("/products", locale)}
-							class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
-						>
-							{t(messages, "common.viewAll")}
-							<CircleChevronRight class="w-4 h-4" />
-						</a>
-					</div>
+							<h2 class="text-3xl font-bold">
+								{data.productsTitle as string}
+							</h2>
+							<a
+								href={productsLinkHref}
+								class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+							>
+								{productsLinkLabel}
+								<CircleChevronRight class="w-4 h-4" />
+							</a>
+						</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 						{homeProducts.map(
 							(product) => (
@@ -248,17 +277,17 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 			showInsights && (
 				<div class="w-full">
 					<div class="flex items-center justify-between mb-6">
-						<h2 class="text-3xl font-bold">
-							{data.insightsTitle as string}
-						</h2>
-						<a
-							href={toHref("/about/insights", locale)}
-							class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
-						>
-							{t(messages, "common.viewAll")}
-							<CircleChevronRight class="w-4 h-4" />
-						</a>
-					</div>
+							<h2 class="text-3xl font-bold">
+								{data.insightsTitle as string}
+							</h2>
+							<a
+								href={insightsLinkHref}
+								class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+							>
+								{insightsLinkLabel}
+								<CircleChevronRight class="w-4 h-4" />
+							</a>
+						</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 						{displayInsights.map(
 							(insight) => (
@@ -277,17 +306,17 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 		{showDownloadFiles && (
 			<div class="w-full">
 				<div class="flex items-center justify-between mb-6">
-					<h2 class="text-3xl font-bold">
-						{data.downloadFilesTitle as string}
-					</h2>
-					<a
-						href={toHref("/support/download", locale)}
-						class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
-					>
-						{t(messages, "common.viewAll")}
-						<CircleChevronRight class="w-4 h-4" />
-					</a>
-				</div>
+						<h2 class="text-3xl font-bold">
+							{data.downloadFilesTitle as string}
+						</h2>
+						<a
+							href={downloadFilesLinkHref}
+							class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+						>
+							{downloadFilesLinkLabel}
+							<CircleChevronRight class="w-4 h-4" />
+						</a>
+					</div>
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 					{downloadFileList.map((fileItem) => (
 						<DownloadFileCard

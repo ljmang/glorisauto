@@ -72,6 +72,13 @@ const featuredInsightSlugs = new Set(
 const latestInsights = allLatestInsights
   .filter((insight) => !featuredInsightSlugs.has(insight.slug))
   .slice(0, latestInsightsCount);
+const storyLinkLabel = aboutUs?.storyLinkLabel?.trim() || t(messages, 'common.readMore');
+const storyLinkHref = toHref(aboutUs?.storyLink?.trim() || '/about/insights/news/brand-story', locale);
+const latestInsightsTitle = aboutUs?.latestInsightsTitle?.trim() || t(messages, 'footer.about.insights');
+const latestInsightsLinkLabel =
+  aboutUs?.latestInsightsLinkLabel?.trim() || t(messages, 'common.viewAll');
+const latestInsightsLinkHref = toHref(aboutUs?.latestInsightsLink?.trim() || '/about/insights', locale);
+const messageButtonHref = toHref(aboutUs?.messageButtonLink?.trim() || '/contact', locale);
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -84,12 +91,14 @@ const defaultMapLinkUrl = 'https://www.google.com/maps?q=23.1291,113.2644';
 
 const googleMaps = aboutUs?.googleMaps?.trim() || '';
 const mapLinkUrl = googleMaps || defaultMapLinkUrl;
+const mapLinkLabel = aboutUs?.mapLinkLabel?.trim() || 'View on Google Map';
 // 打开链接转成 iframe 嵌入地址：加 output=embed，域名用 maps.google.com
 const mapEmbedUrl = googleMaps
   ? googleMaps.includes('output=embed')
     ? googleMaps
     : `https://maps.google.com/maps?${new URL(googleMaps).searchParams.toString()}&z=12&output=embed`
   : defaultMapEmbedUrl;
+const mapEmbedTitle = aboutUs?.mapEmbedTitle?.trim() || 'Google Map - Guangzhou';
 ---
 
 <BaseLayout
@@ -140,10 +149,10 @@ const mapEmbedUrl = googleMaps
               </p>
             )}
             <a
-              href={toHref('/about/insights/news/brand-story', locale)}
+              href={storyLinkHref}
               class="inline-flex items-center gap-2 text-cyan-600 hover:text-orange-600 transition-colors font-semibold"
             >
-              {t(messages, 'common.readMore')}
+              {storyLinkLabel}
               <CircleChevronRight class="w-4 h-4" />
             </a>
           </div>
@@ -227,7 +236,7 @@ const mapEmbedUrl = googleMaps
                       </p>
                     )}
                     <a
-                      href={toHref('/contact', locale)}
+                      href={messageButtonHref}
                       class="inline-flex items-center gap-2 text-cyan-600 hover:text-orange-600 transition-colors font-semibold"
                     >
                       {aboutUs.messageButton || t(messages, 'common.readMore')}
@@ -281,7 +290,7 @@ const mapEmbedUrl = googleMaps
                       rel="noopener noreferrer"
                       class="inline-block mt-3 text-cyan-600 hover:text-orange-600 transition-colors"
                     >
-                      View on Google Map
+                      {mapLinkLabel}
                     </a>
                   </div>
                 )}
@@ -297,7 +306,7 @@ const mapEmbedUrl = googleMaps
                   allowfullscreen
                   loading="lazy"
                   referrerpolicy="no-referrer-when-downgrade"
-                  title="Google Map - Guangzhou"
+                  title={mapEmbedTitle}
                 ></iframe>
               </div>
             </div>
@@ -309,13 +318,13 @@ const mapEmbedUrl = googleMaps
           <section class="mt-16 pt-16 border-t border-gray-200">
             <div class="flex items-center justify-between mb-8">
               <h2 class="text-3xl lg:text-4xl font-bold ">
-                {t(messages, 'footer.about.insights')}
+                {latestInsightsTitle}
               </h2>
               <a
-                href={toHref('/about/insights', locale)}
+                href={latestInsightsLinkHref}
                 class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
               >
-                {t(messages, 'common.viewAll')}
+                {latestInsightsLinkLabel}
                 <CircleChevronRight class="w-4 h-4" />
               </a>
             </div>

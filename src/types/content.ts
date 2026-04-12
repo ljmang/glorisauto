@@ -20,12 +20,20 @@ export interface HomeAttributes {
   aboutGlorisTitleH2: string;
   aboutGlorisDescription: string;
   aboutGlorisCover: StrapiMedia | null;
+  aboutGlorisLinkLabel?: string;
+  aboutGlorisLink?: string;
   glorisNewsTitle?: string;
   productsTitle?: string;
+  productsLinkLabel?: string;
+  productsLink?: string;
   insightsTitle?: string;
   insightsMode?: InsightDisplayMode;
   insightsCount?: number;
+  insightsLinkLabel?: string;
+  insightsLink?: string;
   downloadFilesTitle?: string;
+  downloadFilesLinkLabel?: string;
+  downloadFilesLink?: string;
   glorisNews?: NewsItem[];
   products?: unknown[];
   insights?: InsightAttributes[];
@@ -185,6 +193,8 @@ export interface AboutUsAttributes {
   title: string;
   subTitle?: string;
   description?: string;
+  storyLinkLabel?: string;
+  storyLink?: string;
   heroMedia?: StrapiMedia | StrapiMedia[] | null;
   content?: string;
   coverImage?: StrapiMedia | null;
@@ -194,13 +204,19 @@ export interface AboutUsAttributes {
   insights?: InsightAttributes[];
   /** 关于我们底部最新文章数量 */
   latestInsightsCount?: number;
+  latestInsightsTitle?: string;
+  latestInsightsLinkLabel?: string;
+  latestInsightsLink?: string;
   /** Google 地图链接 */
   googleMaps?: string | null;
+  mapLinkLabel?: string;
+  mapEmbedTitle?: string;
   /** 联系我们区块 */
   contactGlorisTitle?: string;
   messageTitle?: string;
   messageDescription?: string;
   messageButton?: string;
+  messageButtonLink?: string;
   phoneTitle?: string;
   phoneDescription?: string;
   phoneNumber?: string;
