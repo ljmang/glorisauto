@@ -131,6 +131,16 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
       <meta property="article:modified_time" content={modifiedTime || publishedTime} />
     )}
 
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WGFHNVN3WZ"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+      gtag('config', 'G-WGFHNVN3WZ');
+    </script>
+
     {resolvedSeo.jsonLd.map((schema, index) => (
       <script type="application/ld+json" set:html={JSON.stringify(schema)} data-schema={String(index)} />
     ))}
