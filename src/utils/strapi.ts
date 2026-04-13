@@ -3,7 +3,7 @@
  * 仅服务端/构建时使用（Astro getStaticPaths、页面顶层 await）
  */
 
-/** 前端 locale → Strapi 后台 locale，须与 Settings → Internationalization 中一致（你后台中文为 zh） */
+/** 前端 locale → Strapi 后台 locale，须与 Settings → Internationalization 中一致 */
 const STRAPI_LOCALE_MAP: Record<string, string> = {
   'en': 'en',
   'zh-cn': 'zh-cn',

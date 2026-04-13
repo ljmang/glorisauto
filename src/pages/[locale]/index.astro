@@ -51,6 +51,7 @@ const homeData = await fetchApiWithLocaleFallback<StrapiResponse<HomeAttributes>
 		},
 		products: {
 			populate: {
+				cover: true,
 				images: true,
 				category: true,
 			},

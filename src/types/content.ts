@@ -79,12 +79,14 @@ export interface CollectionPageCopyFields {
 export interface ProductAttributes {
   name: string;
   slug: string;
+  cover?: StrapiMedia | null;
   description?: string;
   productFeatures?: string;
   shortDescription?: string;
   images?: StrapiMedia | StrapiMedia[];
   category?: unknown;
   price?: number;
+  sort?: number | null;
   specifications?: Record<string, unknown>;
   seo?: StrapiSeo | null;
 }
