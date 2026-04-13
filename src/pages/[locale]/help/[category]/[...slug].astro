@@ -59,7 +59,7 @@ const articleRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCen
         twitterImage: true,
       },
     },
-    products: { populate: { images: true, category: true } },
+    products: { populate: { cover: true, images: true, category: true } },
     articles: { populate: { cover: true } },
   },
   filters: {

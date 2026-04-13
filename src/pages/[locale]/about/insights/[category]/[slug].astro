@@ -53,7 +53,7 @@ const articleRes = await fetchApiWithLocaleFallback<{ data?: InsightAttributes[]
         twitterImage: true,
       },
     },
-    products: { populate: { images: true, category: true } },
+    products: { populate: { cover: true, images: true, category: true } },
     articles: { populate: { cover: true } },
   },
   filters: {

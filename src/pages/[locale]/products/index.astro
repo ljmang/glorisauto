@@ -30,7 +30,7 @@ const [categoriesRes, productsRes, siteSeo] = await Promise.all([
   }),
   fetchApi<{ data?: ProductAttributes[] }>(api.products, {
     locale,
-    populate: { images: true, category: true },
+    populate: { cover: true, images: true, category: true },
     pagination: { pageSize: 100 },
   }),
   fetchSiteSeo(locale),

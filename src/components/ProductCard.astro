@@ -18,8 +18,8 @@ interface Props {
 
 const { product, locale } = Astro.props;
 
-// 解析第一张图片
-const productImage = parseImage(product.images);
+// 产品卡片优先使用独立封面图，未设置时回退到图片列表第一张
+const productImage = parseImage(product.cover ?? product.images);
 // 产品详情页链接：/products/{category}/{slug}（与 [category]/[slug].astro 一致）
 const categorySlug =
   product.category && typeof product.category === 'object' && 'slug' in product.category

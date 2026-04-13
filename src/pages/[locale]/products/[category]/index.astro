@@ -61,7 +61,7 @@ const slugsToFilter =
 
 const productsRes = await fetchApi<{ data?: ProductAttributes[] }>(api.products, {
   locale,
-  populate: { images: true, category: true },
+  populate: { cover: true, images: true, category: true },
   filters: slugsToFilter.length > 1 ? { category: { slug: { $in: slugsToFilter } } } : { category: { slug: { $eq: categorySlug } } },
   pagination: { pageSize: 100 },
 });

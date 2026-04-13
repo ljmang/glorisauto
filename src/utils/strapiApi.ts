@@ -25,6 +25,19 @@ export async function fetchApiWithLocaleFallback<T = unknown>(
   return fetchApiBase(path, { ...options, locale: defaultLocale }) as Promise<T>;
 }
 
+function appendMediaVersion(url: string, version?: string): string {
+  if (!url || !version) return url;
+
+  try {
+    const target = new URL(url);
+    target.searchParams.set('v', version);
+    return target.toString();
+  } catch {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}v=${encodeURIComponent(version)}`;
+  }
+}
+
 /** v5 媒体：对象带 url，或数组取首项 */
 export function getMediaUrlFromField(field: unknown): string {
   if (field == null) return '';
@@ -32,7 +45,11 @@ export function getMediaUrlFromField(field: unknown): string {
   if (target == null) return '';
   const r = target as Record<string, unknown>;
   const url = typeof r?.url === 'string' ? r.url : '';
-  return getMediaUrlBase(url);
+  const version =
+    (typeof r?.updatedAt === 'string' && r.updatedAt) ||
+    (typeof r?.createdAt === 'string' && r.createdAt) ||
+    undefined;
+  return appendMediaVersion(getMediaUrlBase(url), version);
 }
 
 const VIDEO_MIME_PREFIX = 'video/';
@@ -53,7 +70,11 @@ export function parseHeroMedia(field: unknown): { type: 'image' | 'video'; src: 
   if (target == null) return null;
   const r = target as Record<string, unknown>;
   const url = typeof r?.url === 'string' ? r.url : '';
-  const src = getMediaUrlBase(url);
+  const version =
+    (typeof r?.updatedAt === 'string' && r.updatedAt) ||
+    (typeof r?.createdAt === 'string' && r.createdAt) ||
+    undefined;
+  const src = appendMediaVersion(getMediaUrlBase(url), version);
   if (!src) return null;
   const type = isVideoMedia(r) ? 'video' : 'image';
   return { type, src };
@@ -71,6 +92,8 @@ export interface StrapiImage {
   mime?: string;
   ext?: string;
   formats?: Record<string, unknown>;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /** 解析图片字段，返回图片信息对象（用于 img 标签） */
@@ -89,7 +112,11 @@ export function parseImage(field: unknown): {
   
   const img = target as StrapiImage;
   const url = typeof img?.url === 'string' ? img.url : '';
-  const src = getMediaUrlBase(url);
+  const version =
+    (typeof img?.updatedAt === 'string' && img.updatedAt) ||
+    (typeof img?.createdAt === 'string' && img.createdAt) ||
+    undefined;
+  const src = appendMediaVersion(getMediaUrlBase(url), version);
   if (!src) return null;
   
   // alt 文本优先级：alternativeText > caption > name > ''
