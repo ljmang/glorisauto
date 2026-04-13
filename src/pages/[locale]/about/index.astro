@@ -44,7 +44,6 @@ const aboutUsRes = await fetchApiWithLocaleFallback<StrapiResponse<AboutUsAttrib
 // 处理 about-us 数据（单类型）
 const aboutUs = aboutUsRes?.data;
 const heroMedia = aboutUs ? parseImage(aboutUs.heroMedia) : null;
-const aboutInsightsMode = aboutUs?.insightsMode === 'latest' ? 'latest' : 'manual';
 const featuredInsightsCount = normalizeInsightsCount(aboutUs?.insightsCount, 2);
 const latestInsightsCount = normalizeInsightsCount(aboutUs?.latestInsightsCount, 3);
 
@@ -59,13 +58,13 @@ const latestInsightsRes = aboutUs
     })
   : null;
 
-const manualFeaturedArticles = Array.isArray(aboutUs?.insights) ? aboutUs.insights : [];
+const manualFeaturedArticles = Array.isArray(aboutUs?.insights)
+  ? aboutUs.insights.filter((insight) => Boolean(insight?.slug))
+  : [];
 const allLatestInsights = Array.isArray(latestInsightsRes?.data)
   ? latestInsightsRes.data.filter((insight) => Boolean(insight?.slug))
   : [];
-const featuredArticles = (
-  aboutInsightsMode === 'latest' ? allLatestInsights : manualFeaturedArticles
-).slice(0, featuredInsightsCount);
+const featuredArticles = manualFeaturedArticles.slice(0, featuredInsightsCount);
 const featuredInsightSlugs = new Set(
   featuredArticles.map((article) => article.slug).filter((slug): slug is string => Boolean(slug))
 );
@@ -160,7 +159,7 @@ const mapEmbedTitle = aboutUs?.mapEmbedTitle?.trim() || 'Google Map - Guangzhou'
       )}
 
       <div class="container mx-auto px-4 py-12 lg:py-16">
-        <!-- 2. 中间：手动文章或最新文章 -->
+        <!-- 2. 中间：后台手动指定文章 -->
         {featuredArticles.length > 0 && (
           <section class="mb-16 lg:mb-20 space-y-16 lg:space-y-20">
             {featuredArticles.map((article, index) => {
