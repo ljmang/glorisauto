@@ -52,32 +52,135 @@ export function getMediaUrlFromField(field: unknown): string {
   return appendMediaVersion(getMediaUrlBase(url), version);
 }
 
+const IMAGE_MIME_PREFIX = 'image/';
 const VIDEO_MIME_PREFIX = 'video/';
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', '.svg'];
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.m4v'];
 
-function isVideoMedia(record: Record<string, unknown>): boolean {
-  const mime = record?.mime as string | undefined;
-  if (typeof mime === 'string' && mime.startsWith(VIDEO_MIME_PREFIX)) return true;
-  const url = (record?.url as string) ?? '';
+function getMediaVersion(record: Record<string, unknown>): string | undefined {
+  return (
+    (typeof record?.updatedAt === 'string' && record.updatedAt) ||
+    (typeof record?.createdAt === 'string' && record.createdAt) ||
+    undefined
+  );
+}
+
+function getMediaAltText(record: Record<string, unknown>): string {
+  return (
+    (typeof record?.alternativeText === 'string' && record.alternativeText) ||
+    (typeof record?.caption === 'string' && record.caption) ||
+    (typeof record?.name === 'string' && record.name) ||
+    ''
+  );
+}
+
+function getMediaDimensions(record: Record<string, unknown>): { width?: number; height?: number } {
+  return {
+    width: typeof record?.width === 'number' ? record.width : undefined,
+    height: typeof record?.height === 'number' ? record.height : undefined,
+  };
+}
+
+function resolveMediaSrc(record: Record<string, unknown>): string {
+  const url = typeof record?.url === 'string' ? record.url : '';
+  return appendMediaVersion(getMediaUrlBase(url), getMediaVersion(record));
+}
+
+function hasExtension(url: string, extensions: string[]): boolean {
   const lower = url.toLowerCase();
-  return VIDEO_EXTENSIONS.some((ext) => lower.includes(ext));
+  return extensions.some((ext) => lower.includes(ext));
+}
+
+function detectMediaType(record: Record<string, unknown>): 'image' | 'video' | null {
+  const mime = record?.mime as string | undefined;
+  if (typeof mime === 'string' && mime.startsWith(VIDEO_MIME_PREFIX)) return 'video';
+  if (typeof mime === 'string' && mime.startsWith(IMAGE_MIME_PREFIX)) return 'image';
+
+  const url = (record?.url as string) ?? '';
+  if (hasExtension(url, VIDEO_EXTENSIONS)) return 'video';
+  if (hasExtension(url, IMAGE_EXTENSIONS)) return 'image';
+
+  if (typeof record?.width === 'number' || typeof record?.height === 'number') return 'image';
+  return null;
+}
+
+function resolveVideoPoster(record: Record<string, unknown>): string | undefined {
+  const previewUrl = (record as { previewUrl?: unknown }).previewUrl;
+  if (typeof previewUrl === 'string' && previewUrl) {
+    return appendMediaVersion(getMediaUrlBase(previewUrl), getMediaVersion(record));
+  }
+
+  const formats = record?.formats;
+  if (!formats || typeof formats !== 'object') return undefined;
+
+  const candidates = ['thumbnail', 'small', 'medium', 'large'];
+  for (const key of candidates) {
+    const format = (formats as Record<string, unknown>)[key];
+    if (!format || typeof format !== 'object') continue;
+    const formatUrl = (format as { url?: unknown }).url;
+    if (typeof formatUrl === 'string' && formatUrl) {
+      return appendMediaVersion(getMediaUrlBase(formatUrl), getMediaVersion(record));
+    }
+  }
+
+  return undefined;
+}
+
+export interface ParsedMediaItem {
+  type: 'image' | 'video';
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  name?: string;
+  poster?: string;
+}
+
+export function parseMedia(field: unknown): ParsedMediaItem | null {
+  if (field == null) return null;
+  const target = Array.isArray(field) ? field[0] : field;
+  if (target == null) return null;
+
+  const record = target as Record<string, unknown>;
+  const type = detectMediaType(record);
+  const src = resolveMediaSrc(record);
+  if (!type || !src) return null;
+
+  const { width, height } = getMediaDimensions(record);
+
+  return {
+    type,
+    src,
+    alt: getMediaAltText(record),
+    width,
+    height,
+    name: typeof record?.name === 'string' ? record.name : undefined,
+    poster: type === 'video' ? resolveVideoPoster(record) : undefined,
+  };
+}
+
+export function parseMediaItems(field: unknown): ParsedMediaItem[] {
+  if (field == null) return [];
+
+  if (Array.isArray(field)) {
+    return field
+      .map((item) => parseMedia(item))
+      .filter((item): item is ParsedMediaItem => item !== null);
+  }
+
+  const single = parseMedia(field);
+  return single ? [single] : [];
 }
 
 /** 从单一 heroMedia 字段解析出 { type, src, poster? }，图片或视频均由该字段上传 */
 export function parseHeroMedia(field: unknown): { type: 'image' | 'video'; src: string; poster?: string } | null {
-  if (field == null) return null;
-  const target = Array.isArray(field) ? field[0] : field;
-  if (target == null) return null;
-  const r = target as Record<string, unknown>;
-  const url = typeof r?.url === 'string' ? r.url : '';
-  const version =
-    (typeof r?.updatedAt === 'string' && r.updatedAt) ||
-    (typeof r?.createdAt === 'string' && r.createdAt) ||
-    undefined;
-  const src = appendMediaVersion(getMediaUrlBase(url), version);
-  if (!src) return null;
-  const type = isVideoMedia(r) ? 'video' : 'image';
-  return { type, src };
+  const media = parseMedia(field);
+  if (!media) return null;
+  return {
+    type: media.type,
+    src: media.src,
+    poster: media.poster,
+  };
 }
 
 /** Strapi 图片对象类型 */
@@ -111,26 +214,18 @@ export function parseImage(field: unknown): {
   if (target == null) return null;
   
   const img = target as StrapiImage;
-  const url = typeof img?.url === 'string' ? img.url : '';
-  const version =
-    (typeof img?.updatedAt === 'string' && img.updatedAt) ||
-    (typeof img?.createdAt === 'string' && img.createdAt) ||
-    undefined;
-  const src = appendMediaVersion(getMediaUrlBase(url), version);
+  if (detectMediaType(img as Record<string, unknown>) !== 'image') return null;
+
+  const src = resolveMediaSrc(img as Record<string, unknown>);
   if (!src) return null;
   
-  // alt 文本优先级：alternativeText > caption > name > ''
-  const alt = 
-    (typeof img?.alternativeText === 'string' && img.alternativeText) ||
-    (typeof img?.caption === 'string' && img.caption) ||
-    (typeof img?.name === 'string' && img.name) ||
-    '';
+  const { width, height } = getMediaDimensions(img as Record<string, unknown>);
   
   return {
     src,
-    alt,
-    width: typeof img?.width === 'number' ? img.width : undefined,
-    height: typeof img?.height === 'number' ? img.height : undefined,
+    alt: getMediaAltText(img as Record<string, unknown>),
+    width,
+    height,
     name: typeof img?.name === 'string' ? img.name : undefined,
   };
 }

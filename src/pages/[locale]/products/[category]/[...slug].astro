@@ -2,7 +2,7 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
-import { fetchApi, api, parseImage, parseImages, getMediaUrl } from '@/utils/strapiApi';
+import { fetchApi, api, parseImage, parseMediaItems, getMediaUrl } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { markdownToHtml } from '@/utils/markdown';
 import { hasMeaningfulText, sanitizeInlineText, sanitizeMarkdown } from '@/utils/contentSanitizers';
@@ -75,9 +75,18 @@ const category = (product as { category?: { slug?: string; name?: string } } | n
 const categoryName = category?.name ?? categorySlug;
 
 const productCoverImage = product ? parseImage(product.cover) : null;
-const productImages = product ? parseImages(product.images) : [];
-const productGalleryImages =
-  productImages.length > 0 ? productImages : productCoverImage ? [productCoverImage] : [];
+const productMedia = product ? parseMediaItems(product.images) : [];
+const productGalleryMedia =
+  productMedia.length > 0
+    ? productMedia.map((media) =>
+        media.type === 'video' && !media.poster && productCoverImage?.src
+          ? { ...media, poster: productCoverImage.src }
+          : media
+      )
+    : productCoverImage
+      ? [{ type: 'image' as const, ...productCoverImage }]
+      : [];
+const productSeoImage = productCoverImage ?? productGalleryMedia.find((media) => media.type === 'image') ?? null;
 const rawInformationList = (product as { information?: { title?: string; description?: BlockNode[] }[] } | null)?.information ?? [];
 const informationList = rawInformationList
   .map((item) => ({
@@ -184,7 +193,7 @@ const breadcrumbItems = [
 <BaseLayout
   title={product ? `${product.name} - ${t(messages, 'pageTitle.products')}` : t(messages, 'pageTitle.products')}
   description={productDescription}
-  image={product?.cover ?? product?.images}
+  image={product?.cover ?? (productSeoImage ? { url: productSeoImage.src } : undefined)}
   seo={product?.seo}
   pageType="product"
   breadcrumbs={breadcrumbItems}
@@ -198,7 +207,7 @@ const breadcrumbItems = [
 
         <section class='mb-12 grid gap-8 lg:grid-cols-2 lg:gap-12'>
           <div class='lg:min-w-0'>
-            <ProductGallery images={productGalleryImages} productName={product.name ?? ''} />
+            <ProductGallery media={productGalleryMedia} productName={product.name ?? ''} />
           </div>
           <div>
             <h1 class='text-3xl font-bold md:text-4xl'>{product.name}</h1>
