@@ -1,57 +1,91 @@
 ---
 /**
- * 产品多图切换：主图 + 缩略图，点击缩略图切换主图
+ * 产品多媒体切换：主媒体 + 缩略图，支持图片 / 视频切换
  */
-interface ImageItem {
-  src: string;
-  alt: string;
-  width?: number;
-  height?: number;
-}
+import type { ParsedMediaItem } from '@/utils/strapiApi';
 
 interface Props {
-  images: ImageItem[];
+  media: ParsedMediaItem[];
   productName: string;
 }
 
-const { images, productName } = Astro.props;
-const list = Array.isArray(images) && images.length > 0 ? images : [];
+const { media, productName } = Astro.props;
+const list = Array.isArray(media) && media.length > 0 ? media : [];
 const first = list[0];
-// Astro Image 需要静态 import 或 getImage，这里主图/缩略图用普通 img 以支持动态 URL
 ---
 
-<div class="product-gallery">
-  <div class="mb-4 aspect-square w-full overflow-hidden p-8">
+<div class="product-gallery" data-product-gallery-root>
+  <div class="mb-4 aspect-square w-full overflow-hidden p-8" data-product-gallery-stage>
     {first ? (
-      <img
-        id="product-gallery-main"
-        src={first.src}
-        alt={first.alt || productName}
-        width={first.width ?? 600}
-        height={first.height ?? 600}
-        class="h-full w-full object-contain"
-        loading="eager"
-      />
+      first.type === 'video' ? (
+        <video
+          data-product-gallery-main
+          src={first.src}
+          poster={first.poster}
+          aria-label={first.alt || productName}
+          width={first.width ?? 600}
+          height={first.height ?? 600}
+          class="h-full w-full object-contain"
+          preload="metadata"
+          autoplay
+          muted
+          playsinline
+          loop
+          controls
+        />
+      ) : (
+        <img
+          data-product-gallery-main
+          src={first.src}
+          alt={first.alt || productName}
+          width={first.width ?? 600}
+          height={first.height ?? 600}
+          class="h-full w-full object-contain"
+          loading="eager"
+        />
+      )
     ) : (
-      <div class="flex h-full w-full items-center justify-center text-gray-400">No image</div>
+      <div class="flex h-full w-full items-center justify-center text-gray-400">No media</div>
     )}
   </div>
+
   {list.length > 1 && (
-    <div class="flex justify-center flex-wrap gap-2" role="tablist" aria-label="Product images">
-      {list.map((img, i) => (
+    <div class="flex flex-wrap justify-center gap-2" role="tablist" aria-label="Product media">
+      {list.map((item, i) => (
         <button
           type="button"
           data-product-thumb
-          data-src={img.src}
-          data-alt={img.alt || productName}
+          data-type={item.type}
+          data-src={item.src}
+          data-alt={item.alt || productName}
+          data-poster={item.poster ?? ''}
+          data-width={item.width ? String(item.width) : ''}
+          data-height={item.height ? String(item.height) : ''}
           class="h-16 w-16 shrink-0 overflow-hidden rounded border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500"
           class:list={[
             i === 0 ? 'border-orange-500' : 'border-gray-200 hover:border-gray-300',
           ]}
           aria-selected={i === 0}
-          aria-label={`View image ${i + 1}`}
+          aria-label={item.type === 'video' ? `Play video ${i + 1}` : `View image ${i + 1}`}
         >
-          <img src={img.src} alt="" class="h-full w-full object-cover" width="64" height="64" loading="lazy" />
+          {item.type === 'video' ? (
+            <div class="relative h-full w-full bg-gray-900">
+              {item.poster ? (
+                <img src={item.poster} alt="" class="h-full w-full object-cover" width="64" height="64" loading="lazy" />
+              ) : (
+                <div class="flex h-full w-full items-center justify-center text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
+                  Video
+                </div>
+              )}
+              <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <span class="flex h-7 w-7 items-center justify-center rounded-full bg-black/65 text-[11px] text-white">
+                  ▶
+                </span>
+              </span>
+            </div>
+          ) : (
+            <img src={item.src} alt="" class="h-full w-full object-cover" width="64" height="64" loading="lazy" />
+          )}
         </button>
       ))}
     </div>
@@ -59,18 +93,101 @@ const first = list[0];
 </div>
 
 <script>
-  document.querySelectorAll('[data-product-thumb]').forEach((btn, i) => {
-    btn.addEventListener('click', () => {
-      const main = document.getElementById('product-gallery-main') as HTMLImageElement | null;
-      if (!main) return;
-      const src = btn.getAttribute('data-src');
-      const alt = btn.getAttribute('data-alt');
-      if (src) main.src = src;
-      if (alt != null) main.alt = alt;
-      document.querySelectorAll('[data-product-thumb]').forEach((b, j) => {
-        b.setAttribute('aria-selected', j === i ? 'true' : 'false');
-        b.classList.toggle('border-orange-500', j === i);
-        b.classList.toggle('border-gray-200', j !== i);
+  function autoplayVideo(video) {
+    if (!(video instanceof HTMLVideoElement)) return;
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {});
+    }
+  }
+
+  function stopVideo(video) {
+    if (!(video instanceof HTMLVideoElement)) return;
+    video.pause();
+    try {
+      video.currentTime = 0;
+    } catch {
+      // Ignore reset failures for partially loaded media.
+    }
+  }
+
+  function syncThumbState(thumbs, activeIndex) {
+    thumbs.forEach((thumb, index) => {
+      thumb.setAttribute('aria-selected', index === activeIndex ? 'true' : 'false');
+      thumb.classList.toggle('border-orange-500', index === activeIndex);
+      thumb.classList.toggle('border-gray-200', index !== activeIndex);
+    });
+  }
+
+  document.querySelectorAll('[data-product-gallery-root]').forEach((root) => {
+    const stage = root.querySelector('[data-product-gallery-stage]');
+    if (!(stage instanceof HTMLElement)) return;
+
+    const thumbs = Array.from(root.querySelectorAll('[data-product-thumb]'));
+
+    const initialVideo = stage.querySelector('[data-product-gallery-main]');
+    if (initialVideo instanceof HTMLVideoElement) {
+      autoplayVideo(initialVideo);
+    }
+
+    thumbs.forEach((thumb, index) => {
+      thumb.addEventListener('click', () => {
+        const src = thumb.getAttribute('data-src');
+        const type = thumb.getAttribute('data-type');
+        const alt = thumb.getAttribute('data-alt') || '';
+        const poster = thumb.getAttribute('data-poster') || '';
+        const width = Number(thumb.getAttribute('data-width'));
+        const height = Number(thumb.getAttribute('data-height'));
+
+        if (!src || !type) return;
+
+        const currentVideo = stage.querySelector('[data-product-gallery-main]');
+        if (currentVideo instanceof HTMLVideoElement) {
+          stopVideo(currentVideo);
+        }
+
+        let nextNode;
+
+        if (type === 'video') {
+          const video = document.createElement('video');
+          video.src = src;
+          video.className = 'h-full w-full object-contain';
+          video.preload = 'metadata';
+          video.autoplay = true;
+          video.muted = true;
+          video.defaultMuted = true;
+          video.loop = true;
+          video.controls = true;
+          video.playsInline = true;
+          video.setAttribute('playsinline', '');
+          video.setAttribute('data-product-gallery-main', '');
+          if (poster) video.poster = poster;
+          if (alt) video.setAttribute('aria-label', alt);
+          if (Number.isFinite(width) && width > 0) video.width = width;
+          if (Number.isFinite(height) && height > 0) video.height = height;
+          nextNode = video;
+        } else {
+          const image = document.createElement('img');
+          image.src = src;
+          image.alt = alt;
+          image.className = 'h-full w-full object-contain';
+          image.loading = 'eager';
+          image.setAttribute('data-product-gallery-main', '');
+          if (Number.isFinite(width) && width > 0) image.width = width;
+          if (Number.isFinite(height) && height > 0) image.height = height;
+          nextNode = image;
+        }
+
+        stage.replaceChildren(nextNode);
+
+        if (nextNode instanceof HTMLVideoElement) {
+          autoplayVideo(nextNode);
+        }
+
+        syncThumbState(thumbs, index);
       });
     });
   });
