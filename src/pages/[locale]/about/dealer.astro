@@ -10,7 +10,7 @@ import type { BecomeDealerAttributes, InsightAttributes } from '@/types/content'
 import type { StrapiResponse } from '@/types';
 import { Image } from 'astro:assets';
 import { extractTextFromBlocks } from '@/utils/blocks';
-import { MessageCircle, Phone, Mail, MapPin } from 'lucide-svelte';
+import { MessageCircle, Phone, Mail, MapPin, Sparkles, Wrench, TrendingUp } from 'lucide-svelte';
 import { countryOptions, getCountryLabel } from '@/data/countries';
 
 export async function getStaticPaths() {
@@ -47,6 +47,7 @@ const dealer = dealerRes?.data ?? null;
 const heroMedia = dealer ? parseHeroMedia(dealer.heroMedia) : null;
 const focusItems = dealer?.focus ?? [];
 const advantageInsights = (dealer?.insights ?? []) as (InsightAttributes & { cover?: unknown })[];
+const focusFallbackIcons = [Sparkles, Wrench, TrendingUp];
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -107,9 +108,10 @@ const formApiBase = (() => {
     <!-- 3 张资质卡片（使用接口返回的 cover 图片） -->
     {focusItems.length > 0 && (
       <section class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-16">
-        {focusItems.slice(0, 3).map((item) => {
+        {focusItems.slice(0, 3).map((item, index) => {
           const coverImg = parseImage(item.cover);
           const subtitle = extractTextFromBlocks(item.content, 120);
+          const FallbackIcon = focusFallbackIcons[index] ?? Sparkles;
           return (
             <div class="bg-gray-50 rounded-xl p-6 lg:p-12 text-center shadow-sm bg-white">
               {coverImg?.src ? (
@@ -125,7 +127,9 @@ const formApiBase = (() => {
                   />
                 </div>
               ) : (
-                <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-200 flex items-center justify-center" />
+                <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                  <FallbackIcon class="w-10 h-10 text-orange-500" aria-hidden="true" />
+                </div>
               )}
               <h2 class="text-xl font-bold  mb-2">{item.title}</h2>
               {subtitle && <p class="text-gray-600 text-sm leading-relaxed">{subtitle}</p>}
