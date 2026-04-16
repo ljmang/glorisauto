@@ -153,6 +153,11 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 
 		if (aHasSort && bHasSort && aSort !== bSort) return aSort - bSort;
 		if (aHasSort !== bHasSort) return aHasSort ? -1 : 1;
+		const aDocumentId = (a.product as ProductAttributes & { documentId?: string }).documentId ?? "";
+		const bDocumentId = (b.product as ProductAttributes & { documentId?: string }).documentId ?? "";
+		if (aDocumentId && bDocumentId && aDocumentId !== bDocumentId) {
+			return aDocumentId.localeCompare(bDocumentId);
+		}
 		return a.index - b.index;
 	})
 	.map(({ product }) => product));
