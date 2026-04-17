@@ -2,13 +2,13 @@
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import { type Messages, type Locale } from '@/i18n';
-import type { SiteSeoAttributes } from '@/types/content';
+import type { SeoPageAttributes, SiteSeoAttributes } from '@/types/content';
 import type { StrapiResponse, StrapiSeo } from '@/types';
 import type { BreadcrumbMetaItem, JsonLdNode, SeoPageType } from '@/utils/seo';
 import { resolveSeoMeta } from '@/utils/seo';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
 import { transformNavigations } from '@/utils/navigationData';
-import { fetchSiteSeo } from '@/utils/siteConfig';
+import { fetchSeoPage, fetchSiteSeo } from '@/utils/siteConfig';
 import '@/styles/global.css';
 
 interface Props {
@@ -70,13 +70,27 @@ async function getSiteSeo(currentLocale: Locale): Promise<SiteSeoAttributes | nu
   }
 }
 
-const [navData, siteSeo] = await Promise.all([getNavData(locale), getSiteSeo(locale)]);
+async function getSeoPage(currentLocale: Locale, pathname: string): Promise<SeoPageAttributes | null> {
+  try {
+    return await fetchSeoPage(currentLocale, pathname);
+  } catch (error) {
+    console.error('[BaseLayout] failed to load seo page, falling back to defaults:', error);
+    return null;
+  }
+}
+
+const [navData, siteSeo, seoPage] = await Promise.all([
+  getNavData(locale),
+  getSiteSeo(locale),
+  getSeoPage(locale, Astro.url.pathname),
+]);
 
 const resolvedSeo = resolveSeoMeta({
   title,
   description,
   image,
   seo,
+  seoPage,
   siteSeo,
   locale,
   pathname: Astro.url.pathname,

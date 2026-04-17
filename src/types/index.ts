@@ -19,6 +19,8 @@ export type {
   HomeContent,
   SiteSeoAttributes,
   SiteSeoContent,
+  SeoPageAttributes,
+  SeoPageContent,
   ProductAttributes,
   ProductContent,
   CategoryAttributes,
