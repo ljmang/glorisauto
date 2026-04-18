@@ -27,7 +27,7 @@
     class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent pointer-events-none z-10"
     aria-hidden="true"
   >
-    <div class="container mx-auto px-4 py-20 pointer-events-auto">
+    <div class="max-w-3xl mx-auto px-4 py-20 pointer-events-auto">
       {#if title}
         <h1 class="text-4xl sm:text-6xl lg:text-6xl font-bold text-white drop-shadow-md mb-4">
           {title}
