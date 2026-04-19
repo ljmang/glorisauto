@@ -1,4 +1,9 @@
-import { defaultLocale, supportedLocales, type Locale } from '@/i18n/config';
+import {
+  defaultLocale,
+  supportedLocales,
+  localeLanguageTag,
+  type Locale,
+} from '@/i18n/config';
 import type { SeoPageAttributes, SiteSeoAttributes } from '@/types/content';
 import type { StrapiLinkItem, StrapiSeo } from '@/types/strapi';
 import { toHref } from './navigationData';
@@ -105,7 +110,7 @@ function resolveCanonicalUrl(siteUrl: string, pathname: string, canonicalURL?: s
 }
 
 function localeToLanguageTag(locale: Locale): string {
-  return locale === 'zh-cn' ? 'zh-CN' : 'en';
+  return localeLanguageTag[locale];
 }
 
 function resolveImageUrl(...fields: Array<unknown>): string {

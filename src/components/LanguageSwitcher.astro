@@ -22,12 +22,13 @@ interface InsightLookupResult {
 const { currentLocale } = Astro.props;
 
 const currentPath = Astro.url.pathname.replace(`/${currentLocale}`, '') || '/';
-const localeToStrapi: Record<Locale, string> = { en: 'en', 'zh-cn': 'zh-cn' };
-const strapiToLocale: Record<string, Locale> = { en: 'en', 'zh-cn': 'zh-cn' };
+const localeToStrapi: Record<Locale, string> = { en: 'en', 'zh-cn': 'zh-cn', 'ja': 'ja' };
+const strapiToLocale: Record<string, Locale> = { en: 'en', 'zh-cn': 'zh-cn', 'ja': 'ja' };
 
 const resolvedPathByLocale: Record<Locale, string> = {
   en: currentPath,
   'zh-cn': currentPath,
+  'ja': currentPath,
 };
 
 const match = currentPath.match(/^\/about\/insights\/([^/]+)\/([^/]+)\/?$/);

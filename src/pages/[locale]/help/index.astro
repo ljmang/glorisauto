@@ -3,7 +3,7 @@
  * 帮助中心首页：分类标签 + 按分类分组的 FAQ 列表
  */
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { supportedLocales, type Locale, getLocale, localeLanguageTag } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApi, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
@@ -87,7 +87,7 @@ for (const article of [...articles].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0)
 }
 
 const productHelpLinks = Array.from(productHelpLinksMap.values()).sort((a, b) =>
-  a.name.localeCompare(b.name, locale === 'zh-cn' ? 'zh-CN' : 'en')
+  a.name.localeCompare(b.name, localeLanguageTag[locale])
 );
 
 // 4. 每个分类内的文章按 sort 排序

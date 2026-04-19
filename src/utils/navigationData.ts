@@ -55,7 +55,7 @@ function normalizeInternalPath(url: string | undefined): string {
   }
 
   let path = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
-  path = path.replace(/^\/(en|zh-cn|zh|cn)(?=\/|$)/i, '');
+  path = path.replace(/^\/(en|zh-cn|zh|cn|ja)(?=\/|$)/i, '');
   path = path.replace(/\/+$/, '');
   return path || '/';
 }
@@ -71,7 +71,7 @@ export function toHref(url: string | undefined, locale: string): string {
 
   let path = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
 
-  path = path.replace(/^\/(en|zh-cn|zh|cn)(?=\/|$)/i, '');
+  path = path.replace(/^\/(en|zh-cn|zh|cn|ja)(?=\/|$)/i, '');
   if (path === '') path = '/';
 
   if (path === '/' || path === '') return `/${locale}`;

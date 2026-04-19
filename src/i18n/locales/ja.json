@@ -1,0 +1,173 @@
+{
+  "pageTitle": {
+    "home": "ホーム",
+    "products": "製品",
+    "supportTraining": "トレーニング",
+    "search": "検索",
+    "contact": "お問い合わせ",
+    "customerService": "カスタマーサービス",
+    "thankYou": "ありがとうございます",
+    "about": "会社情報",
+    "topBrands": "主要ブランド"
+  },
+  "products": {
+    "allProducts": "すべての製品",
+    "technicalDetails": "技術仕様",
+    "features": "製品特長",
+    "downloads": "ダウンロード",
+    "faq": "よくある質問",
+    "becomeDealer": "販売代理店になる",
+    "leaveMessage": "お問い合わせ",
+    "gritOptions": "番手オプション",
+    "suitableMaterials": "適用素材"
+  },
+  "common": {
+    "submit": "送信",
+    "loading": "読み込み中…",
+    "viewAll": "すべて見る",
+    "readMore": "詳細を見る",
+    "back": "戻る",
+    "close": "閉じる",
+    "send": "送る",
+    "required": "必須",
+    "all": "すべて"
+  },
+  "footer": {
+    "copyright": "Copyright © {year} Powered by Gloris",
+    "privacy": "プライバシーポリシー",
+    "cookiePreferences": "Cookie設定",
+    "products": {
+      "title": "製品",
+      "abrasivePaper": "研磨紙",
+      "films": "フィルム",
+      "compoundsPolishes": "コンパウンド＆ポリッシュ",
+      "automotiveWindowFilm": "自動車用ウィンドウフィルム",
+      "paintProtectionFilms": "ペイントプロテクションフィルム"
+    },
+    "support": {
+      "title": "サポート",
+      "download": "ダウンロード",
+      "allFiles": "すべてのファイル",
+      "helpCenter": "ヘルプセンター",
+      "training": "トレーニング"
+    },
+    "about": {
+      "title": "会社情報",
+      "brandStory": "ブランドストーリー",
+      "productionBase": "生産拠点",
+      "becomeDealer": "販売代理店になる",
+      "contactUs": "お問い合わせ",
+      "insights": "インサイト"
+    },
+    "chat": "お問い合わせください"
+  },
+  "cookie": {
+    "title": "Cookie設定",
+    "intro": "当サイトでは、必須機能の提供、アクセス解析、体験改善のためにCookieおよび類似技術を使用します。以下でカテゴリごとに設定できます。",
+    "whatAre": "Cookie はサイト訪問時に端末へ保存される小さなテキストファイルです。設定の記憶、ログイン維持、利用状況の把握に役立ちます。",
+    "necessary": "必須 Cookie",
+    "necessaryDesc": "サイト動作に必要なCookieです。通常、プライバシー設定・ログイン・フォーム送信などの操作に応じて設定され、無効化できません。",
+    "necessaryAlwaysOn": "常に有効",
+    "analytics": "分析 Cookie",
+    "analyticsDesc": "訪問数や滞在時間などを把握し、サイト改善に利用します。通常は匿名化された形で収集されます。",
+    "functional": "機能 Cookie",
+    "functionalDesc": "言語や地域などの設定を記憶し、より最適化された体験を提供します。",
+    "marketing": "マーケティング / コミュニケーション Cookie",
+    "marketingDesc": "閲覧ページの記憶、関連広告の表示、施策効果測定に利用される場合があります。拒否しても主要機能は利用できます。",
+    "save": "設定を保存",
+    "saved": "Cookie設定を保存しました。",
+    "backToPrivacy": "プライバシーポリシーを見る"
+  },
+  "form": {
+    "name": "お名前",
+    "email": "メール",
+    "phone": "電話",
+    "country": "国/地域",
+    "message": "メッセージ",
+    "namePlaceholder": "お名前を入力",
+    "emailPlaceholder": "メールアドレスを入力",
+    "phonePlaceholder": "電話番号を入力",
+    "countryPlaceholder": "国/地域を選択",
+    "messagePlaceholder": "お問い合わせ内容をご入力ください",
+    "submitSuccess": "送信が完了しました。担当よりご連絡いたします。",
+    "submitConfigError": "送信設定に問題があります。しばらくしてから再度お試しください。",
+    "submitting": "送信中…",
+    "submitFailed": "送信に失敗しました。しばらくしてから再度お試しください。"
+  },
+  "privacyPolicy": {
+    "lastUpdated": "最終更新：2025年2月",
+    "intro": "Gloris（以下「当社」）はお客様のプライバシーを尊重します。本ポリシーは、本サイトを通じて取得する情報の収集・利用・保管・保護について説明します。本サイトの利用により本ポリシーに同意したものとみなします。",
+    "s1Title": "当社について",
+    "s1Body": "本サイトは Gloris が運営し、製品情報、インサイト、ビジネス提携情報を提供しています。「販売代理店になる」「お問い合わせ」等のフォームで送信された個人データは本ポリシーに従って処理します。",
+    "s2Title": "収集するデータ",
+    "s2Body": "当社は、お客様が提供する情報（氏名、メール、電話、国/地域、メッセージ等）、端末・利用データ（IP、ブラウザ種別、閲覧ページ、訪問時間等）、Cookie等のデータを収集する場合があります。分析・機能・マーケティングCookieは、同意または法令で許可される範囲で収集します。",
+    "s3Title": "利用目的",
+    "s3Body": "お問い合わせ対応、販売代理店申請対応、サイト改善、利用分析（同意がある場合）、法令遵守、その他同意に基づく目的で使用します。同意がない限り、無関係なマーケティングには利用しません。",
+    "s4Title": "Cookie と類似技術",
+    "s4Body": "当社は必要機能の提供、設定保持、同意に基づく分析/マーケティングのためにCookie等を使用します。非必須CookieはCookie設定ページでいつでも管理・無効化できます。",
+    "s5Title": "第三者提供",
+    "s5Body": "ホスティング、フォーム処理、分析などの技術提供者に必要な範囲で共有する場合があります。これらの事業者は当社の指示に従ってのみ処理します。個人データを販売することはありません。法令上必要な場合や権利・安全保護のために開示することがあります。",
+    "s6Title": "保管期間",
+    "s6Body": "データは取得目的に必要な期間のみ保管します。問い合わせや代理店申請データは、通常、業務連絡終了後の合理的期間、または法令で求められる期間保管します。",
+    "s7Title": "お客様の権利",
+    "s7Body": "適用法令により、アクセス、訂正、削除、処理制限、異議申立て、同意撤回などの権利が認められる場合があります。EEA等では監督機関への申立ても可能です。ご希望の場合は下記連絡先までご連絡ください。",
+    "s8Title": "お問い合わせ先",
+    "s8Body": "本ポリシーまたは個人データに関するお問い合わせは、「お問い合わせ」ページまたはCookie設定ページ記載のメール/電話までご連絡ください。可能な限り速やかに対応します。",
+    "s9Title": "本ポリシーの変更",
+    "s9Body": "本ポリシーは随時更新される場合があります。更新時は本ページの「最終更新日」を改訂します。定期的なご確認をお願いします。変更後もサイトを利用した場合、更新後ポリシーに同意したものとみなします。",
+    "cookieLink": "Cookie設定"
+  },
+  "home": {
+    "heroTitle": "ようこそ",
+    "heroCta": "お問い合わせ"
+  },
+  "error404": {
+    "title": "ページが見つかりません",
+    "message": "お探しのページは存在しません。",
+    "backHome": "ホームへ戻る",
+    "description": "URL が誤っているか、ページが移動された可能性があります。"
+  },
+  "search": {
+    "placeholder": "検索...",
+    "noResults": "検索結果が見つかりません",
+    "results": "{count} 件見つかりました",
+    "searching": "検索中...",
+    "recentSearches": "最近の検索",
+    "clearHistory": "履歴をクリア",
+    "allResults": "すべての結果を見る",
+    "types": {
+      "product": "製品",
+      "insight": "インサイト",
+      "help": "ヘルプ",
+      "about": "会社情報",
+      "support": "サポート"
+    }
+  },
+  "dealer": {
+    "joinUsTitle": "今すぐパートナーに参加",
+    "customerServiceTitle": "カスタマーサービス",
+    "whatsapp": "WhatsApp",
+    "chatNow": "今すぐチャット",
+    "advantagesTitle": "Gloris が販売代理店にもたらす価値"
+  },
+  "training": {
+    "description": "包括的なトレーニングプログラムでスキルと知識を高めましょう。業界の専門家から学び、表面仕上げと自動車ケアの最新技術を身につけられます。"
+  },
+  "helpCenter": {
+    "featuredTitle": "注目の質問",
+    "featuredDescription": "よく参照されるサポートトピックと実用ガイドからご覧ください。",
+    "browseByProductTitle": "製品から探す",
+    "browseByProductDescription": "製品から関連するヘルプ記事へすばやく移動できます。",
+    "openArticle": "記事を見る",
+    "other": "その他",
+    "relatedProducts": "関連製品",
+    "relatedArticles": "関連記事",
+    "relatedFaq": "関連FAQ",
+    "noArticles": "このカテゴリには記事がありません。"
+  },
+  "insights": {
+    "allArticles": "すべての記事",
+    "noCover": "カバー画像なし",
+    "tableOfContents": "目次"
+  }
+}

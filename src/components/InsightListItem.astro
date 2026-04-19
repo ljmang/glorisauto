@@ -6,6 +6,7 @@
 
 import type { InsightAttributes, InsightCategoryAttributes } from '@/types/content';
 import type { Messages } from '@/i18n';
+import { type Locale, localeDateTag } from '@/i18n/config';
 import { parseImage } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { t } from '@/i18n';
@@ -13,7 +14,7 @@ import { Image } from 'astro:assets';
 
 interface Props {
   insight: InsightAttributes;
-  locale: string;
+  locale: Locale;
   messages: Messages;
 }
 
@@ -29,7 +30,7 @@ const href = categorySlug && insight.slug
   : toHref(`/about/insights/${insight.slug}`, locale);
 const categoryName = category?.name ?? '';
 const publishedDate = insight.publishedAt
-  ? new Date(insight.publishedAt).toLocaleDateString(locale === 'zh-cn' ? 'zh-CN' : 'en-US', {
+  ? new Date(insight.publishedAt).toLocaleDateString(localeDateTag[locale], {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

@@ -2,6 +2,7 @@
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import { type Messages, type Locale } from '@/i18n';
+import { localeLanguageTag, localeOgTag } from '@/i18n/config';
 import type { SeoPageAttributes, SiteSeoAttributes } from '@/types/content';
 import type { StrapiResponse, StrapiSeo } from '@/types';
 import type { BreadcrumbMetaItem, JsonLdNode, SeoPageType } from '@/utils/seo';
@@ -103,8 +104,8 @@ const resolvedSeo = resolveSeoMeta({
   authorName,
 });
 
-const htmlLang = locale === 'zh-cn' ? 'zh-CN' : 'en';
-const ogLocale = locale === 'zh-cn' ? 'zh_CN' : 'en_US';
+const htmlLang = localeLanguageTag[locale];
+const ogLocale = localeOgTag[locale];
 const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'Gloris Auto';
 ---
 
