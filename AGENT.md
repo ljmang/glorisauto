@@ -37,6 +37,36 @@
 
 截至上方核验时间，两个本地仓库工作区都是干净状态，并且都与各自的 `origin` 分支一致。
 
+## 本机 GitHub SSH（2026-04-20 更新）
+
+当前机器可用于 GitHub 的 SSH 方式已核验通过（账号：`ljmang`）。
+
+- GitHub SSH 主机：`git@github.com`
+- 可用私钥：`~/.ssh/id_rsa`
+- 私钥注释：`mingplus0815@163.com`
+- 私钥指纹：`SHA256:TmuxZHZmEG7qYmd/y4V9+RLpvDgqzRvJDurA7vrUwwI`
+
+常用命令：
+
+```bash
+ssh-add ~/.ssh/id_rsa
+ssh -T git@github.com
+```
+
+鉴权成功预期：
+
+```text
+Hi ljmang! You've successfully authenticated, but GitHub does not provide shell access.
+```
+
+说明：
+
+- `id_rsa` 为带口令私钥；口令不要写入仓库或文档。
+- 若出现 `Permission denied (publickey)`，先执行 `ssh-add ~/.ssh/id_rsa` 再重试 Git 操作。
+- 本地仓库 remote 使用 SSH：
+  - `git@github.com:ljmang/glorisauto.git`
+  - `git@github.com:ljmang/glorisauto-admin.git`
+
 ## 生产服务器
 
 SSH 登录：
