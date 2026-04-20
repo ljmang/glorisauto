@@ -8,11 +8,11 @@
   export let ctaHref = '/';
 </script>
 
-<div class="w-full relative min-h-[24rem] lg:min-h-[40rem] overflow-hidden bg-black">
+<div class="w-full relative h-128 md:h-full overflow-hidden bg-black">
   {#if media?.type === 'video' && media.src}
     <div class="absolute inset-0 pointer-events-none hidden md:block" aria-hidden="true">
       <video
-        class="w-full h-full object-cover scale-110 blur-2xl opacity-70"
+        class="w-full h-full object-cover scale-110 blur-md"
         src={media.src}
         poster={media.poster ?? ''}
         muted
@@ -23,9 +23,9 @@
       <div class="absolute inset-0 bg-black/35"></div>
     </div>
 
-    <div class="relative z-[1] h-120 lg:h-160 2xl:h-200">
+    <div class="relative z-[1] h-full overflow-hidden md:mx-auto md:w-[calc(100%-2rem)] lg:max-w-[100rem]">
       <video
-        class="w-full h-full object-cover md:object-contain"
+        class="w-full h-full object-cover"
         src={media.src}
         poster={media.poster ?? ''}
         muted
@@ -42,10 +42,10 @@
     class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent pointer-events-none z-10"
     aria-hidden="true"
   >
-    <div class="container mx-auto px-4 py-20 pointer-events-auto">
-      <div class="max-w-3xl">
+    <div class="container mx-auto px-4 py-10 md:py-20 pointer-events-auto">
+      <div class="md:max-w-4xl">
         {#if title}
-          <h1 class="text-4xl sm:text-6xl lg:text-6xl font-bold text-white drop-shadow-md mb-4">
+          <h1 class="text-4xl lg:text-6xl font-bold text-white drop-shadow-md mb-4">
             {title}
           </h1>
         {/if}
