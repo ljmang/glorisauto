@@ -326,13 +326,6 @@ function buildPageSchema(options: {
   }
 
   if (pageType === 'product') {
-    const seller = companyName
-      ? {
-          '@type': 'Organization',
-          name: companyName,
-          url: siteOrigin,
-        }
-      : undefined;
     const productSchema = toJsonLdNode({
       '@context': 'https://schema.org',
       '@type': 'Product',
@@ -346,13 +339,6 @@ function buildPageSchema(options: {
             name: companyName,
           }
         : undefined,
-      offers: {
-        '@type': 'Offer',
-        url: options.canonicalUrl,
-        availability: 'https://schema.org/InStock',
-        itemCondition: 'https://schema.org/NewCondition',
-        seller,
-      },
     });
     return productSchema ? [productSchema] : [];
   }
