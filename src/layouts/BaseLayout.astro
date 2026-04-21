@@ -2,7 +2,7 @@
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import { type Messages, type Locale } from '@/i18n';
-import { localeLanguageTag, localeOgTag } from '@/i18n/config';
+import { localeLanguageTag, localeOgTag, isRtlLocale } from '@/i18n/config';
 import type { SeoPageAttributes, SiteSeoAttributes } from '@/types/content';
 import type { StrapiResponse, StrapiSeo } from '@/types';
 import type { BreadcrumbMetaItem, JsonLdNode, SeoPageType } from '@/utils/seo';
@@ -106,11 +106,12 @@ const resolvedSeo = resolveSeoMeta({
 
 const htmlLang = localeLanguageTag[locale];
 const ogLocale = localeOgTag[locale];
+const htmlDir = isRtlLocale(locale) ? 'rtl' : 'ltr';
 const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'Gloris Auto';
 ---
 
 <!doctype html>
-<html lang={htmlLang} class="scroll-smooth">
+<html lang={htmlLang} dir={htmlDir} class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content={resolvedSeo.viewport} />

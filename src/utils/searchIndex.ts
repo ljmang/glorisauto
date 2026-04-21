@@ -8,7 +8,7 @@ export interface SearchItem {
   category?: string;
 }
 
-type SearchLocale = 'en' | 'zh-cn' | 'ja';
+type SearchLocale = 'en' | 'zh-cn' | 'ja' | 'ar';
 
 interface SearchStaticText {
   aboutUs: string;
@@ -108,10 +108,34 @@ const SEARCH_TEXTS: Record<SearchLocale, SearchStaticText> = {
     privacy: 'プライバシーポリシー',
     privacyContent: 'プライバシーポリシーの内容',
   },
+  ar: {
+    aboutUs: 'من نحن',
+    aboutUsContent: 'محتوى صفحة من نحن',
+    brandStory: 'قصة العلامة',
+    brandStoryContent: 'محتوى قصة العلامة',
+    dealer: 'الوكلاء',
+    dealerContent: 'محتوى صفحة الوكلاء',
+    production: 'الإنتاج',
+    productionContent: 'محتوى صفحة الإنتاج',
+    products: 'المنتجات',
+    productsContent: 'محتوى قائمة المنتجات',
+    insights: 'الرؤى',
+    insightsContent: 'محتوى قائمة المقالات',
+    support: 'الدعم',
+    supportContent: 'محتوى مركز الدعم',
+    contact: 'اتصل بنا',
+    contactContent: 'نموذج التواصل',
+    downloads: 'التنزيلات',
+    downloadsContent: 'محتوى قائمة التنزيلات',
+    helpCenter: 'مركز المساعدة',
+    helpCenterContent: 'محتوى فئات مركز المساعدة',
+    privacy: 'سياسة الخصوصية',
+    privacyContent: 'محتوى سياسة الخصوصية',
+  },
 };
 
 function resolveSearchTexts(locale: string): SearchStaticText {
-  if (locale === 'zh-cn' || locale === 'ja') return SEARCH_TEXTS[locale];
+  if (locale === 'zh-cn' || locale === 'ja' || locale === 'ar') return SEARCH_TEXTS[locale];
   return SEARCH_TEXTS.en;
 }
 
