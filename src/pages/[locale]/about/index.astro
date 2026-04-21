@@ -2,7 +2,7 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import InsightCard from '@/components/InsightCard.astro';
-import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { supportedLocales, type Locale, getLocale, isRtlLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api, parseImage } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
@@ -19,6 +19,7 @@ export async function getStaticPaths() {
 
 const params = Astro.params as { locale?: string };
 const locale: Locale = getLocale(params.locale);
+const isRtl = isRtlLocale(locale);
 const messages = await loadMessages(locale);
 
 const normalizeInsightsCount = (value: number | undefined, fallback: number) =>
@@ -131,7 +132,7 @@ const mapEmbedTitle = aboutUs?.mapEmbedTitle?.trim() || 'Google Map - Guangzhou'
             loading="eager"
           />
           <!-- 白色半透明内容框 -->
-          <div class="absolute bottom-0 left-0 right-0 lg:left-8 lg:right-auto lg:w-[640px] bg-white/95 p-8 lg:p-12">
+          <div class={`absolute bottom-0 left-0 right-0 lg:w-[640px] bg-white/95 p-8 lg:p-12 ${isRtl ? 'lg:right-8 lg:left-auto' : 'lg:left-8 lg:right-auto'}`}>
             {aboutUs.title && (
               <h1 class="text-3xl lg:text-4xl font-bold  mb-3">
                 {aboutUs.title}

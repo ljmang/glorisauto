@@ -7,7 +7,7 @@ import Breadcrumb from '@/components/Breadcrumb.astro';
 import ProductCard from '@/components/ProductCard.astro';
 import InsightCard from '@/components/InsightCard.astro';
 import TableOfContents from '@/components/TableOfContents.astro';
-import { supportedLocales, type Locale, getLocale, defaultLocale } from '@/i18n/config';
+import { supportedLocales, type Locale, getLocale, localeDateTag } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
@@ -18,7 +18,7 @@ export async function getStaticPaths() {
   const paths: { params: { locale: string; category: string; slug: string } }[] = [];
   for (const locale of supportedLocales) {
     const res = await fetchApiWithLocaleFallback<{ data?: InsightAttributes[] }>(api.insights, {
-      locale: defaultLocale,
+      locale,
       populate: { insight_category: true },
       pagination: { pageSize: 500 },
     });
@@ -77,7 +77,7 @@ const relatedProducts = (article as { products?: ProductAttributes[] })?.product
 const relatedArticles = (article as { articles?: InsightAttributes[] })?.articles ?? [];
 
 const publishedDate = article.publishedAt
-  ? new Date(article.publishedAt).toLocaleDateString(locale === 'zh-cn' ? 'zh-CN' : 'en-US', {
+  ? new Date(article.publishedAt).toLocaleDateString(localeDateTag[locale], {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

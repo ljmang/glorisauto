@@ -32,6 +32,13 @@ const href = categorySlug
   : toHref(`/products/${product.slug}`, locale);
 const productDescription = sanitizeInlineText(product.description);
 const showCta = typeof ctaLabel === 'string' && ctaLabel.trim().length > 0;
+const noImageLabelByLocale: Record<string, string> = {
+  en: 'No image',
+  'zh-cn': '暂无图片',
+  ja: '画像なし',
+  ar: 'لا توجد صورة',
+};
+const noImageLabel = noImageLabelByLocale[locale] || noImageLabelByLocale.en;
 ---
 
 <a
@@ -54,7 +61,7 @@ const showCta = typeof ctaLabel === 'string' && ctaLabel.trim().length > 0;
     </div>
   ) : (
     <div class="relative w-full aspect-square bg-gray-200 flex items-center justify-center mb-4">
-      <span class="text-gray-500 text-sm">暂无图片</span>
+      <span class="text-gray-500 text-sm">{noImageLabel}</span>
     </div>
   )}
 

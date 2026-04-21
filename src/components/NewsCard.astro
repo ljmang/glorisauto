@@ -21,6 +21,20 @@ const { news, locale } = Astro.props;
 const coverImage = parseImage(news.cover);
 const href = toHref(news.url, locale);
 const excerpt = extractTextFromBlocks(news.content, 120);
+const noCoverLabelByLocale: Record<string, string> = {
+  en: 'No cover image',
+  'zh-cn': '暂无封面图',
+  ja: 'カバー画像なし',
+  ar: 'لا توجد صورة غلاف',
+};
+const noContentLabelByLocale: Record<string, string> = {
+  en: 'No content',
+  'zh-cn': '暂无内容',
+  ja: 'コンテンツなし',
+  ar: 'لا يوجد محتوى',
+};
+const noCoverLabel = noCoverLabelByLocale[locale] || noCoverLabelByLocale.en;
+const noContentLabel = noContentLabelByLocale[locale] || noContentLabelByLocale.en;
 ---
 
 <a
@@ -54,7 +68,7 @@ const excerpt = extractTextFromBlocks(news.content, 120);
     )
   ) : (
     <div class="relative w-full flex-[2] min-h-[200px] bg-gray-300 flex items-center justify-center">
-      <span class="text-gray-500 text-sm">暂无封面图</span>
+      <span class="text-gray-500 text-sm">{noCoverLabel}</span>
     </div>
   )}
   
@@ -68,7 +82,7 @@ const excerpt = extractTextFromBlocks(news.content, 120);
         {excerpt}
       </p>
     ) : (
-      <p class="text-gray-700 italic">暂无内容</p>
+      <p class="text-gray-700 italic">{noContentLabel}</p>
     )}
   </div>
 </a>

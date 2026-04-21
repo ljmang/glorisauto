@@ -75,6 +75,14 @@ export interface CollectionPageCopyFields {
   intro?: string;
 }
 
+export interface SeoPageAttributes {
+  title: string;
+  path: string;
+  seo?: StrapiSeo | null;
+}
+
+export type SeoPageContent = StrapiContent<SeoPageAttributes>;
+
 /** Product 产品类型 */
 export interface ProductAttributes {
   name: string;

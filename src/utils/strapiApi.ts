@@ -277,6 +277,7 @@ export const api = {
   insightCategories: 'insight-categories',
   helpCenters: 'help-centers',
   helpCategories: 'help-categories',
+  seoPages: 'seo-pages',
   downloadFiles: 'download-files',
   trainings: 'trainings',
   productionBases: 'production-bases',

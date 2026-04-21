@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { supportedLocales, type Locale, getLocale, isRtlLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApi, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
@@ -20,6 +20,7 @@ export async function getStaticPaths() {
 
 const params = Astro.params as { locale?: string };
 const locale: Locale = getLocale(params.locale);
+const isRtl = isRtlLocale(locale);
 const messages = await loadMessages(locale);
 
 const [categoriesRes, productsRes, siteSeo] = await Promise.all([
@@ -82,7 +83,7 @@ const pageCopy = resolveCollectionPageCopy(locale, 'products', siteSeo);
                 >
                   {root.name}
                 </a>
-                <ul class="border-l border-gray-200 ml-2 pl-2">
+                <ul class={`border-gray-200 ${isRtl ? 'border-r mr-2 pr-2' : 'border-l ml-2 pl-2'}`}>
                   {root.children.map((child) => (
                     <li>
                       <a

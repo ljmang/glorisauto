@@ -82,12 +82,17 @@
     "name": "姓名",
     "email": "邮箱",
     "phone": "电话",
+    "country": "国家/地区",
     "message": "留言",
     "namePlaceholder": "请输入姓名",
     "emailPlaceholder": "请输入邮箱",
     "phonePlaceholder": "请输入电话",
+    "countryPlaceholder": "请选择国家/地区",
     "messagePlaceholder": "请输入您的需求或问题",
-    "submitSuccess": "提交成功，我们会尽快联系您"
+    "submitSuccess": "提交成功，我们会尽快联系您",
+    "submitConfigError": "提交配置异常，请稍后重试",
+    "submitting": "提交中…",
+    "submitFailed": "提交失败，请稍后重试"
   },
   "privacyPolicy": {
     "lastUpdated": "最后更新：2025年2月",
@@ -137,6 +142,13 @@
       "about": "关于我们",
       "support": "支持"
     }
+  },
+  "dealer": {
+    "joinUsTitle": "立即加入我们",
+    "customerServiceTitle": "客户服务",
+    "whatsapp": "WhatsApp",
+    "chatNow": "在线咨询",
+    "advantagesTitle": "Gloris 为合作经销商带来的价值"
   },
   "training": {
     "description": "通过我们全面的培训计划提升您的技能和知识。向行业专家学习，掌握表面处理和汽车护理的最新技术。"

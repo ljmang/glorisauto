@@ -257,7 +257,7 @@ const breadcrumbItems = [
                 {t(messages, 'products.becomeDealer')}
               </a>
               <a
-                href={toHref('/support/contact', locale)}
+                href={toHref('/support/customer-service', locale)}
                 class='inline-flex items-center justify-center rounded-md border border-orange-400 bg-white px-6 py-3 font-medium text-orange-500 transition-colors hover:bg-gray-100'
               >
                 {t(messages, 'products.leaveMessage')}
@@ -281,7 +281,7 @@ const breadcrumbItems = [
         )}
 
         {productFeaturesHtml && (
-          <section class='mb-12 max-w-3xl'>
+          <section class='mb-12 max-w-5xl'>
             <h2 class='text-3xl font-bold mb-4'>{t(messages, 'products.features')}</h2>
             <div
               class='product-features-content prose prose-lg max-w-none text-gray-700 prose-headings:font-bold prose-a:text-cyan-600 prose-a:no-underline hover:prose-a:text-orange-600'
@@ -302,7 +302,7 @@ const breadcrumbItems = [
         )}
 
         {faqItems.length > 0 && (
-          <section class='mb-12'>
+          <section class='mb-12 max-w-5xl'>
             <h2 class='text-3xl font-bold mb-4'>{t(messages, 'products.faq')}</h2>
             <div class='space-y-4'>
               {faqItems.map((faq, idx) => (

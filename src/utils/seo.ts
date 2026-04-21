@@ -1,5 +1,10 @@
-import { defaultLocale, supportedLocales, type Locale } from '@/i18n/config';
-import type { SiteSeoAttributes } from '@/types/content';
+import {
+  defaultLocale,
+  supportedLocales,
+  localeLanguageTag,
+  type Locale,
+} from '@/i18n/config';
+import type { SeoPageAttributes, SiteSeoAttributes } from '@/types/content';
 import type { StrapiLinkItem, StrapiSeo } from '@/types/strapi';
 import { toHref } from './navigationData';
 import { getMediaUrlFromField } from './strapiApi';
@@ -20,6 +25,7 @@ export interface ResolveSeoMetaOptions {
   description?: string;
   image?: unknown;
   seo?: StrapiSeo | null;
+  seoPage?: SeoPageAttributes | null;
   siteSeo?: SiteSeoAttributes | null;
   locale: Locale;
   pathname: string;
@@ -104,7 +110,7 @@ function resolveCanonicalUrl(siteUrl: string, pathname: string, canonicalURL?: s
 }
 
 function localeToLanguageTag(locale: Locale): string {
-  return locale === 'zh-cn' ? 'zh-CN' : 'en';
+  return localeLanguageTag[locale];
 }
 
 function resolveImageUrl(...fields: Array<unknown>): string {
@@ -374,38 +380,85 @@ export function resolveSeoMeta(options: ResolveSeoMetaOptions): ResolvedSeoMeta 
     options.seo?.ogImage,
     options.seo?.twitterImage,
     options.seo?.metaImage,
+    options.seoPage?.seo?.ogImage,
+    options.seoPage?.seo?.twitterImage,
+    options.seoPage?.seo?.metaImage,
     options.image,
     options.siteSeo?.defaultShareImage
   );
   const rawTitle = firstNonEmpty(
     options.seo?.metaTitle,
+    options.seoPage?.seo?.metaTitle,
     options.title,
+    options.seoPage?.title,
     options.siteSeo?.defaultTitle,
     options.siteSeo?.siteName,
     options.siteSeo?.companyName,
     'Gloris Auto'
   );
   const titleTemplate = firstNonEmpty(options.siteSeo?.titleTemplate);
+  const templateTitle = firstNonEmpty(options.title, options.seoPage?.title);
+  const explicitMetaTitle = firstNonEmpty(options.seo?.metaTitle, options.seoPage?.seo?.metaTitle);
   const title =
-    options.seo?.metaTitle || !firstNonEmpty(options.title) || !titleTemplate.includes('%s')
+    explicitMetaTitle || !templateTitle || !titleTemplate.includes('%s')
       ? rawTitle
-      : titleTemplate.replace('%s', firstNonEmpty(options.title));
+      : titleTemplate.replace('%s', templateTitle);
   const description = firstNonEmpty(
     options.seo?.metaDescription,
+    options.seoPage?.seo?.metaDescription,
     options.description,
     options.siteSeo?.defaultDescription
   );
-  const keywords = firstNonEmpty(options.seo?.metaKeywords, options.seo?.keywords);
-  const robots = options.seo?.hideFromSearch
+  const keywords = firstNonEmpty(
+    options.seo?.metaKeywords,
+    options.seo?.keywords,
+    options.seoPage?.seo?.metaKeywords,
+    options.seoPage?.seo?.keywords
+  );
+  const hideFromSearch =
+    typeof options.seo?.hideFromSearch === 'boolean'
+      ? options.seo.hideFromSearch
+      : typeof options.seoPage?.seo?.hideFromSearch === 'boolean'
+        ? options.seoPage.seo.hideFromSearch
+        : false;
+  const robots = hideFromSearch
     ? 'noindex,nofollow'
-    : firstNonEmpty(options.seo?.metaRobots, options.siteSeo?.defaultRobots, 'index,follow');
-  const viewport = firstNonEmpty(options.seo?.metaViewport, 'width=device-width, initial-scale=1.0');
-  const canonicalUrl = resolveCanonicalUrl(siteUrl, options.pathname, options.seo?.canonicalURL);
-  const ogTitle = firstNonEmpty(options.seo?.ogTitle, title);
-  const ogDescription = firstNonEmpty(options.seo?.ogDescription, description);
-  const twitterTitle = firstNonEmpty(options.seo?.twitterTitle, ogTitle);
-  const twitterDescription = firstNonEmpty(options.seo?.twitterDescription, ogDescription);
-  const twitterCard = normalizeTwitterCard(options.seo?.twitterCard, Boolean(imageUrl));
+    : firstNonEmpty(
+        options.seo?.metaRobots,
+        options.seoPage?.seo?.metaRobots,
+        options.siteSeo?.defaultRobots,
+        'index,follow'
+      );
+  const viewport = firstNonEmpty(
+    options.seo?.metaViewport,
+    options.seoPage?.seo?.metaViewport,
+    'width=device-width, initial-scale=1.0'
+  );
+  const canonicalUrl = resolveCanonicalUrl(
+    siteUrl,
+    options.pathname,
+    options.seo?.canonicalURL || options.seoPage?.seo?.canonicalURL
+  );
+  const ogTitle = firstNonEmpty(options.seo?.ogTitle, options.seoPage?.seo?.ogTitle, title);
+  const ogDescription = firstNonEmpty(
+    options.seo?.ogDescription,
+    options.seoPage?.seo?.ogDescription,
+    description
+  );
+  const twitterTitle = firstNonEmpty(
+    options.seo?.twitterTitle,
+    options.seoPage?.seo?.twitterTitle,
+    ogTitle
+  );
+  const twitterDescription = firstNonEmpty(
+    options.seo?.twitterDescription,
+    options.seoPage?.seo?.twitterDescription,
+    ogDescription
+  );
+  const twitterCard = normalizeTwitterCard(
+    options.seo?.twitterCard || options.seoPage?.seo?.twitterCard,
+    Boolean(imageUrl)
+  );
   const unlocalizedPath = stripLocalePrefix(options.pathname);
   const alternates = supportedLocales.map((locale) => ({
     hrefLang: localeToLanguageTag(locale),
