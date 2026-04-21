@@ -15,6 +15,7 @@
   let fuse: Fuse<SearchItem> | null = $state(null);
   let selectedType = $state<string | null>(null);
   let mounted = $state(false);
+  const isRtl = $derived(locale === 'ar');
 
   // 初始化 Fuse.js（仅在客户端）
   function initFuse() {
@@ -114,10 +115,12 @@
       oninput={handleInput}
       onkeydown={(e) => { if (e.key === 'Enter') handleSearch(); }}
       placeholder={t('search.placeholder')}
-      class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+      class={`w-full py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg ${
+        isRtl ? 'px-4 pr-12 text-right' : 'px-4 pl-12'
+      }`}
     />
     <svg
-      class="absolute left-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400"
+      class={`absolute top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400 ${isRtl ? 'right-4' : 'left-4'}`}
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
@@ -131,7 +134,9 @@
     </svg>
     <button
       onclick={handleSearch}
-      class="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+      class={`absolute top-1/2 transform -translate-y-1/2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors ${
+        isRtl ? 'left-2' : 'right-2'
+      }`}
     >
       {t('pageTitle.search')}
     </button>
@@ -199,7 +204,7 @@
                 <p class="text-sm text-gray-400">{item.url}</p>
               </div>
               <svg
-                class="w-5 h-5 text-gray-400 flex-shrink-0"
+                class={`w-5 h-5 text-gray-400 flex-shrink-0 ${isRtl ? 'rotate-180' : ''}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

@@ -2,7 +2,7 @@
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import { type Messages, type Locale } from '@/i18n';
-import { localeLanguageTag, localeOgTag, isRtlLocale } from '@/i18n/config';
+import { localeLanguageTag, localeOgTag, isRtlLocale, defaultLocale } from '@/i18n/config';
 import type { SeoPageAttributes, SiteSeoAttributes } from '@/types/content';
 import type { StrapiResponse, StrapiSeo } from '@/types';
 import type { BreadcrumbMetaItem, JsonLdNode, SeoPageType } from '@/utils/seo';
@@ -44,9 +44,38 @@ const {
 
 type NavItem = ReturnType<typeof transformNavigations>;
 
+function stripLocalePrefix(path: string): string {
+  const normalized = path.replace(/^\/(en|zh-cn|ja|ar)(?=\/|$)/i, '');
+  const withoutTrailing = normalized.replace(/\/+$/, '');
+  return withoutTrailing || '/';
+}
+
+function navItemKey(item: { href: string }): string {
+  return stripLocalePrefix(item.href || '/');
+}
+
+function hasDropdown(navData: NavItem): boolean {
+  return navData.some((item) => Array.isArray(item.columns) && item.columns.length > 0);
+}
+
+function mergeNavWithFallback(localized: NavItem, fallback: NavItem): NavItem {
+  const fallbackByKey = new Map(fallback.map((item) => [navItemKey(item), item]));
+  const mergedLocalized = localized.map((item) => {
+    if (Array.isArray(item.columns) && item.columns.length > 0) return item;
+    const fallbackItem = fallbackByKey.get(navItemKey(item));
+    if (fallbackItem?.columns && fallbackItem.columns.length > 0) {
+      return { ...item, columns: fallbackItem.columns };
+    }
+    return item;
+  });
+
+  const existingKeys = new Set(mergedLocalized.map((item) => navItemKey(item)));
+  const fallbackOnly = fallback.filter((item) => !existingKeys.has(navItemKey(item)));
+  return [...mergedLocalized, ...fallbackOnly];
+}
+
 async function getNavData(currentLocale: Locale): Promise<NavItem> {
-  const navigationsRes = await fetchApiWithLocaleFallback<{ data?: unknown }>(api.navigation, {
-    locale: currentLocale,
+  const navigationQuery = {
     populate: {
       items: {
         populate: {
@@ -58,8 +87,25 @@ async function getNavData(currentLocale: Locale): Promise<NavItem> {
         },
       },
     },
+  } as const;
+
+  const localizedRes = await fetchApiWithLocaleFallback<{ data?: unknown }>(api.navigation, {
+    locale: currentLocale,
+    ...navigationQuery,
   });
-  return transformNavigations(navigationsRes, currentLocale);
+  const localizedNav = transformNavigations(localizedRes, currentLocale);
+
+  if (currentLocale === defaultLocale || hasDropdown(localizedNav)) {
+    return localizedNav;
+  }
+
+  const fallbackRes = await fetchApiWithLocaleFallback<{ data?: unknown }>(api.navigation, {
+    locale: defaultLocale,
+    ...navigationQuery,
+  });
+  const fallbackNav = transformNavigations(fallbackRes, currentLocale);
+  if (!hasDropdown(fallbackNav)) return localizedNav;
+  return mergeNavWithFallback(localizedNav, fallbackNav);
 }
 
 async function getSiteSeo(currentLocale: Locale): Promise<SiteSeoAttributes | null> {

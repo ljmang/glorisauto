@@ -18,6 +18,7 @@
 
   let fuse: Fuse<SearchItem> | null = $state(null);
   let mounted = $state(false);
+  const isRtl = $derived(locale === 'ar');
 
   // 初始化 Fuse.js（仅在客户端）
   function initFuse() {
@@ -112,15 +113,17 @@
       onkeydown={handleKeydown}
       onfocus={() => { isOpen = query.length > 0; }}
       placeholder={t('search.placeholder')}
-      class="w-full md:w-48 lg:w-64 px-4 py-2 pl-10 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      class={`w-full md:w-48 lg:w-64 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+        isRtl ? 'px-4 pr-10 text-right' : 'px-4 pl-10'
+      }`}
     />
-    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+    <span class={`absolute top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none ${isRtl ? 'right-3' : 'left-3'}`}>
       <Search size={20} />
     </span>
   </div>
 
   {#if isOpen && results.length > 0}
-    <div class="absolute top-full left-0 right-0 md:right-auto md:w-96 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+    <div class={`absolute top-full left-0 right-0 md:w-96 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto ${isRtl ? 'md:left-auto' : 'md:right-auto'}`}>
       <div class="p-2">
         {#each results as result, index}
           {@const item = result.item}
@@ -161,7 +164,7 @@
       </div>
     </div>
   {:else if isOpen && query.length > 0 && results.length === 0}
-    <div class="absolute top-full left-0 right-0 md:right-auto md:w-96 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+    <div class={`absolute top-full left-0 right-0 md:w-96 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 ${isRtl ? 'md:left-auto' : 'md:right-auto'}`}>
       <div class="p-4 text-center text-gray-500">
         {t('search.noResults')}
       </div>

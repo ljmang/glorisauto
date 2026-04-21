@@ -64,6 +64,7 @@
     currentPath.replace(new RegExp(`^/${locale}(/|$)`), '$1') || '/'
   );
   const currentLocaleDisplay = $derived(localeDisplayConfig[locale as Locale]);
+  const isRtl = $derived(locale === 'ar');
 </script>
 <!-- 手机版汉堡菜单按钮（搜索入口在 Header 里，与汉堡并排） -->
 <button
@@ -87,7 +88,7 @@
     <button
       type="button"
       onclick={close}
-      class="absolute top-4 right-4 z-[60] p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+      class={`absolute top-4 ${isRtl ? 'left-4' : 'right-4'} z-[60] p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors`}
       aria-label={t('common.close')}
     >
       <X class="w-6 h-6" />
@@ -110,7 +111,7 @@
         <button
           type="button"
           onclick={() => (langExpanded = !langExpanded)}
-          class="w-full flex items-center justify-between gap-2 py-1 text-left hover:text-orange-500 transition-colors"
+          class={`w-full flex items-center justify-between gap-2 py-1 hover:text-orange-500 transition-colors ${isRtl ? 'text-right' : 'text-left'}`}
           aria-expanded={langExpanded}
         >
           <span class="flex items-center gap-2">
@@ -124,7 +125,7 @@
           {/if}
         </button>
         {#if langExpanded}
-          <div class="pl-6 space-y-0.5">
+          <div class={`${isRtl ? 'pr-6' : 'pl-6'} space-y-0.5`}>
             {#each supportedLocales as loc}
               <a
                 href={`/${loc}${pathWithoutLocale}`}
@@ -160,7 +161,9 @@
               <button
                 type="button"
                 onclick={() => toggleExpand(i)}
-                class={`font-black text-xl w-full text-left p-4 rounded bg-white  transition-colors flex items-center justify-between  ${
+                class={`font-black text-xl w-full p-4 rounded bg-white transition-colors flex items-center justify-between ${
+                  isRtl ? 'text-right' : 'text-left'
+                } ${
                   isParentActive(item.href) ? 'text-orange-500' : 'text-gray-900'
                 } hover:text-orange-500`}
                 aria-expanded={expandedIndex === i}

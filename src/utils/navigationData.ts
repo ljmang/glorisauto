@@ -35,6 +35,55 @@ type ComponentNavNode = {
 
 const TEMPORARILY_HIDDEN_PATHS = new Set(['/top-brands']);
 
+const ROOT_SEGMENT_ALIAS_MAP = new Map<string, string>([
+  // canonical
+  ['products', 'products'],
+  ['support', 'support'],
+  ['about', 'about'],
+  ['help', 'help'],
+  ['insights', 'insights'],
+  ['download', 'download'],
+  ['customer-service', 'customer-service'],
+  ['brand-story', 'brand-story'],
+  ['dealer', 'dealer'],
+  ['top-brands', 'top-brands'],
+  // arabic aliases that may come from translated nav links
+  ['منتجات', 'products'],
+  ['يدعم', 'support'],
+  ['دعم', 'support'],
+  ['الدعم', 'support'],
+  ['عن', 'about'],
+  ['حول', 'about'],
+  ['مساعدة', 'help'],
+  ['المساعدة', 'help'],
+  ['الرؤى', 'insights'],
+  ['التنزيل', 'download'],
+  ['تنزيل', 'download'],
+  ['خدمة-العملاء', 'customer-service'],
+  ['قصة-العلامة-التجارية', 'brand-story'],
+  ['وكيل', 'dealer'],
+  ['الوكلاء', 'dealer'],
+  ['أهم-العلامات-التجارية', 'top-brands'],
+]);
+
+function normalizeRootSegment(segment: string): string {
+  const decoded = decodeURIComponent(segment).trim();
+  const lower = decoded.toLowerCase();
+  return ROOT_SEGMENT_ALIAS_MAP.get(decoded) || ROOT_SEGMENT_ALIAS_MAP.get(lower) || decoded;
+}
+
+function canonicalizeKnownRoutePath(path: string): string {
+  if (!path || path === '/') return path;
+  const hasLeadingSlash = path.startsWith('/');
+  const segments = path.split('/').filter(Boolean);
+  if (segments.length === 0) return '/';
+  for (let i = 0; i < segments.length; i += 1) {
+    segments[i] = normalizeRootSegment(segments[i]);
+  }
+  const joined = segments.join('/');
+  return hasLeadingSlash ? `/${joined}` : joined;
+}
+
 function byOrder(a: ComponentNavNode, b: ComponentNavNode): number {
   const aOrder = Number.isFinite(Number(a.order)) ? Number(a.order) : 0;
   const bOrder = Number.isFinite(Number(b.order)) ? Number(b.order) : 0;
@@ -55,7 +104,8 @@ function normalizeInternalPath(url: string | undefined): string {
   }
 
   let path = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
-  path = path.replace(/^\/(en|zh-cn|zh|cn|ja)(?=\/|$)/i, '');
+  path = path.replace(/^\/(en|zh-cn|zh|cn|ja|ar)(?=\/|$)/i, '');
+  path = canonicalizeKnownRoutePath(path);
   path = path.replace(/\/+$/, '');
   return path || '/';
 }
@@ -71,7 +121,8 @@ export function toHref(url: string | undefined, locale: string): string {
 
   let path = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
 
-  path = path.replace(/^\/(en|zh-cn|zh|cn|ja)(?=\/|$)/i, '');
+  path = path.replace(/^\/(en|zh-cn|zh|cn|ja|ar)(?=\/|$)/i, '');
+  path = canonicalizeKnownRoutePath(path);
   if (path === '') path = '/';
 
   if (path === '/' || path === '') return `/${locale}`;

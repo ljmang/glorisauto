@@ -80,4 +80,13 @@ const html = renderBlocks(blocks);
   .blocks-content :global(a) {
     @apply text-cyan-600 hover:text-orange-600 underline;
   }
+
+  :global(html[dir="rtl"]) .blocks-content :global(ul),
+  :global(html[dir="rtl"]) .blocks-content :global(ol) {
+    @apply ml-0 mr-6;
+  }
+
+  :global(html[dir="rtl"]) .blocks-content :global(blockquote) {
+    @apply border-l-0 pl-0 border-r-4 pr-4;
+  }
 </style>

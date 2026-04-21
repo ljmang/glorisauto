@@ -3,7 +3,7 @@
  * 帮助中心文章详情页：文章内容 + 相关产品和文章
  */
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { type Locale, getLocale } from '@/i18n/config';
+import { type Locale, getLocale, isRtlLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApi, api, parseImage } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
@@ -22,6 +22,7 @@ export async function getStaticPaths() {
 
 const params = Astro.params as { locale?: string; category?: string; slug?: string };
 const locale: Locale = getLocale(params.locale);
+const isRtl = isRtlLocale(locale);
 const categorySlug = params.category ?? '';
 const articleSlug = params.slug ?? '';
 const messages = await loadMessages(locale);
@@ -139,10 +140,10 @@ const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')
           <input
             type="text"
             placeholder={t(messages, 'search.placeholder') || 'Search...'}
-            class="w-full px-4 py-3 pl-12 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            class={`w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${isRtl ? 'pr-12 text-right' : 'pl-12'}`}
           />
           <svg
-            class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+            class={`absolute top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 ${isRtl ? 'right-4' : 'left-4'}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
