@@ -89,6 +89,11 @@
     "phonePlaceholder": "请输入电话",
     "countryPlaceholder": "请选择国家/地区",
     "messagePlaceholder": "请输入您的需求或问题",
+    "inquiryType": "咨询类型",
+    "inquiryFreeSample": "获取免费样品",
+    "inquiryBuyProducts": "购买产品",
+    "inquiryBecomeDealer": "成为经销商",
+    "inquiryOther": "其他",
     "submitSuccess": "提交成功，我们会尽快联系您",
     "submitConfigError": "提交配置异常，请稍后重试",
     "submitting": "提交中…",
@@ -119,7 +124,8 @@
   },
   "home": {
     "heroTitle": "欢迎",
-    "heroCta": "联系我们"
+    "heroCta": "联系我们",
+    "freeSampleCta": "获取免费样品"
   },
   "error404": {
     "title": "页面未找到",

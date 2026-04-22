@@ -251,10 +251,10 @@ const breadcrumbItems = [
             <!-- 行动按钮 -->
             <div class='mt-8 flex flex-wrap gap-4'>
               <a
-                href={toHref('/about/dealer', locale)}
+                href={`${toHref('/support/customer-service', locale)}?type=free-sample`}
                 class='inline-flex items-center justify-center rounded-md bg-orange-500 px-6 py-3 font-medium text-white transition-colors hover:bg-orange-600'
               >
-                {t(messages, 'products.becomeDealer')}
+                {t(messages, 'home.freeSampleCta')}
               </a>
               <a
                 href={toHref('/support/customer-service', locale)}

@@ -48,7 +48,15 @@ const formTexts = {
   submitting: t(messages, 'form.submitting'),
   submitFailed: t(messages, 'form.submitFailed'),
   submit: t(messages, 'common.submit'),
+  inquiryType: t(messages, 'form.inquiryType'),
 };
+
+const inquiryOptions = [
+  { value: 'free-sample', label: t(messages, 'form.inquiryFreeSample') },
+  { value: 'buy-products', label: t(messages, 'form.inquiryBuyProducts') },
+  { value: 'become-dealer', label: t(messages, 'form.inquiryBecomeDealer') },
+  { value: 'other', label: t(messages, 'form.inquiryOther') },
+];
 
 const formApiBase = (() => {
   try {
@@ -123,6 +131,21 @@ const formApiBase = (() => {
               class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               placeholder={t(messages, 'form.emailPlaceholder')}
             />
+          </div>
+          <div>
+            <label for="contact-inquiry-type" class="block text-sm font-medium text-gray-700 mb-1">
+              {t(messages, 'form.inquiryType')} *
+            </label>
+            <select
+              id="contact-inquiry-type"
+              name="inquiryType"
+              required
+              class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            >
+              {inquiryOptions.map((option) => (
+                <option value={option.value}>{option.label}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label for="contact-phone" class="block text-sm font-medium text-gray-700 mb-1">
@@ -233,6 +256,12 @@ const formApiBase = (() => {
     const thankYouUrl = form.getAttribute('data-thank-you') || `/${locale}/thank-you`;
     const messageType = form.getAttribute('data-type') || '联系我们';
     const base = form.getAttribute('data-api-base') || '';
+    const inquiryTypeEl = form.querySelector('[name="inquiryType"]');
+    const requestedType = new URLSearchParams(window.location.search).get('type');
+    if (requestedType && inquiryTypeEl) {
+      const hasOption = Array.from(inquiryTypeEl.options).some((option) => option.value === requestedType);
+      if (hasOption) inquiryTypeEl.value = requestedType;
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -240,13 +269,18 @@ const formApiBase = (() => {
       const nameEl = form.querySelector('[name="name"]');
       const emailEl = form.querySelector('[name="email"]');
       const phoneEl = form.querySelector('[name="phone"]');
+      const inquiryTypeEl = form.querySelector('[name="inquiryType"]');
       const messageEl = form.querySelector('[name="message"]');
       const name = nameEl?.value?.trim();
       const email = emailEl?.value?.trim();
       const phone = phoneEl?.value?.trim() || '';
+      const inquiryTypeLabel =
+        inquiryTypeEl?.selectedOptions?.[0]?.textContent?.trim() ||
+        inquiryTypeEl?.value?.trim() ||
+        '';
       const message = messageEl?.value?.trim();
 
-      if (!name || !email || !message) return;
+      if (!name || !email || !inquiryTypeLabel || !message) return;
       if (!base) {
         alert(formTexts.configError);
         return;
@@ -268,7 +302,7 @@ const formApiBase = (() => {
               name,
               email,
               phone,
-              message,
+              message: `${formTexts.inquiryType}: ${inquiryTypeLabel}\n\n${message}`,
             },
           }),
         });

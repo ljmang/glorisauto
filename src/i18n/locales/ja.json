@@ -89,6 +89,11 @@
     "phonePlaceholder": "電話番号を入力",
     "countryPlaceholder": "国/地域を選択",
     "messagePlaceholder": "お問い合わせ内容をご入力ください",
+    "inquiryType": "お問い合わせ種別",
+    "inquiryFreeSample": "無料サンプルを入手",
+    "inquiryBuyProducts": "製品を購入",
+    "inquiryBecomeDealer": "販売代理店になる",
+    "inquiryOther": "その他",
     "submitSuccess": "送信が完了しました。担当よりご連絡いたします。",
     "submitConfigError": "送信設定に問題があります。しばらくしてから再度お試しください。",
     "submitting": "送信中…",
@@ -119,7 +124,8 @@
   },
   "home": {
     "heroTitle": "ようこそ",
-    "heroCta": "お問い合わせ"
+    "heroCta": "お問い合わせ",
+    "freeSampleCta": "無料サンプルを入手"
   },
   "error404": {
     "title": "ページが見つかりません",

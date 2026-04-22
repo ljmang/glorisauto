@@ -89,6 +89,11 @@
     "phonePlaceholder": "Your phone",
     "countryPlaceholder": "Select Country/Region",
     "messagePlaceholder": "Your inquiry or question",
+    "inquiryType": "Inquiry Type",
+    "inquiryFreeSample": "Get Free Samples",
+    "inquiryBuyProducts": "Buy Products",
+    "inquiryBecomeDealer": "Become a Dealer",
+    "inquiryOther": "Other",
     "submitSuccess": "Submitted successfully. We will get back to you soon.",
     "submitConfigError": "Submission is not configured. Please try again later.",
     "submitting": "Submitting…",
@@ -119,7 +124,8 @@
   },
   "home": {
     "heroTitle": "Welcome",
-    "heroCta": "Contact Us"
+    "heroCta": "Contact Us",
+    "freeSampleCta": "Get Free Samples"
   },
   "error404": {
     "title": "Page Not Found",

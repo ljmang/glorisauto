@@ -6,6 +6,8 @@
   export let subtitle: string | null = null;
   export let cta = '';
   export let ctaHref = '/';
+  export let secondaryCta = '';
+  export let secondaryCtaHref = '/';
 </script>
 
 <div class="w-full relative h-128 md:h-full overflow-hidden bg-black">
@@ -54,14 +56,27 @@
             {subtitle}
           </p>
         {/if}
-        {#if cta}
-          <a
-            href={ctaHref}
-            class="inline-flex items-center justify-center gap-2 px-8 py-3.5 text-base font-semibold bg-white rounded-lg shadow-lg hover:bg-orange-400 hover:text-white transition-colors no-underline"
-          >
-            <span>{cta}</span>
-            <ArrowRight class="w-5 h-5" />
-          </a>
+        {#if cta || secondaryCta}
+          <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+            {#if cta}
+              <a
+                href={ctaHref}
+                class="inline-flex items-center justify-center gap-2 px-8 py-3.5 text-base font-semibold bg-white rounded-lg shadow-lg hover:bg-orange-400 hover:text-white transition-colors no-underline"
+              >
+                <span>{cta}</span>
+                <ArrowRight class="w-5 h-5" />
+              </a>
+            {/if}
+            {#if secondaryCta}
+              <a
+                href={secondaryCtaHref}
+                class="inline-flex items-center justify-center gap-2 px-8 py-3.5 text-base font-semibold text-white border border-white/80 rounded-lg shadow-lg bg-white/10 backdrop-blur-sm hover:bg-white hover:text-orange-600 transition-colors no-underline"
+              >
+                <span>{secondaryCta}</span>
+                <ArrowRight class="w-5 h-5" />
+              </a>
+            {/if}
+          </div>
         {/if}
       </div>
     </div>

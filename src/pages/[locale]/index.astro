@@ -130,6 +130,8 @@ const downloadFilesLinkHref = toHref(
 const heroMediaProp = parseHeroMedia(data.heroMedia);
 const heroTitle = data.heroTitle ?? t(messages, "home.heroTitle");
 const heroCtaHref = toHref(data.heroButtonLink ?? "/", locale);
+const heroSampleCta = t(messages, "home.freeSampleCta");
+const heroSampleCtaHref = `${toHref("/support/customer-service", locale)}?type=free-sample`;
 const aboutGlorisCover = parseImage(data.aboutGlorisCover);
 const showDownloadFiles =
 	Boolean(data.downloadFilesTitle) &&
@@ -178,6 +180,8 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 		subtitle={data.heroDescription}
 		cta={data.heroButton}
 		ctaHref={heroCtaHref}
+		secondaryCta={heroSampleCta}
+		secondaryCtaHref={heroSampleCtaHref}
 	/>
 
 	<div
