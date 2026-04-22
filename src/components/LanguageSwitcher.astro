@@ -19,6 +19,22 @@ interface InsightLookupResult {
   localizations?: InsightLocalization[];
 }
 
+interface ProductLocalization {
+  locale?: string;
+  slug?: string;
+  category?: {
+    slug?: string;
+  } | null;
+}
+
+interface ProductLookupResult {
+  slug?: string;
+  category?: {
+    slug?: string;
+  } | null;
+  localizations?: ProductLocalization[];
+}
+
 const { currentLocale } = Astro.props;
 const isRtl = isRtlLocale(currentLocale);
 
@@ -33,9 +49,9 @@ const resolvedPathByLocale: Record<Locale, string> = {
   ar: currentPath,
 };
 
-const match = currentPath.match(/^\/about\/insights\/([^/]+)\/([^/]+)\/?$/);
-if (match) {
-  const [, categorySlug, articleSlug] = match;
+const insightMatch = currentPath.match(/^\/about\/insights\/([^/]+)\/([^/]+)\/?$/);
+if (insightMatch) {
+  const [, categorySlug, articleSlug] = insightMatch;
   const strapiLocale = localeToStrapi[currentLocale];
   const res = await fetchApi<{ data?: InsightLookupResult[] }>(api.insights, {
     locale: strapiLocale,
@@ -56,6 +72,43 @@ if (match) {
     const targetLocale = loc.locale ? strapiToLocale[loc.locale] : undefined;
     if (!targetLocale || !loc.slug || !loc.insight_category?.slug) continue;
     resolvedPathByLocale[targetLocale] = `/about/insights/${loc.insight_category.slug}/${loc.slug}`;
+  }
+}
+
+const productMatch = currentPath.match(/^\/products\/([^/]+)\/([^/]+)\/?$/);
+if (productMatch) {
+  const [, categorySlug, productSlug] = productMatch;
+  const strapiLocale = localeToStrapi[currentLocale];
+  const res = await fetchApi<{ data?: ProductLookupResult[] }>(api.products, {
+    locale: strapiLocale,
+    populate: {
+      category: true,
+      localizations: {
+        populate: {
+          category: true,
+        },
+      },
+    },
+    filters: {
+      $and: [
+        { slug: { $eq: productSlug } },
+        { category: { slug: { $eq: categorySlug } } },
+      ],
+    },
+    pagination: { pageSize: 1 },
+  });
+
+  const item = Array.isArray(res?.data) ? res.data[0] : undefined;
+  const localizations = Array.isArray(item?.localizations) ? item.localizations : [];
+
+  if (item?.slug && item.category?.slug) {
+    resolvedPathByLocale[currentLocale] = `/products/${item.category.slug}/${item.slug}`;
+  }
+
+  for (const loc of localizations) {
+    const targetLocale = loc.locale ? strapiToLocale[loc.locale] : undefined;
+    if (!targetLocale || !loc.slug || !loc.category?.slug) continue;
+    resolvedPathByLocale[targetLocale] = `/products/${loc.category.slug}/${loc.slug}`;
   }
 }
 ---
