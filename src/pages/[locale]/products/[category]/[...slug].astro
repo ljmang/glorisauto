@@ -132,7 +132,7 @@ const helpCenter = (product as {
     title?: string;
     description?: string;
     slug?: string;
-    content?: BlockNode[];
+    contentMarkdown?: string;
     help_category?: { slug?: string };
   };
 } | null)?.help_center ?? null;
@@ -140,44 +140,56 @@ const helpCenter = (product as {
 type HelpCenterItem = {
   title?: string;
   slug?: string;
-  content?: BlockNode[];
+  contentMarkdown?: string;
+  contentHtml?: string;
   href?: string;
 };
 
 const faqItems: HelpCenterItem[] = [];
 
-if (helpCenter && Array.isArray(helpCenter.content) && helpCenter.content.length > 0) {
+async function buildHelpCenterItem(entry: {
+  title?: string;
+  slug?: string;
+  contentMarkdown?: string;
+  help_category?: { slug?: string };
+}): Promise<HelpCenterItem | null> {
+  const markdown = entry.contentMarkdown?.trim() ?? '';
+  if (!markdown) return null;
+
+  const catSlug = entry.help_category?.slug ?? '';
+  const href = catSlug && entry.slug ? toHref(`/help/${catSlug}/${entry.slug}`, locale) : '';
+
+  return {
+    title: entry.title,
+    slug: entry.slug,
+    contentMarkdown: markdown,
+    contentHtml: await markdownToHtml(markdown),
+    href,
+  };
+}
+
+if (helpCenter) {
   const helpCenterCategorySlug = (helpCenter as { help_category?: { slug?: string } } | null)?.help_category?.slug ?? '';
   const helpCenterSlug = (helpCenter as { slug?: string } | null)?.slug ?? '';
   const helpCenterHref = helpCenterCategorySlug && helpCenterSlug ? toHref(`/help/${helpCenterCategorySlug}/${helpCenterSlug}`, locale) : '';
-  faqItems.push({
-    title: helpCenter.title,
-    slug: helpCenter.slug,
-    content: helpCenter.content,
-    href: helpCenterHref,
-  });
+  const item = await buildHelpCenterItem(helpCenter);
+  if (item) faqItems.push({ ...item, href: helpCenterHref });
 }
 
 const isFilmMasterPage = categorySlug === 'film-sanding-disc' && productSlug === 'film-master-sanding-disc';
 if (isFilmMasterPage) {
-  const commonFaqRes = await fetchApi<{ data?: Array<{ title?: string; slug?: string; content?: BlockNode[]; help_category?: { slug?: string } }> }>(api.helpCenters, {
+  const commonFaqRes = await fetchApi<{ data?: Array<{ title?: string; slug?: string; contentMarkdown?: string; help_category?: { slug?: string } }> }>(api.helpCenters, {
     locale,
     filters: { slug: { $eq: 'common-abrasive-backing-materials' } },
     populate: { help_category: true },
     pagination: { pageSize: 1 },
   });
   const commonFaq = Array.isArray(commonFaqRes?.data) && commonFaqRes.data.length > 0 ? commonFaqRes.data[0] : null;
-  if (commonFaq && Array.isArray(commonFaq.content) && commonFaq.content.length > 0) {
+  if (commonFaq) {
     const exists = faqItems.some((i) => (i.slug ?? '') === (commonFaq.slug ?? ''));
     if (!exists) {
-      const catSlug = commonFaq.help_category?.slug ?? '';
-      const href = catSlug && commonFaq.slug ? toHref(`/help/${catSlug}/${commonFaq.slug}`, locale) : '';
-      faqItems.push({
-        title: commonFaq.title,
-        slug: commonFaq.slug,
-        content: commonFaq.content,
-        href,
-      });
+      const item = await buildHelpCenterItem(commonFaq);
+      if (item) faqItems.push(item);
     }
   }
 }
@@ -311,7 +323,9 @@ const breadcrumbItems = [
                     {faq.title || `${t(messages, 'products.faq')} ${idx + 1}`}
                   </summary>
                   <div class='px-4 pb-4 text-gray-700'>
-                    {Array.isArray(faq.content) && faq.content.length > 0 && <BlocksRenderer blocks={faq.content as BlockNode[]} class='text-gray-700' />}
+                    {faq.contentHtml && (
+                      <div class='prose max-w-none text-gray-700' set:html={faq.contentHtml} />
+                    )}
                     {faq.href && (
                       <div class='mt-4'>
                         <a href={faq.href} class='flex items-center gap-2 font-medium text-cyan-600 hover:text-orange-600'>

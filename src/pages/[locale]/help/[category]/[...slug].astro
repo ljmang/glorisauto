@@ -5,16 +5,14 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { type Locale, getLocale, isRtlLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
-import { fetchApi, api, parseImage } from '@/utils/strapiApi';
+import { fetchApi, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { getHelpArticleStaticPaths } from '@/utils/helpStaticPaths';
 import Breadcrumb from '@/components/Breadcrumb.astro';
-import BlocksRenderer from '@/components/BlocksRenderer.astro';
 import ProductCard from '@/components/ProductCard.astro';
 import InsightCard from '@/components/InsightCard.astro';
-import { Image } from 'astro:assets';
 import type { HelpCategoryAttributes, HelpCenterAttributes, ProductAttributes, InsightAttributes } from '@/types/content';
-import type { BlockNode, ImageNode } from '@/types/blocks';
+import { markdownToHtml } from '@/utils/markdown';
 
 export async function getStaticPaths() {
   return getHelpArticleStaticPaths();
@@ -85,24 +83,10 @@ if (categorySlug !== canonicalCategorySlug) {
 
 const categoryName = article.help_category?.name ?? canonicalCategorySlug;
 
-// 3. 从 content blocks 中提取第一张图片作为配图
-function extractFirstImage(blocks: BlockNode[] | null | undefined): ImageNode | null {
-  if (!blocks || !Array.isArray(blocks)) return null;
-  for (const block of blocks) {
-    if (block.type === 'image' && 'image' in block) {
-      return block as ImageNode;
-    }
-    if (block.children && Array.isArray(block.children)) {
-      const found = extractFirstImage(block.children);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-const coverImageNode = extractFirstImage(article.content);
-const coverImage = coverImageNode?.image ? parseImage(coverImageNode.image) : null;
+const articleMarkdown = article.contentMarkdown?.trim() ?? '';
+const articleMarkdownHtml = articleMarkdown ? await markdownToHtml(articleMarkdown) : '';
 
-// 4. 相关产品和文章
+// 3. 相关产品和文章
 const relatedProducts = (article as { products?: ProductAttributes[] })?.products ?? [];
 const relatedArticles = (article as { articles?: InsightAttributes[] })?.articles ?? [];
 
@@ -118,7 +102,6 @@ const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')
 <BaseLayout
   title={pageTitle}
   description={article.description}
-  image={coverImageNode?.image ?? null}
   seo={article.seo}
   pageType="article"
   breadcrumbs={breadcrumbItems}
@@ -184,27 +167,9 @@ const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')
       <!-- 文章标题 -->
       <h2 class="text-4xl lg:text-5xl font-black mb-6">{article.title}</h2>
 
-      <!-- 文章配图 -->
-      {coverImage && coverImage.src && coverImage.width && coverImage.height && (
-        <div class="mb-8 w-full aspect-video overflow-hidden rounded-lg">
-          <Image
-            src={coverImage.src}
-            alt={coverImage.alt || article.title}
-            width={coverImage.width}
-            height={coverImage.height}
-            class="w-full h-full object-cover"
-            format="webp"
-            quality={85}
-            loading="eager"
-          />
-        </div>
-      )}
-
       <!-- 文章正文 -->
-      {article.content && Array.isArray(article.content) && article.content.length > 0 && (
-        <div class="prose prose-lg max-w-none mb-12">
-          <BlocksRenderer blocks={article.content as BlockNode[]} />
-        </div>
+      {articleMarkdownHtml && (
+        <div class="prose prose-lg max-w-none mb-12" set:html={articleMarkdownHtml} />
       )}
     </article>
 

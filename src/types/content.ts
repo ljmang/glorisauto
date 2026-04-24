@@ -337,7 +337,7 @@ export interface HelpCenterAttributes {
   title: string;
   slug: string;
   description?: string;
-  content?: BlockNode[];
+  contentMarkdown?: string;
   sort?: number;
   recommend?: boolean;
   publishedAt?: string;

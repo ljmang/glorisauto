@@ -107,8 +107,23 @@ const formApiBase = (() => {
           data-api-base={formApiBase}
         >
           <div>
+            <label for="contact-inquiry-type" class="block text-sm font-medium text-gray-700 mb-1">
+              {t(messages, 'form.inquiryType')} <span class="text-orange-500">*</span>
+            </label>
+            <select
+              id="contact-inquiry-type"
+              name="inquiryType"
+              required
+              class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            >
+              {inquiryOptions.map((option) => (
+                <option value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label for="contact-name" class="block text-sm font-medium text-gray-700 mb-1">
-              {contact?.yourName ?? t(messages, 'form.name')} *
+              {contact?.yourName ?? t(messages, 'form.name')} <span class="text-orange-500">*</span>
             </label>
             <input
               type="text"
@@ -121,7 +136,7 @@ const formApiBase = (() => {
           </div>
           <div>
             <label for="contact-email" class="block text-sm font-medium text-gray-700 mb-1">
-              {contact?.yourEmail ?? t(messages, 'form.email')} *
+              {contact?.yourEmail ?? t(messages, 'form.email')} <span class="text-orange-500">*</span>
             </label>
             <input
               type="email"
@@ -131,21 +146,6 @@ const formApiBase = (() => {
               class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               placeholder={t(messages, 'form.emailPlaceholder')}
             />
-          </div>
-          <div>
-            <label for="contact-inquiry-type" class="block text-sm font-medium text-gray-700 mb-1">
-              {t(messages, 'form.inquiryType')} *
-            </label>
-            <select
-              id="contact-inquiry-type"
-              name="inquiryType"
-              required
-              class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-            >
-              {inquiryOptions.map((option) => (
-                <option value={option.value}>{option.label}</option>
-              ))}
-            </select>
           </div>
           <div>
             <label for="contact-phone" class="block text-sm font-medium text-gray-700 mb-1">
@@ -161,7 +161,7 @@ const formApiBase = (() => {
           </div>
           <div>
             <label for="contact-message" class="block text-sm font-medium text-gray-700 mb-1">
-              {contact?.message ?? t(messages, 'form.message')} *
+              {contact?.message ?? t(messages, 'form.message')} <span class="text-orange-500">*</span>
             </label>
             <textarea
               id="contact-message"
