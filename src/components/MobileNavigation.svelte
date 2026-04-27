@@ -9,11 +9,15 @@
     locale = '',
     messages = {},
     navData = [],
+    contactPhone = '+86 18122288163',
+    contactEmail = 'Sales@glorisauto.com',
   }: {
     currentPath?: string;
     locale?: string;
     messages?: Record<string, unknown>;
     navData?: NavItem[];
+    contactPhone?: string;
+    contactEmail?: string;
   } = $props();
 
   let isOpen = $state(false);
@@ -65,6 +69,7 @@
   );
   const currentLocaleDisplay = $derived(localeDisplayConfig[locale as Locale]);
   const isRtl = $derived(locale === 'ar');
+  const contactPhoneHref = $derived(`tel:${contactPhone.replace(/[^\d+]/g, '')}`);
 </script>
 <!-- 手机版汉堡菜单按钮（搜索入口在 Header 里，与汉堡并排） -->
 <button
@@ -97,14 +102,14 @@
     <div class="shrink-0 flex flex-col gap-3 px-4 py-4 pt-14 border-b border-gray-200 bg-white">
       <div class="flex items-center gap-2">
         <PhoneCall class="w-4 h-4 shrink-0 text-gray-500" />
-        <a href="tel:+8618122288163" class=" hover:text-orange-500 transition-colors no-underline"
-          >+86 18122288163</a
+        <a href={contactPhoneHref} class=" hover:text-orange-500 transition-colors no-underline"
+          >{contactPhone}</a
         >
       </div>
       <div class="flex items-center gap-2">
         <Mail class="w-4 h-4 shrink-0 text-gray-500" />
-        <a href="mailto:Sales@glorisauto.com" class=" hover:text-orange-500 transition-colors no-underline"
-          >Sales@glorisauto.com</a
+        <a href={`mailto:${contactEmail}`} class=" hover:text-orange-500 transition-colors no-underline"
+          >{contactEmail}</a
         >
       </div>
       <div class="space-y-1 font-medium text-lg">

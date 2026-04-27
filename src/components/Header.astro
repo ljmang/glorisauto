@@ -2,6 +2,7 @@
 import { type Messages } from "@/i18n";
 import { type Locale } from "@/i18n/config";
 import type { NavItem } from "@/utils/navigationData";
+import type { SiteSeoAttributes } from "@/types/content";
 import LanguageSwitcher from "@/components/LanguageSwitcher.astro";
 import Navigation from "@/components/Navigation.svelte";
 import MobileNavigation from "@/components/MobileNavigation.svelte";
@@ -13,11 +14,16 @@ interface Props {
   messages: Messages;
   locale: Locale;
   navData?: NavItem[];
+  siteSeo?: SiteSeoAttributes | null;
 }
 
-const { messages, locale, navData = [] } = Astro.props;
+const { messages, locale, navData = [], siteSeo = null } = Astro.props;
 const currentPath = Astro.url.pathname;
 const searchIndex = await generateSearchIndex(locale);
+
+const contactPhone = siteSeo?.contactPhone?.trim() || '+86 18122288163';
+const contactEmail = siteSeo?.contactEmail?.trim() || 'Sales@glorisauto.com';
+const contactPhoneHref = `tel:${contactPhone.replace(/[^\d+]/g, '')}`;
 ---
 
 <header class="bg-white sticky top-0 z-40 shadow-sm">
@@ -29,16 +35,16 @@ const searchIndex = await generateSearchIndex(locale);
     <div class="flex items-center gap-2">
       <PhoneCall class="w-4 h-4" />
       <a
-        href="tel:+8618122288163"
-        class="hover:text-orange-500 transition-colors">+86 18122288163</a
+        href={contactPhoneHref}
+        class="hover:text-orange-500 transition-colors">{contactPhone}</a
       >
     </div>
     <!-- email -->
     <div class="flex items-center gap-2">
       <Mail class="w-4 h-4" />
       <a
-        href="mailto:Sales@glorisauto.com"
-        class="hover:text-orange-500 transition-colors">Sales@glorisauto.com</a
+        href={`mailto:${contactEmail}`}
+        class="hover:text-orange-500 transition-colors">{contactEmail}</a
       >
     </div>
     <!-- language switcher -->
@@ -82,6 +88,8 @@ const searchIndex = await generateSearchIndex(locale);
         locale={locale}
         messages={messages}
         navData={navData}
+        contactPhone={contactPhone}
+        contactEmail={contactEmail}
       />
     </div>
   </nav>

@@ -101,12 +101,35 @@ function toAbsoluteUrl(siteUrl: string, targetPath: string): string {
   return new URL(targetPath.startsWith('/') ? targetPath : `/${targetPath}`, `${siteUrl}/`).toString();
 }
 
+function normalizeCanonicalUrl(siteUrl: string, targetPath: string): string {
+  const absoluteUrl = toAbsoluteUrl(siteUrl, targetPath);
+
+  try {
+    const url = new URL(absoluteUrl);
+    const siteOrigin = new URL(siteUrl).origin;
+
+    if (url.origin !== siteOrigin || url.pathname === '/' || url.pathname.endsWith('/')) {
+      return url.toString();
+    }
+
+    const lastSegment = url.pathname.split('/').pop() ?? '';
+    if (lastSegment.includes('.')) {
+      return url.toString();
+    }
+
+    url.pathname = `${url.pathname}/`;
+    return url.toString();
+  } catch {
+    return absoluteUrl;
+  }
+}
+
 function resolveCanonicalUrl(siteUrl: string, pathname: string, canonicalURL?: string | null): string {
   const explicitCanonical = firstNonEmpty(canonicalURL ?? undefined);
   if (explicitCanonical) {
-    return toAbsoluteUrl(siteUrl, explicitCanonical);
+    return normalizeCanonicalUrl(siteUrl, explicitCanonical);
   }
-  return toAbsoluteUrl(siteUrl, normalizePath(pathname));
+  return normalizeCanonicalUrl(siteUrl, normalizePath(pathname));
 }
 
 function localeToLanguageTag(locale: Locale): string {
