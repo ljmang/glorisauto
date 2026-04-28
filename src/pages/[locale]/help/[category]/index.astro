@@ -81,6 +81,7 @@ const articlesRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCe
 const articles = (articlesRes?.data ?? []).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
 
 const categoryName = currentCategory?.name ?? categorySlug;
+const categoryDescription = currentCategory.description ?? currentCategory.descrition;
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
   { label: t(messages, 'footer.support.helpCenter'), href: '/help' },
@@ -91,7 +92,7 @@ const pageTitle = `${categoryName} - ${t(messages, 'footer.support.helpCenter')}
 
 <BaseLayout
   title={pageTitle}
-  description={currentCategory.description}
+  description={categoryDescription}
   seo={currentCategory.seo}
   pageType="collection"
   breadcrumbs={breadcrumbItems}
@@ -102,6 +103,11 @@ const pageTitle = `${categoryName} - ${t(messages, 'footer.support.helpCenter')}
     <Breadcrumb items={breadcrumbItems} locale={locale} />
 
     <h1 class="text-4xl lg:text-5xl font-black mb-8">{categoryName}</h1>
+    {categoryDescription && (
+      <p class="mb-8 max-w-3xl text-base leading-7 text-gray-600 lg:text-lg lg:leading-8">
+        {categoryDescription}
+      </p>
+    )}
 
     <!-- 搜索框 -->
     <div class="mb-8">

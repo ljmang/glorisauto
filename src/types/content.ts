@@ -325,6 +325,7 @@ export type SupportContent = StrapiContent<SupportAttributes>;
 export interface HelpCategoryAttributes {
   name: string;
   slug: string;
+  descrition?: string;
   description?: string;
   sort?: number;
   seo?: StrapiSeo | null;
@@ -337,7 +338,7 @@ export interface HelpCenterAttributes {
   title: string;
   slug: string;
   description?: string;
-  contentMarkdown?: string;
+  contentMarkdown?: string | null;
   sort?: number;
   recommend?: boolean;
   publishedAt?: string;

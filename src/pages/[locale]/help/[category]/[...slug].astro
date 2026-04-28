@@ -8,11 +8,11 @@ import { loadMessages, t } from '@/i18n';
 import { fetchApi, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { getHelpArticleStaticPaths } from '@/utils/helpStaticPaths';
+import { markdownToHtml } from '@/utils/markdown';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ProductCard from '@/components/ProductCard.astro';
 import InsightCard from '@/components/InsightCard.astro';
 import type { HelpCategoryAttributes, HelpCenterAttributes, ProductAttributes, InsightAttributes } from '@/types/content';
-import { markdownToHtml } from '@/utils/markdown';
 
 export async function getStaticPaths() {
   return getHelpArticleStaticPaths();
