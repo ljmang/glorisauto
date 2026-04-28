@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ArrowRight } from 'lucide-svelte';
+  import { ArrowRight, Pause, Play } from 'lucide-svelte';
 
   export let media: { type: 'image' | 'video'; src: string; poster?: string } | null = null;
   export let title = '';
@@ -8,36 +8,72 @@
   export let ctaHref = '/';
   export let secondaryCta = '';
   export let secondaryCtaHref = '/';
+
+  let mobileVideo: HTMLVideoElement | null = null;
+  let mobileVideoPlaying = false;
+
+  async function toggleMobileVideo() {
+    if (!mobileVideo) return;
+
+    if (mobileVideo.paused) {
+      try {
+        await mobileVideo.play();
+        mobileVideoPlaying = true;
+      } catch {
+        mobileVideoPlaying = false;
+      }
+      return;
+    }
+
+    mobileVideo.pause();
+    mobileVideoPlaying = false;
+  }
 </script>
 
-<div class="w-full relative h-128 md:h-full overflow-hidden bg-black">
+<div class="w-full relative h-[520px] md:h-[640px] 2xl:h-[800px] overflow-hidden bg-black">
   {#if media?.type === 'video' && media.src}
-    <div class="absolute inset-0 pointer-events-none hidden md:block" aria-hidden="true">
+    <div class="relative h-full md:hidden">
       <video
-        class="w-full h-full object-cover scale-110 blur-md"
+        bind:this={mobileVideo}
+        class="h-full w-full object-cover md:hidden"
         src={media.src}
         poster={media.poster ?? ''}
         muted
-        loop
         playsinline
-        autoplay
+        preload="metadata"
+        onpause={() => (mobileVideoPlaying = false)}
+        onplay={() => (mobileVideoPlaying = true)}
       ></video>
-      <div class="absolute inset-0 bg-black/35"></div>
+      <button
+        type="button"
+        class="absolute right-4 top-4 z-20 grid h-11 w-11 place-items-center rounded-full border border-white/70 bg-black/45 text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-black/65 focus:outline-none focus:ring-2 focus:ring-white"
+        aria-label={mobileVideoPlaying ? 'Pause hero video' : 'Play hero video'}
+        aria-pressed={mobileVideoPlaying}
+        onclick={toggleMobileVideo}
+      >
+        {#if mobileVideoPlaying}
+          <Pause class="h-5 w-5" strokeWidth={2.4} />
+        {:else}
+          <Play class="h-5 w-5 translate-x-px" strokeWidth={2.4} />
+        {/if}
+      </button>
     </div>
 
-    <div class="relative z-[1] h-full overflow-hidden md:mx-auto md:w-[calc(100%-2rem)] lg:max-w-[100rem]">
+    <div class="hidden h-full overflow-hidden md:block">
       <video
-        class="w-full h-full object-cover"
-        src={media.src}
+        class="h-full w-full object-cover"
         poster={media.poster ?? ''}
         muted
         loop
         playsinline
         autoplay
-      ></video>
+        preload="metadata"
+      >
+        <source src={media.src} media="(min-width: 768px)" />
+      </video>
     </div>
   {:else if media?.src}
-    <img src={media.src} alt="" class="h-120 lg:h-160 2xl:h-200 w-full object-cover" />
+    <img src={media.src} alt="" class="h-full w-full object-cover" />
   {/if}
 
   <div

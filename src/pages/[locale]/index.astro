@@ -175,6 +175,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 	locale={locale}
 >
 	<Hero
+		client:load
 		media={heroMediaProp}
 		title={heroTitle}
 		subtitle={data.heroDescription}
