@@ -55,7 +55,14 @@ export interface SiteSeoAttributes {
   companyLogo?: StrapiMedia | null;
   contactEmail?: string;
   contactPhone?: string;
+  contactWhatsapp?: string;
+  contactWhatsappLabel?: string;
+  contactChatLabel?: string;
+  addressTitle?: string;
   address?: string;
+  googleMaps?: string | null;
+  mapLinkLabel?: string;
+  mapEmbedTitle?: string;
   sameAsLinks?: StrapiLinkItem[];
   defaultLocale?: string;
   supportedLocales?: string[] | null;

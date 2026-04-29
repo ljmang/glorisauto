@@ -99,6 +99,10 @@
     "submitting": "提交中…",
     "submitFailed": "提交失败，请稍后重试"
   },
+  "contactInfo": {
+    "address": "地址",
+    "mapLink": "在 Google 地图中查看"
+  },
   "privacyPolicy": {
     "lastUpdated": "最后更新：2025年2月",
     "intro": "Gloris（以下简称「我们」）尊重您的隐私。本政策说明我们如何收集、使用、存储及保护您通过本网站提供或我们自动获取的信息。使用本网站即表示您同意本政策。",

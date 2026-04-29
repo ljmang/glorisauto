@@ -9,6 +9,7 @@ import Navigation from "@/components/Navigation.svelte";
 import MobileNavigation from "@/components/MobileNavigation.svelte";
 import SearchBox from "@/components/SearchBox.svelte";
 import { generateSearchIndex } from "@/utils/searchIndex";
+import { getSiteContactInfo } from "@/utils/siteContact";
 import { PhoneCall, Mail, Search, Gift } from "lucide-svelte";
 
 interface Props {
@@ -22,9 +23,7 @@ const { messages, locale, navData = [], siteSeo = null } = Astro.props;
 const currentPath = Astro.url.pathname;
 const searchIndex = await generateSearchIndex(locale);
 
-const contactPhone = siteSeo?.contactPhone?.trim() || '+86 18122288163';
-const contactEmail = siteSeo?.contactEmail?.trim() || 'Sales@glorisauto.com';
-const contactPhoneHref = `tel:${contactPhone.replace(/[^\d+]/g, '')}`;
+const siteContact = getSiteContactInfo(siteSeo);
 const customerServiceHref = toHref('/support/customer-service', locale);
 const freeSampleHref = `${customerServiceHref}/?type=free-sample`;
 const freeSampleLabel = t(messages, 'home.freeSampleCta');
@@ -39,16 +38,16 @@ const freeSampleLabel = t(messages, 'home.freeSampleCta');
     <div class="flex items-center gap-2">
       <PhoneCall class="w-4 h-4" />
       <a
-        href={contactPhoneHref}
-        class="hover:text-orange-500 transition-colors">{contactPhone}</a
+        href={siteContact.phoneHref}
+        class="hover:text-orange-500 transition-colors">{siteContact.phone}</a
       >
     </div>
     <!-- email -->
     <div class="flex items-center gap-2">
       <Mail class="w-4 h-4" />
       <a
-        href={`mailto:${contactEmail}`}
-        class="hover:text-orange-500 transition-colors">{contactEmail}</a
+        href={`mailto:${siteContact.email}`}
+        class="hover:text-orange-500 transition-colors">{siteContact.email}</a
       >
     </div>
     <!-- language switcher -->
@@ -99,8 +98,8 @@ const freeSampleLabel = t(messages, 'home.freeSampleCta');
         locale={locale}
         messages={messages}
         navData={navData}
-        contactPhone={contactPhone}
-        contactEmail={contactEmail}
+        contactPhone={siteContact.phone}
+        contactEmail={siteContact.email}
       />
     </div>
   </nav>

@@ -25,6 +25,7 @@ interface Props {
   publishedTime?: string;
   modifiedTime?: string;
   authorName?: string;
+  siteSeo?: SiteSeoAttributes | null;
 }
 
 const {
@@ -40,6 +41,7 @@ const {
   publishedTime,
   modifiedTime,
   authorName,
+  siteSeo: providedSiteSeo = undefined,
 } = Astro.props;
 
 type NavItem = ReturnType<typeof transformNavigations>;
@@ -128,7 +130,7 @@ async function getSeoPage(currentLocale: Locale, pathname: string): Promise<SeoP
 
 const [navData, siteSeo, seoPage] = await Promise.all([
   getNavData(locale),
-  getSiteSeo(locale),
+  providedSiteSeo === undefined ? getSiteSeo(locale) : Promise.resolve(providedSiteSeo),
   getSeoPage(locale, Astro.url.pathname),
 ]);
 

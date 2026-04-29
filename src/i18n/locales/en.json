@@ -99,6 +99,10 @@
     "submitting": "Submitting…",
     "submitFailed": "Submission failed. Please try again later."
   },
+  "contactInfo": {
+    "address": "Address",
+    "mapLink": "View on Google Map"
+  },
   "privacyPolicy": {
     "lastUpdated": "Last updated: February 2025",
     "intro": "Gloris (\"we\", \"us\") respects your privacy. This policy explains how we collect, use, store and protect information you provide through this website or that we obtain automatically. By using this site you agree to this policy.",
