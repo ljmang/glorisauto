@@ -14,6 +14,149 @@ import ProductCard from '@/components/ProductCard.astro';
 import InsightCard from '@/components/InsightCard.astro';
 import type { HelpCategoryAttributes, HelpCenterAttributes, ProductAttributes, InsightAttributes } from '@/types/content';
 
+type RelatedProductLink = {
+  label: string;
+  href: string;
+  categorySlug: string;
+  productSlug: string;
+};
+
+type RelatedArticleLink = {
+  label: string;
+  href: string;
+  categorySlug: string;
+  articleSlug: string;
+};
+
+function parseProductHref(href: string): Omit<RelatedProductLink, 'label' | 'href'> | null {
+  const path = href.replace(/^https?:\/\/[^/]+/i, '').split('?')[0]?.split('#')[0] ?? '';
+  const segments = path.split('/').filter(Boolean);
+  const productsIndex = segments.findIndex((segment) => segment === 'products');
+  if (productsIndex === -1) return null;
+
+  const categorySlug = segments[productsIndex + 1] ?? '';
+  const productSlug = segments[productsIndex + 2] ?? '';
+  if (!categorySlug || !productSlug) return null;
+
+  return { categorySlug, productSlug };
+}
+
+function parseInsightHref(href: string): Omit<RelatedArticleLink, 'label' | 'href'> | null {
+  const path = href.replace(/^https?:\/\/[^/]+/i, '').split('?')[0]?.split('#')[0] ?? '';
+  const segments = path.split('/').filter(Boolean);
+  const insightsIndex = segments.findIndex((segment, index) => segment === 'insights' && segments[index - 1] === 'about');
+  if (insightsIndex === -1) return null;
+
+  const categorySlug = segments[insightsIndex + 1] ?? '';
+  const articleSlug = segments[insightsIndex + 2] ?? '';
+  if (!categorySlug || !articleSlug) return null;
+
+  return { categorySlug, articleSlug };
+}
+
+function extractRelatedProductLinks(markdown: string): RelatedProductLink[] {
+  const links: RelatedProductLink[] = [];
+  const linkPattern = /\[([^\]]+)\]\(([^)]*\/products\/[^)]*)\)/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = linkPattern.exec(markdown)) !== null) {
+    const label = match[1]?.trim() ?? '';
+    const href = match[2]?.trim() ?? '';
+    const parsed = parseProductHref(href);
+    if (!label || !href || !parsed) continue;
+    links.push({ label, href, ...parsed });
+  }
+
+  return links;
+}
+
+function extractRelatedArticleLinks(markdown: string): RelatedArticleLink[] {
+  const links: RelatedArticleLink[] = [];
+  const linkPattern = /\[([^\]]+)\]\(([^)]*\/about\/insights\/[^)]*)\)/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = linkPattern.exec(markdown)) !== null) {
+    const label = match[1]?.trim() ?? '';
+    const href = match[2]?.trim() ?? '';
+    const parsed = parseInsightHref(href);
+    if (!label || !href || !parsed) continue;
+    links.push({ label, href, ...parsed });
+  }
+
+  return links;
+}
+
+function isRelatedResourceLinkListLine(line: string): boolean {
+  return /^\s*[-*+]\s+\[[^\]]+\]\([^)]*\/(?:products|about\/insights)\/[^)]*\)\s*$/.test(line);
+}
+
+function looksLikeRelatedResourceHeading(line: string): boolean {
+  const normalized = line.replace(/^#{1,6}\s*/, '').trim();
+  if (!normalized || normalized.length > 120) return false;
+  return /related|product|products|article|articles|产品|商品|製品|関連|文章|相关文章|関連記事|منتج|منتجات|مقال|مقالات/i.test(normalized);
+}
+
+function stripRelatedResourceLinkLists(markdown: string): string {
+  const lines = markdown.split(/\r?\n/);
+  const output: string[] = [];
+
+  for (let i = 0; i < lines.length; i += 1) {
+    if (!isRelatedResourceLinkListLine(lines[i] ?? '')) {
+      output.push(lines[i] ?? '');
+      continue;
+    }
+
+    while (output.length > 0 && output[output.length - 1]?.trim() === '') {
+      output.pop();
+    }
+
+    if (output.length > 0 && looksLikeRelatedResourceHeading(output[output.length - 1] ?? '')) {
+      output.pop();
+    }
+
+    while (i < lines.length && ((lines[i]?.trim() ?? '') === '' || isRelatedResourceLinkListLine(lines[i] ?? ''))) {
+      i += 1;
+    }
+    i -= 1;
+
+    while (i + 1 < lines.length && (lines[i + 1]?.trim() ?? '') === '') {
+      i += 1;
+    }
+
+    if (output.length > 0 && output[output.length - 1]?.trim() !== '' && i + 1 < lines.length) {
+      output.push('');
+    }
+  }
+
+  return output.join('\n').trim();
+}
+
+function getProductKey(product: ProductAttributes): string {
+  const record = product as ProductAttributes & { id?: string | number; documentId?: string };
+  const categorySlug =
+    product.category && typeof product.category === 'object' && 'slug' in product.category
+      ? ((product.category as { slug?: string }).slug ?? '')
+      : '';
+
+  if (product.slug) return categorySlug ? `path:${categorySlug}/${product.slug}` : `slug:${product.slug}`;
+  if (record.documentId) return `document:${record.documentId}`;
+  if (record.id != null) return `id:${record.id}`;
+  return `name:${product.name}`;
+}
+
+function getArticleKey(insight: InsightAttributes): string {
+  const record = insight as InsightAttributes & { id?: string | number; documentId?: string };
+  const categorySlug =
+    insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
+      ? ((insight.insight_category as { slug?: string }).slug ?? '')
+      : '';
+
+  if (insight.slug) return categorySlug ? `path:${categorySlug}/${insight.slug}` : `slug:${insight.slug}`;
+  if (record.documentId) return `document:${record.documentId}`;
+  if (record.id != null) return `id:${record.id}`;
+  return `title:${insight.title}`;
+}
+
 export async function getStaticPaths() {
   return getHelpArticleStaticPaths();
 }
@@ -84,11 +227,82 @@ if (categorySlug !== canonicalCategorySlug) {
 const categoryName = article.help_category?.name ?? canonicalCategorySlug;
 
 const articleMarkdown = article.contentMarkdown?.trim() ?? '';
-const articleMarkdownHtml = articleMarkdown ? await markdownToHtml(articleMarkdown) : '';
+const markdownProductLinks = extractRelatedProductLinks(articleMarkdown);
+const markdownArticleLinks = extractRelatedArticleLinks(articleMarkdown);
+const articleBodyMarkdown = stripRelatedResourceLinkLists(articleMarkdown);
+const articleMarkdownHtml = articleBodyMarkdown ? await markdownToHtml(articleBodyMarkdown) : '';
 
 // 3. 相关产品和文章
-const relatedProducts = (article as { products?: ProductAttributes[] })?.products ?? [];
-const relatedArticles = (article as { articles?: InsightAttributes[] })?.articles ?? [];
+const articleProducts = (article as { products?: ProductAttributes[] })?.products ?? [];
+const markdownProductSlugs = Array.from(new Set(markdownProductLinks.map((link) => link.productSlug))).filter(Boolean);
+const linkedProductsRes = markdownProductSlugs.length > 0
+  ? await fetchApi<{ data?: ProductAttributes[] }>(api.products, {
+      locale,
+      populate: { cover: true, images: true, category: true },
+      filters: { slug: { $in: markdownProductSlugs } },
+      pagination: { pageSize: Math.max(markdownProductSlugs.length, 1) },
+    })
+  : null;
+const linkedProducts = linkedProductsRes?.data ?? [];
+const productsBySlug = new Map(linkedProducts.map((product) => [product.slug, product]));
+const seenProductKeys = new Set<string>();
+const relatedProducts: ProductAttributes[] = [];
+
+for (const link of markdownProductLinks) {
+  const product =
+    productsBySlug.get(link.productSlug) ??
+    ({
+      name: link.label,
+      slug: link.productSlug,
+      category: { slug: link.categorySlug },
+    } as ProductAttributes);
+  const key = getProductKey(product);
+  if (seenProductKeys.has(key)) continue;
+  seenProductKeys.add(key);
+  relatedProducts.push(product);
+}
+
+for (const product of articleProducts) {
+  const key = getProductKey(product);
+  if (seenProductKeys.has(key)) continue;
+  seenProductKeys.add(key);
+  relatedProducts.push(product);
+}
+const articleRelations = (article as { articles?: InsightAttributes[] })?.articles ?? [];
+const markdownArticleSlugs = Array.from(new Set(markdownArticleLinks.map((link) => link.articleSlug))).filter(Boolean);
+const linkedArticlesRes = markdownArticleSlugs.length > 0
+  ? await fetchApi<{ data?: InsightAttributes[] }>(api.insights, {
+      locale,
+      populate: { cover: true, insight_category: true },
+      filters: { slug: { $in: markdownArticleSlugs } },
+      pagination: { pageSize: Math.max(markdownArticleSlugs.length, 1) },
+    })
+  : null;
+const linkedArticles = linkedArticlesRes?.data ?? [];
+const articlesBySlug = new Map(linkedArticles.map((insight) => [insight.slug, insight]));
+const seenArticleKeys = new Set<string>();
+const relatedArticles: InsightAttributes[] = [];
+
+for (const link of markdownArticleLinks) {
+  const insight =
+    articlesBySlug.get(link.articleSlug) ??
+    ({
+      title: link.label,
+      slug: link.articleSlug,
+      insight_category: { name: link.categorySlug, slug: link.categorySlug },
+    } as InsightAttributes);
+  const key = getArticleKey(insight);
+  if (seenArticleKeys.has(key)) continue;
+  seenArticleKeys.add(key);
+  relatedArticles.push(insight);
+}
+
+for (const insight of articleRelations) {
+  const key = getArticleKey(insight);
+  if (seenArticleKeys.has(key)) continue;
+  seenArticleKeys.add(key);
+  relatedArticles.push(insight);
+}
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
