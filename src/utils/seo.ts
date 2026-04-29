@@ -349,21 +349,9 @@ function buildPageSchema(options: {
   }
 
   if (pageType === 'product') {
-    const productSchema = toJsonLdNode({
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      name: options.title,
-      description: options.description,
-      url: options.canonicalUrl,
-      image: options.imageUrl || undefined,
-      brand: companyName
-        ? {
-            '@type': 'Brand',
-            name: companyName,
-          }
-        : undefined,
-    });
-    return productSchema ? [productSchema] : [];
+    // Product rich results require offers, reviews, or ratings. Our B2B inquiry
+    // pages do not expose that data yet, so avoid emitting invalid Product JSON-LD.
+    return [];
   }
 
   return [];
