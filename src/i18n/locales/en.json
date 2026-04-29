@@ -127,6 +127,10 @@
     "heroCta": "Contact Us",
     "freeSampleCta": "Get Free Samples"
   },
+  "articleSampleCta": {
+    "title": "Need samples for testing?",
+    "description": "Tell us your application and target market, and our team will recommend suitable Gloris products and sample options."
+  },
   "error404": {
     "title": "Page Not Found",
     "message": "Sorry, the page you are looking for does not exist.",

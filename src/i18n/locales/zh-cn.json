@@ -127,6 +127,10 @@
     "heroCta": "联系我们",
     "freeSampleCta": "获取免费样品"
   },
+  "articleSampleCta": {
+    "title": "需要样品测试吗？",
+    "description": "告诉我们你的应用场景和目标市场，我们会推荐合适的 Gloris 产品与样品方案。"
+  },
   "error404": {
     "title": "页面未找到",
     "message": "抱歉，您访问的页面不存在。",

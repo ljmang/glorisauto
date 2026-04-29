@@ -15,7 +15,7 @@ import type {
   CodeNode,
   ImageNode,
 } from '@/types/blocks';
-import { parseImage } from './strapiApi';
+import { parseImage, sanitizeMediaAltText } from './strapiApi';
 
 /** 渲染文本节点 */
 function renderTextNode(node: TextNode): string {
@@ -95,7 +95,7 @@ export function renderBlockNode(node: BlockNode): string {
       const image = parseImage(imageNode.image);
       if (!image) return '';
       
-      const alt = image.alt || imageNode.caption || '';
+      const alt = image.alt || sanitizeMediaAltText(imageNode.caption);
       const width = image.width ? ` width="${image.width}"` : '';
       const height = image.height ? ` height="${image.height}"` : '';
       const caption = imageNode.caption ? `<figcaption>${imageNode.caption}</figcaption>` : '';

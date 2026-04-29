@@ -109,7 +109,7 @@ const holeList = ((product as { hole?: { name?: string }[] } | null)?.hole ?? []
   .map((item) => ({ name: sanitizeInlineText(item?.name ?? '') }))
   .filter((item) => item.name);
 const productFeaturesMarkdown = sanitizeMarkdown((product as { productFeatures?: string } | null)?.productFeatures ?? '');
-const productFeaturesHtml = await markdownToHtml(productFeaturesMarkdown);
+const productFeaturesHtml = await markdownToHtml(productFeaturesMarkdown, product?.name);
 const productFeaturesHtmlWithScrollableTables = productFeaturesHtml
   .replace(/<table>/g, '<div class="product-features-table-scroll"><table>')
   .replace(/<\/table>/g, '</table></div>');
@@ -163,7 +163,7 @@ async function buildHelpCenterItem(entry: {
     title: entry.title,
     slug: entry.slug,
     contentMarkdown: markdown,
-    contentHtml: await markdownToHtml(markdown),
+    contentHtml: await markdownToHtml(markdown, entry.title),
     href,
   };
 }

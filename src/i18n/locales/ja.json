@@ -127,6 +127,10 @@
     "heroCta": "お問い合わせ",
     "freeSampleCta": "無料サンプルを入手"
   },
+  "articleSampleCta": {
+    "title": "テスト用サンプルが必要ですか？",
+    "description": "用途と対象市場をお知らせください。Gloris チームが適切な製品とサンプル案をご提案します。"
+  },
   "error404": {
     "title": "ページが見つかりません",
     "message": "お探しのページは存在しません。",

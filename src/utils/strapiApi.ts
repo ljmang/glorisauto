@@ -56,6 +56,7 @@ const IMAGE_MIME_PREFIX = 'image/';
 const VIDEO_MIME_PREFIX = 'video/';
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', '.svg'];
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.m4v'];
+const MEDIA_FILENAME_PATTERN = /\.(?:jpe?g|png|webp|gif|avif|svg|mp4|webm|ogg|mov|m4v)$/i;
 
 function getMediaVersion(record: Record<string, unknown>): string | undefined {
   return (
@@ -65,13 +66,17 @@ function getMediaVersion(record: Record<string, unknown>): string | undefined {
   );
 }
 
+export function sanitizeMediaAltText(value: unknown): string {
+  if (typeof value !== 'string') return '';
+
+  const trimmed = value.trim();
+  if (!trimmed || MEDIA_FILENAME_PATTERN.test(trimmed)) return '';
+
+  return trimmed;
+}
+
 function getMediaAltText(record: Record<string, unknown>): string {
-  return (
-    (typeof record?.alternativeText === 'string' && record.alternativeText) ||
-    (typeof record?.caption === 'string' && record.caption) ||
-    (typeof record?.name === 'string' && record.name) ||
-    ''
-  );
+  return sanitizeMediaAltText(record?.alternativeText) || sanitizeMediaAltText(record?.caption);
 }
 
 function getMediaDimensions(record: Record<string, unknown>): { width?: number; height?: number } {

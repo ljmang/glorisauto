@@ -12,6 +12,7 @@ import { markdownToHtml } from '@/utils/markdown';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ProductCard from '@/components/ProductCard.astro';
 import InsightCard from '@/components/InsightCard.astro';
+import ArticleSampleCta from '@/components/ArticleSampleCta.astro';
 import type { HelpCategoryAttributes, HelpCenterAttributes, ProductAttributes, InsightAttributes } from '@/types/content';
 
 type RelatedProductLink = {
@@ -230,7 +231,7 @@ const articleMarkdown = article.contentMarkdown?.trim() ?? '';
 const markdownProductLinks = extractRelatedProductLinks(articleMarkdown);
 const markdownArticleLinks = extractRelatedArticleLinks(articleMarkdown);
 const articleBodyMarkdown = stripRelatedResourceLinkLists(articleMarkdown);
-const articleMarkdownHtml = articleBodyMarkdown ? await markdownToHtml(articleBodyMarkdown) : '';
+const articleMarkdownHtml = articleBodyMarkdown ? await markdownToHtml(articleBodyMarkdown, article.title) : '';
 
 // 3. 相关产品和文章
 const articleProducts = (article as { products?: ProductAttributes[] })?.products ?? [];
@@ -385,6 +386,8 @@ const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')
       {articleMarkdownHtml && (
         <div class="prose prose-lg max-w-none mb-12" set:html={articleMarkdownHtml} />
       )}
+
+      <ArticleSampleCta locale={locale} messages={messages} />
     </article>
 
     <!-- 相关产品 -->

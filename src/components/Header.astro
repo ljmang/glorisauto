@@ -9,7 +9,7 @@ import Navigation from "@/components/Navigation.svelte";
 import MobileNavigation from "@/components/MobileNavigation.svelte";
 import SearchBox from "@/components/SearchBox.svelte";
 import { generateSearchIndex } from "@/utils/searchIndex";
-import { PhoneCall, Mail, Search } from "lucide-svelte";
+import { PhoneCall, Mail, Search, Gift } from "lucide-svelte";
 
 interface Props {
   messages: Messages;
@@ -88,8 +88,9 @@ const freeSampleLabel = t(messages, 'home.freeSampleCta');
       </div>
       <a
         href={freeSampleHref}
-        class="hidden xl:inline-flex items-center justify-center whitespace-nowrap rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 lg:px-5"
+        class="hidden xl:inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 lg:px-5"
       >
+        <Gift class="h-4 w-4 shrink-0" />
         {freeSampleLabel}
       </a>
       <MobileNavigation

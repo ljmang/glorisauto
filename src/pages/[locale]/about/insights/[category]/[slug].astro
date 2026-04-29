@@ -7,6 +7,7 @@ import Breadcrumb from '@/components/Breadcrumb.astro';
 import ProductCard from '@/components/ProductCard.astro';
 import InsightCard from '@/components/InsightCard.astro';
 import TableOfContents from '@/components/TableOfContents.astro';
+import ArticleSampleCta from '@/components/ArticleSampleCta.astro';
 import { supportedLocales, type Locale, getLocale, localeDateTag } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
@@ -92,7 +93,7 @@ const breadcrumbItems = [
 ];
 const pageTitle = `${article.title} - ${t(messages, 'footer.about.insights')}`;
 
-const markdownResult = article.content ? await renderMarkdownWithTOC(article.content) : { html: '', toc: [] };
+const markdownResult = article.content ? await renderMarkdownWithTOC(article.content, article.title) : { html: '', toc: [] };
 const articleHtml = markdownResult.html;
 const tocItems = markdownResult.toc;
 ---
@@ -122,6 +123,7 @@ const tocItems = markdownResult.toc;
         {articleHtml && (
           <div class="prose prose-lg max-w-none mb-12" set:html={articleHtml} />
         )}
+        <ArticleSampleCta locale={locale} messages={messages} />
       </article>
       {tocItems.length > 0 && (
         <TableOfContents items={tocItems} locale={locale} messages={messages} />
