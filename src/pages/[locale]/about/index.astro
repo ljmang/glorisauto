@@ -86,9 +86,9 @@ const latestInsightsLinkHref = toHref(aboutUs?.latestInsightsLink?.trim() || '/a
 const messageButtonHref = toHref(aboutUs?.messageButtonLink?.trim() || '/contact', locale);
 const siteContact = getSiteContactInfo(siteSeo);
 const phoneTitle = aboutUs?.phoneTitle?.trim() || t(messages, 'form.phone');
-const addressTitle = siteContact.addressTitle || aboutUs?.addressTitle?.trim() || t(messages, 'contactInfo.address');
-const mapLinkLabel = siteContact.mapLinkLabel || aboutUs?.mapLinkLabel?.trim() || t(messages, 'contactInfo.mapLink');
-const mapEmbedTitle = siteContact.mapEmbedTitle || aboutUs?.mapEmbedTitle?.trim() || 'Google Map - Guangzhou';
+const addressTitle = siteContact.addressTitle || t(messages, 'contactInfo.address');
+const mapLinkLabel = siteContact.mapLinkLabel || t(messages, 'contactInfo.mapLink');
+const mapEmbedTitle = siteContact.mapEmbedTitle || 'Google Map - Guangzhou';
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -271,16 +271,14 @@ const breadcrumbItems = [
                   </div>
                 )}
 
-                {(aboutUs.addressTitle || siteContact.address) && (
+                {siteContact.address && (
                   <div>
                     <h3 class="text-xl font-bold  mb-2">
                       {addressTitle}
                     </h3>
-                    {siteContact.address && (
-                      <p class="">
-                        {siteContact.address}
-                      </p>
-                    )}
+                    <p class="">
+                      {siteContact.address}
+                    </p>
                     <a
                       href={siteContact.mapLinkUrl}
                       target="_blank"

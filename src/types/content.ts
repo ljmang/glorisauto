@@ -224,10 +224,6 @@ export interface AboutUsAttributes {
   latestInsightsTitle?: string;
   latestInsightsLinkLabel?: string;
   latestInsightsLink?: string;
-  /** Google 地图链接 */
-  googleMaps?: string | null;
-  mapLinkLabel?: string;
-  mapEmbedTitle?: string;
   /** 联系我们区块 */
   contactGlorisTitle?: string;
   messageTitle?: string;
@@ -236,10 +232,6 @@ export interface AboutUsAttributes {
   messageButtonLink?: string;
   phoneTitle?: string;
   phoneDescription?: string;
-  phoneNumber?: string;
-  phoneEmail?: string;
-  addressTitle?: string;
-  addressDescription?: string;
   seo?: StrapiSeo | null;
 }
 
@@ -271,14 +263,6 @@ export interface BecomeDealerAttributes {
   yourPhone?: string;
   message?: string;
   customerServiceTitle?: string;
-  customerServicePhone?: string;
-  customerServiceEmail?: string;
-  customerServiceWhatsapp?: string;
-  customerServiceChat?: string;
-  addressTitle?: string;
-  addressContent?: string;
-  addressGoogleMaps?: string;
-  addressGoogleMapsUrl?: string;
   advantagesTitle?: string;
   focus?: BecomeDealerFocusItem[];
   insights?: (InsightAttributes & { cover?: unknown })[];
