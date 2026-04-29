@@ -93,7 +93,7 @@ function isRelatedResourceLinkListLine(line: string): boolean {
 function looksLikeRelatedResourceHeading(line: string): boolean {
   const normalized = line.replace(/^#{1,6}\s*/, '').trim();
   if (!normalized || normalized.length > 120) return false;
-  return /related|product|products|article|articles|产品|商品|製品|関連|文章|相关文章|関連記事|منتج|منتجات|مقال|مقالات/i.test(normalized);
+  return /related|recommended|further\s+reading|read\s+more|learn\s+more|product|products|article|articles|insight|insights|产品|商品|製品|関連|文章|相关文章|延伸阅读|延伸閱讀|推荐阅读|関連記事|続きを読む|منتج|منتجات|مقال|مقالات|قراءة|المزيد/i.test(normalized);
 }
 
 function stripRelatedResourceLinkLists(markdown: string): string {
@@ -138,10 +138,10 @@ function getProductKey(product: ProductAttributes): string {
       ? ((product.category as { slug?: string }).slug ?? '')
       : '';
 
-  if (product.slug) return categorySlug ? `path:${categorySlug}/${product.slug}` : `slug:${product.slug}`;
+  if (product.slug) return `slug:${product.slug}`;
   if (record.documentId) return `document:${record.documentId}`;
   if (record.id != null) return `id:${record.id}`;
-  return `name:${product.name}`;
+  return `name:${product.name}-${categorySlug}`;
 }
 
 function getArticleKey(insight: InsightAttributes): string {
@@ -151,10 +151,10 @@ function getArticleKey(insight: InsightAttributes): string {
       ? ((insight.insight_category as { slug?: string }).slug ?? '')
       : '';
 
-  if (insight.slug) return categorySlug ? `path:${categorySlug}/${insight.slug}` : `slug:${insight.slug}`;
+  if (insight.slug) return `slug:${insight.slug}`;
   if (record.documentId) return `document:${record.documentId}`;
   if (record.id != null) return `id:${record.id}`;
-  return `title:${insight.title}`;
+  return `title:${insight.title}-${categorySlug}`;
 }
 
 export async function getStaticPaths() {
@@ -202,7 +202,7 @@ const articleRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCen
       },
     },
     products: { populate: { cover: true, images: true, category: true } },
-    articles: { populate: { cover: true } },
+    articles: { populate: { cover: true, insight_category: true } },
   },
   filters: {
     slug: { $eq: articleSlug },

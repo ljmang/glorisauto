@@ -1,7 +1,8 @@
 ---
-import { type Messages } from "@/i18n";
+import { t, type Messages } from "@/i18n";
 import { type Locale } from "@/i18n/config";
 import type { NavItem } from "@/utils/navigationData";
+import { toHref } from "@/utils/navigationData";
 import type { SiteSeoAttributes } from "@/types/content";
 import LanguageSwitcher from "@/components/LanguageSwitcher.astro";
 import Navigation from "@/components/Navigation.svelte";
@@ -24,6 +25,9 @@ const searchIndex = await generateSearchIndex(locale);
 const contactPhone = siteSeo?.contactPhone?.trim() || '+86 18122288163';
 const contactEmail = siteSeo?.contactEmail?.trim() || 'Sales@glorisauto.com';
 const contactPhoneHref = `tel:${contactPhone.replace(/[^\d+]/g, '')}`;
+const customerServiceHref = toHref('/support/customer-service', locale);
+const freeSampleHref = `${customerServiceHref}/?type=free-sample`;
+const freeSampleLabel = t(messages, 'home.freeSampleCta');
 ---
 
 <header class="bg-white sticky top-0 z-40 shadow-sm">
@@ -65,16 +69,16 @@ const contactPhoneHref = `tel:${contactPhone.replace(/[^\d+]/g, '')}`;
       </a>
       <Navigation client:load locale={locale} currentPath={currentPath} navData={navData} />
     </div>
-    <!-- 右侧：手机端搜索图标 + 桌面搜索框 + 汉堡 -->
+    <!-- 右侧：窄屏搜索图标 + 桌面搜索框 + CTA + 汉堡 -->
     <div class="flex items-center gap-1 shrink-0 justify-end">
       <a
         href={`/${locale}/search`}
-        class="md:hidden p-2 text-gray-700 hover:text-orange-500 transition-colors"
+        class="xl:hidden p-2 text-gray-700 hover:text-orange-500 transition-colors"
         aria-label="Search"
       >
         <Search class="w-6 h-6" />
       </a>
-      <div class="hidden md:block">
+      <div class="hidden xl:block">
         <SearchBox
           client:load
           searchIndex={searchIndex}
@@ -82,6 +86,12 @@ const contactPhoneHref = `tel:${contactPhone.replace(/[^\d+]/g, '')}`;
           messages={messages}
         />
       </div>
+      <a
+        href={freeSampleHref}
+        class="hidden xl:inline-flex items-center justify-center whitespace-nowrap rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 lg:px-5"
+      >
+        {freeSampleLabel}
+      </a>
       <MobileNavigation
         client:load
         currentPath={currentPath}

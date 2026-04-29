@@ -70,11 +70,12 @@
   const currentLocaleDisplay = $derived(localeDisplayConfig[locale as Locale]);
   const isRtl = $derived(locale === 'ar');
   const contactPhoneHref = $derived(`tel:${contactPhone.replace(/[^\d+]/g, '')}`);
+  const freeSampleHref = $derived(`/${locale}/support/customer-service/?type=free-sample`);
 </script>
 <!-- 手机版汉堡菜单按钮（搜索入口在 Header 里，与汉堡并排） -->
 <button
   onclick={toggle}
-  class="md:hidden p-2  hover:text-orange-500 transition-colors"
+  class="xl:hidden p-2  hover:text-orange-500 transition-colors"
   aria-label="Toggle menu"
 >
   {#if isOpen}
@@ -86,7 +87,7 @@
 
 {#if isOpen}
   <div
-    class="md:hidden fixed inset-0 z-50 flex flex-col bg-white font-medium text-lg"
+    class="xl:hidden fixed inset-0 z-50 flex flex-col bg-white font-medium text-lg"
     transition:fade={{ duration: 200 }}
   >
     <!-- 右上角关闭 -->
@@ -146,6 +147,13 @@
           </div>
         {/if}
       </div>
+      <a
+        href={freeSampleHref}
+        onclick={close}
+        class="inline-flex items-center justify-center rounded-full bg-orange-500 px-5 py-3 text-base font-bold text-white shadow-sm transition-colors no-underline hover:bg-orange-600"
+      >
+        {t('home.freeSampleCta')}
+      </a>
     </div>
 
     <!-- 中间可上下滑动：导航 -->
