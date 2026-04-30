@@ -1,6 +1,19 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+.article-content :where(img) {
+  width: auto;
+  max-width: min(100%, 56rem);
+  height: auto;
+}
+
+.article-content :where(p > img:only-child),
+.article-content :where(h2 > img:only-child),
+.article-content :where(figure > img:only-child) {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* Noto Sans 自托管于 public/fonts，不请求外网 */
 @font-face {
   font-family: "Noto Sans";

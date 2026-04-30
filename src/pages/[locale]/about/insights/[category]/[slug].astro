@@ -121,7 +121,7 @@ const tocItems = markdownResult.toc;
           <p class="text-lg text-gray-700 mb-8 leading-relaxed">{article.description || article.excerpt}</p>
         )}
         {articleHtml && (
-          <div class="prose prose-lg max-w-none mb-12" set:html={articleHtml} />
+          <div class="article-content prose prose-lg max-w-none mb-12" set:html={articleHtml} />
         )}
         <ArticleSampleCta locale={locale} messages={messages} />
       </article>
