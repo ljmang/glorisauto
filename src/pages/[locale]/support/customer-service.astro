@@ -111,7 +111,7 @@ const formApiBase = (() => {
         <!-- <h2 class="text-2xl font-bold mb-6">{t(messages, 'pageTitle.contact')}</h2> -->
         <form
           id="contact-form"
-          class="space-y-4"
+          class="scroll-mt-28 space-y-4 lg:scroll-mt-32"
           data-thank-you={toHref('/thank-you', locale)}
           data-type={MESSAGE_TYPE_CONTACT}
           data-api-base={formApiBase}
@@ -271,6 +271,13 @@ const formApiBase = (() => {
     if (requestedType && inquiryTypeEl) {
       const hasOption = Array.from(inquiryTypeEl.options).some((option) => option.value === requestedType);
       if (hasOption) inquiryTypeEl.value = requestedType;
+    }
+
+    if (window.location.hash === '#contact-form' || requestedType === 'free-sample') {
+      window.requestAnimationFrame(() => {
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        inquiryTypeEl?.focus?.({ preventScroll: true });
+      });
     }
 
     form.addEventListener('submit', async (e) => {

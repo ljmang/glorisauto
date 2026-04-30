@@ -4,15 +4,16 @@ import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApi, api, parseImage, parseMediaItems, getMediaUrl } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
+import { getFreeSampleHref } from '@/utils/freeSampleLink';
 import { markdownToHtml } from '@/utils/markdown';
 import { hasMeaningfulText, sanitizeInlineText, sanitizeMarkdown } from '@/utils/contentSanitizers';
-import type { ProductAttributes } from '@/types/content';
+import type { HelpCenterAttributes, ProductAttributes } from '@/types/content';
 import type { BlockNode } from '@/types/blocks';
 import BlocksRenderer from '@/components/BlocksRenderer.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ProductGallery from '@/components/ProductGallery.astro';
 import DownloadFileCard from '@/components/DownloadFileCard.astro';
-import { CircleChevronRight } from 'lucide-svelte';
+import { CircleChevronRight, Gift, MessageCircle } from 'lucide-svelte';
 
 export async function getStaticPaths() {
   const paths: { params: { locale: string; category: string; slug: string } }[] = [];
@@ -43,32 +44,72 @@ const categorySlug = params.category ?? '';
 const productSlug = params.slug ?? '';
 const messages = await loadMessages(locale);
 
-const productsRes = await fetchApi<{ data?: ProductAttributes[] }>(api.products, {
-  locale,
-  populate: {
-    images: true,
-    cover: true,
-    category: true,
-    seo: {
-      populate: {
-        metaImage: true,
-        ogImage: true,
-        twitterImage: true,
-      },
+type ProductResponse = { data?: ProductAttributes[] };
+type ProductFaqGlobalState = typeof globalThis & {
+  __glorisProductHelpCentersPopulateSupported?: boolean;
+};
+
+const productFaqGlobalState = globalThis as ProductFaqGlobalState;
+
+const productBasePopulate = {
+  images: true,
+  cover: true,
+  category: true,
+  seo: {
+    populate: {
+      metaImage: true,
+      ogImage: true,
+      twitterImage: true,
     },
-    information: true,
-    technicalDetails: true,
-    options: true,
-    hole: true,
-    downloadFiles: { populate: ['file'] },
-    help_center: { populate: ['help_category'] },
   },
-  filters: {
-    slug: { $eq: productSlug },
-    category: { slug: { $eq: categorySlug } },
-  },
-  pagination: { pageSize: 1 },
-});
+  information: true,
+  technicalDetails: true,
+  options: true,
+  hole: true,
+  downloadFiles: { populate: { file: true } },
+  help_center: { populate: { help_category: true } },
+};
+
+const productFilters = {
+  slug: { $eq: productSlug },
+  category: { slug: { $eq: categorySlug } },
+};
+
+async function fetchProductResponse(): Promise<ProductResponse> {
+  const fetchLegacyProductResponse = () =>
+    fetchApi<ProductResponse>(api.products, {
+      locale,
+      populate: productBasePopulate,
+      filters: productFilters,
+      pagination: { pageSize: 1 },
+    });
+
+  if (productFaqGlobalState.__glorisProductHelpCentersPopulateSupported === false) {
+    return fetchLegacyProductResponse();
+  }
+
+  try {
+    const response = await fetchApi<ProductResponse>(api.products, {
+      locale,
+      populate: {
+        ...productBasePopulate,
+        help_centers: { populate: { help_category: true } },
+      },
+      filters: productFilters,
+      pagination: { pageSize: 1 },
+    });
+    productFaqGlobalState.__glorisProductHelpCentersPopulateSupported = true;
+    return response;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!message.includes('Invalid key help_centers')) throw error;
+
+    productFaqGlobalState.__glorisProductHelpCentersPopulateSupported = false;
+    return fetchLegacyProductResponse();
+  }
+}
+
+const productsRes = await fetchProductResponse();
 
 const product = Array.isArray(productsRes?.data) && productsRes.data.length > 0 ? productsRes.data[0] : null;
 const category = (product as { category?: { slug?: string; name?: string } } | null)?.category;
@@ -127,15 +168,14 @@ const downloadFilesList = rawDownloads.map((d) => ({
   file: d?.file ? { ...d.file, url: d.file.url ? getMediaUrl(d.file.url) : undefined } : undefined,
 }));
 
-const helpCenter = (product as {
-  help_center?: {
-    title?: string;
-    description?: string;
-    slug?: string;
-    contentMarkdown?: string;
-    help_category?: { slug?: string };
-  };
-} | null)?.help_center ?? null;
+type ProductHelpCenterEntry = Partial<Pick<HelpCenterAttributes, 'title' | 'slug' | 'contentMarkdown'>> & {
+  help_category?: { slug?: string } | null;
+};
+
+const legacyHelpCenter = (product as { help_center?: ProductHelpCenterEntry | null } | null)?.help_center ?? null;
+const relatedHelpCenters = Array.isArray((product as { help_centers?: ProductHelpCenterEntry[] } | null)?.help_centers)
+  ? ((product as { help_centers?: ProductHelpCenterEntry[] }).help_centers ?? [])
+  : [];
 
 type HelpCenterItem = {
   title?: string;
@@ -147,12 +187,7 @@ type HelpCenterItem = {
 
 const faqItems: HelpCenterItem[] = [];
 
-async function buildHelpCenterItem(entry: {
-  title?: string;
-  slug?: string;
-  contentMarkdown?: string;
-  help_category?: { slug?: string };
-}): Promise<HelpCenterItem | null> {
+async function buildHelpCenterItem(entry: ProductHelpCenterEntry): Promise<HelpCenterItem | null> {
   const markdown = entry.contentMarkdown?.trim() ?? '';
   if (!markdown) return null;
 
@@ -168,12 +203,25 @@ async function buildHelpCenterItem(entry: {
   };
 }
 
-if (helpCenter) {
-  const helpCenterCategorySlug = (helpCenter as { help_category?: { slug?: string } } | null)?.help_category?.slug ?? '';
-  const helpCenterSlug = (helpCenter as { slug?: string } | null)?.slug ?? '';
-  const helpCenterHref = helpCenterCategorySlug && helpCenterSlug ? toHref(`/help/${helpCenterCategorySlug}/${helpCenterSlug}`, locale) : '';
-  const item = await buildHelpCenterItem(helpCenter);
-  if (item) faqItems.push({ ...item, href: helpCenterHref });
+function getFaqItemKey(item: HelpCenterItem): string {
+  return item.href || item.slug || item.title || item.contentMarkdown || '';
+}
+
+async function addFaqItem(entry: ProductHelpCenterEntry): Promise<void> {
+  const item = await buildHelpCenterItem(entry);
+  if (!item) return;
+
+  const key = getFaqItemKey(item);
+  const exists = faqItems.some((existingItem) => getFaqItemKey(existingItem) === key);
+  if (!exists) faqItems.push(item);
+}
+
+if (legacyHelpCenter) {
+  await addFaqItem(legacyHelpCenter);
+}
+
+for (const relatedHelpCenter of relatedHelpCenters) {
+  await addFaqItem(relatedHelpCenter);
 }
 
 const isFilmMasterPage = categorySlug === 'film-sanding-disc' && productSlug === 'film-master-sanding-disc';
@@ -186,11 +234,7 @@ if (isFilmMasterPage) {
   });
   const commonFaq = Array.isArray(commonFaqRes?.data) && commonFaqRes.data.length > 0 ? commonFaqRes.data[0] : null;
   if (commonFaq) {
-    const exists = faqItems.some((i) => (i.slug ?? '') === (commonFaq.slug ?? ''));
-    if (!exists) {
-      const item = await buildHelpCenterItem(commonFaq);
-      if (item) faqItems.push(item);
-    }
+    await addFaqItem(commonFaq);
   }
 }
 
@@ -263,17 +307,20 @@ const breadcrumbItems = [
             <!-- 行动按钮 -->
             <div class='mt-8 flex flex-wrap gap-4'>
               <a
-                href={`${toHref('/support/customer-service', locale)}?type=free-sample`}
-                class='inline-flex items-center justify-center rounded-md bg-orange-500 px-6 py-3 font-medium text-white transition-colors hover:bg-orange-600'
+                href={getFreeSampleHref(locale)}
+                class='inline-flex items-center justify-center gap-2 rounded-md bg-orange-500 px-6 py-3 font-medium text-white transition-colors hover:bg-orange-600'
               >
+                <Gift class="h-5 w-5 shrink-0" />
                 {t(messages, 'home.freeSampleCta')}
               </a>
-              <a
-                href={toHref('/support/customer-service', locale)}
-                class='inline-flex items-center justify-center rounded-md border border-orange-400 bg-white px-6 py-3 font-medium text-orange-500 transition-colors hover:bg-gray-100'
+              <button
+                type="button"
+                data-open-live-chat
+                class='inline-flex items-center justify-center gap-2 rounded-md border border-orange-400 bg-white px-6 py-3 font-medium text-orange-500 transition-colors hover:bg-gray-100'
               >
+                <MessageCircle class="h-5 w-5 shrink-0" />
                 {t(messages, 'products.leaveMessage')}
-              </a>
+              </button>
             </div>
           </div>
         </section>
@@ -318,7 +365,7 @@ const breadcrumbItems = [
             <h2 class='text-3xl font-bold mb-4'>{t(messages, 'products.faq')}</h2>
             <div class='space-y-4'>
               {faqItems.map((faq, idx) => (
-                <details class='rounded-lg border border-gray-200 bg-white' open={idx === 0}>
+                <details class='rounded-lg border border-gray-200 bg-white' open={idx === 0 ? true : undefined}>
                   <summary class='cursor-pointer px-4 py-3 text-lg font-semibold text-gray-900'>
                     {faq.title || `${t(messages, 'products.faq')} ${idx + 1}`}
                   </summary>
@@ -346,6 +393,46 @@ const breadcrumbItems = [
     )}
   </div>
 </BaseLayout>
+
+<script is:inline>
+  (function () {
+    const triggerSelector = '[data-open-live-chat]';
+    const waitIntervalMs = 150;
+    const maxWaitMs = 5000;
+
+    function openLiveChat() {
+      const api = window.Tawk_API;
+      if (!api) return false;
+      if (typeof api.maximize === 'function') {
+        api.maximize();
+        return true;
+      }
+      if (typeof api.toggle === 'function') {
+        api.toggle();
+        return true;
+      }
+      return false;
+    }
+
+    document.addEventListener('click', function (event) {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const trigger = target.closest(triggerSelector);
+      if (!trigger) return;
+
+      event.preventDefault();
+      if (openLiveChat()) return;
+
+      const startedAt = Date.now();
+      const timer = window.setInterval(function () {
+        if (openLiveChat() || Date.now() - startedAt >= maxWaitMs) {
+          window.clearInterval(timer);
+        }
+      }, waitIntervalMs);
+    });
+  })();
+</script>
 
 <style>
   .product-features-content :global(.product-features-table-scroll) {

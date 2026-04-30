@@ -2,7 +2,7 @@
 import { t, type Messages } from "@/i18n";
 import { type Locale } from "@/i18n/config";
 import type { NavItem } from "@/utils/navigationData";
-import { toHref } from "@/utils/navigationData";
+import { getFreeSampleHref } from "@/utils/freeSampleLink";
 import type { SiteSeoAttributes } from "@/types/content";
 import LanguageSwitcher from "@/components/LanguageSwitcher.astro";
 import Navigation from "@/components/Navigation.svelte";
@@ -24,8 +24,7 @@ const currentPath = Astro.url.pathname;
 const searchIndex = await generateSearchIndex(locale);
 
 const siteContact = getSiteContactInfo(siteSeo);
-const customerServiceHref = toHref('/support/customer-service', locale);
-const freeSampleHref = `${customerServiceHref}/?type=free-sample`;
+const freeSampleHref = getFreeSampleHref(locale);
 const freeSampleLabel = t(messages, 'home.freeSampleCta');
 ---
 

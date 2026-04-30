@@ -2,6 +2,7 @@
   import { fade } from 'svelte/transition';
   import type { NavItem } from '@/utils/navigationData';
   import { supportedLocales, localeDisplayConfig, type Locale } from '@/i18n/config';
+  import { getFreeSampleHref } from '@/utils/freeSampleLink';
   import { PhoneCall, Mail, Menu, X, Plus, Minus, Gift } from 'lucide-svelte';
 
   let {
@@ -70,7 +71,7 @@
   const currentLocaleDisplay = $derived(localeDisplayConfig[locale as Locale]);
   const isRtl = $derived(locale === 'ar');
   const contactPhoneHref = $derived(`tel:${contactPhone.replace(/[^\d+]/g, '')}`);
-  const freeSampleHref = $derived(`/${locale}/support/customer-service/?type=free-sample`);
+  const freeSampleHref = $derived(getFreeSampleHref(locale));
 </script>
 <!-- 手机版汉堡菜单按钮（搜索入口在 Header 里，与汉堡并排） -->
 <button

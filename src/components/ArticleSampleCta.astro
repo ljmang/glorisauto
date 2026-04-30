@@ -2,7 +2,7 @@
 import { ArrowRight, Gift } from 'lucide-svelte';
 import { type Locale, isRtlLocale } from '@/i18n/config';
 import { type Messages, t } from '@/i18n';
-import { toHref } from '@/utils/navigationData';
+import { getFreeSampleHref } from '@/utils/freeSampleLink';
 
 interface Props {
   locale: Locale;
@@ -11,7 +11,7 @@ interface Props {
 
 const { locale, messages } = Astro.props;
 const isRtl = isRtlLocale(locale);
-const ctaHref = `${toHref('/support/customer-service', locale)}?type=free-sample`;
+const ctaHref = getFreeSampleHref(locale);
 ---
 
 <aside

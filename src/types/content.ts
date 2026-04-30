@@ -103,6 +103,8 @@ export interface ProductAttributes {
   price?: number;
   sort?: number | null;
   specifications?: Record<string, unknown>;
+  help_center?: HelpCenterAttributes | null;
+  help_centers?: HelpCenterAttributes[];
   seo?: StrapiSeo | null;
 }
 
@@ -336,6 +338,7 @@ export interface HelpCenterAttributes {
   updatedAt?: string;
   help_category?: HelpCategoryAttributes | null;
   products?: ProductAttributes[];
+  related_products?: ProductAttributes[];
   seo?: StrapiSeo | null;
 }
 
