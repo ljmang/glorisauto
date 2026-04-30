@@ -2,6 +2,7 @@
   import { ArrowRight, Pause, Play } from 'lucide-svelte';
 
   export let media: { type: 'image' | 'video'; src: string; poster?: string } | null = null;
+  export let defaultBackground: string | null = null;
   export let title = '';
   export let subtitle: string | null = null;
   export let cta = '';
@@ -28,16 +29,27 @@
     mobileVideo.pause();
     mobileVideoPlaying = false;
   }
+
+  $: videoPoster = media?.poster || defaultBackground || '';
 </script>
 
 <div class="w-full relative h-[520px] md:h-[640px] 2xl:h-[800px] overflow-hidden bg-black">
+  {#if defaultBackground}
+    <img
+      src={defaultBackground}
+      alt=""
+      class="absolute inset-0 h-full w-full object-cover"
+      aria-hidden="true"
+    />
+  {/if}
+
   {#if media?.type === 'video' && media.src}
     <div class="relative h-full md:hidden">
       <video
         bind:this={mobileVideo}
-        class="h-full w-full object-cover md:hidden"
+        class="relative h-full w-full object-cover md:hidden"
         src={media.src}
-        poster={media.poster ?? ''}
+        poster={videoPoster}
         muted
         playsinline
         preload="metadata"
@@ -61,8 +73,8 @@
 
     <div class="hidden h-full overflow-hidden md:block">
       <video
-        class="h-full w-full object-cover"
-        poster={media.poster ?? ''}
+        class="relative h-full w-full object-cover"
+        poster={videoPoster}
         muted
         loop
         playsinline
@@ -73,7 +85,7 @@
       </video>
     </div>
   {:else if media?.src}
-    <img src={media.src} alt="" class="h-full w-full object-cover" />
+    <img src={media.src} alt="" class="relative h-full w-full object-cover" />
   {/if}
 
   <div

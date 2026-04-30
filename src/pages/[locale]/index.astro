@@ -37,6 +37,7 @@ const homeData = await fetchApiWithLocaleFallback<StrapiResponse<HomeAttributes>
 	locale,
 	populate: {
 		heroMedia: true,
+		heroDefaultBackground: true,
 		aboutGlorisCover: true,
 		seo: {
 			populate: {
@@ -129,6 +130,7 @@ const downloadFilesLinkHref = toHref(
 
 // 处理数据
 const heroMediaProp = parseHeroMedia(data.heroMedia);
+const heroDefaultBackground = parseImage(data.heroDefaultBackground);
 const heroTitle = data.heroTitle ?? t(messages, "home.heroTitle");
 const heroCtaHref = toHref(data.heroButtonLink ?? "/", locale);
 const heroSampleCta = t(messages, "home.freeSampleCta");
@@ -169,7 +171,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 <BaseLayout
 	title={t(messages, "pageTitle.home")}
 	description={data.heroDescription}
-	image={data.aboutGlorisCover ?? data.heroMedia}
+	image={data.aboutGlorisCover ?? data.heroDefaultBackground ?? data.heroMedia}
 	seo={data.seo}
 	pageType="website"
 	messages={messages}
@@ -178,6 +180,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 	<Hero
 		client:load
 		media={heroMediaProp}
+		defaultBackground={heroDefaultBackground?.src ?? null}
 		title={heroTitle}
 		subtitle={data.heroDescription}
 		cta={data.heroButton}

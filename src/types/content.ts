@@ -15,6 +15,7 @@ export interface HomeAttributes {
   heroButton: string;
   heroButtonLink: string;
   heroMedia: StrapiMedia | StrapiMedia[] | null;
+  heroDefaultBackground?: StrapiMedia | null;
   aboutGlorisTitle?: string;
   aboutGlorisTitleH1: string;
   aboutGlorisTitleH2: string;
