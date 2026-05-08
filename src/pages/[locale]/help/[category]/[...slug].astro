@@ -372,7 +372,10 @@ const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')
 
       <!-- 文章正文 -->
       {articleMarkdownHtml && (
-        <div class="article-content prose prose-lg max-w-none mb-12" set:html={articleMarkdownHtml} />
+        <div
+          class="article-content prose prose-lg max-w-none mb-12 prose-a:text-cyan-600 prose-a:underline prose-a:transition-colors hover:prose-a:text-orange-500"
+          set:html={articleMarkdownHtml}
+        />
       )}
 
       <ArticleSampleCta locale={locale} messages={messages} />
