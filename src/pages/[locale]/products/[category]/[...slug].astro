@@ -7,13 +7,14 @@ import { toHref } from '@/utils/navigationData';
 import { getFreeSampleHref } from '@/utils/freeSampleLink';
 import { markdownToHtml } from '@/utils/markdown';
 import { hasMeaningfulText, sanitizeInlineText, sanitizeMarkdown } from '@/utils/contentSanitizers';
-import type { HelpCenterAttributes, ProductAttributes } from '@/types/content';
 import type { BlockNode } from '@/types/blocks';
 import BlocksRenderer from '@/components/BlocksRenderer.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ProductGallery from '@/components/ProductGallery.astro';
 import DownloadFileCard from '@/components/DownloadFileCard.astro';
+import InsightCard from '@/components/InsightCard.astro';
 import { CircleChevronRight, Gift, MessageCircle } from 'lucide-svelte';
+import type { HelpCenterAttributes, InsightAttributes, ProductAttributes } from '@/types/content';
 
 export async function getStaticPaths() {
   const paths: { params: { locale: string; category: string; slug: string } }[] = [];
@@ -45,11 +46,6 @@ const productSlug = params.slug ?? '';
 const messages = await loadMessages(locale);
 
 type ProductResponse = { data?: ProductAttributes[] };
-type ProductFaqGlobalState = typeof globalThis & {
-  __glorisProductHelpCentersPopulateSupported?: boolean;
-};
-
-const productFaqGlobalState = globalThis as ProductFaqGlobalState;
 
 const productBasePopulate = {
   images: true,
@@ -67,7 +63,8 @@ const productBasePopulate = {
   options: true,
   hole: true,
   downloadFiles: { populate: { file: true } },
-  help_center: { populate: { help_category: true } },
+  help_centers: { populate: { help_category: true } },
+  insights: { populate: { cover: true, insight_category: true } },
 };
 
 const productFilters = {
@@ -75,41 +72,12 @@ const productFilters = {
   category: { slug: { $eq: categorySlug } },
 };
 
-async function fetchProductResponse(): Promise<ProductResponse> {
-  const fetchLegacyProductResponse = () =>
-    fetchApi<ProductResponse>(api.products, {
-      locale,
-      populate: productBasePopulate,
-      filters: productFilters,
-      pagination: { pageSize: 1 },
-    });
-
-  if (productFaqGlobalState.__glorisProductHelpCentersPopulateSupported === false) {
-    return fetchLegacyProductResponse();
-  }
-
-  try {
-    const response = await fetchApi<ProductResponse>(api.products, {
-      locale,
-      populate: {
-        ...productBasePopulate,
-        help_centers: { populate: { help_category: true } },
-      },
-      filters: productFilters,
-      pagination: { pageSize: 1 },
-    });
-    productFaqGlobalState.__glorisProductHelpCentersPopulateSupported = true;
-    return response;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (!message.includes('Invalid key help_centers')) throw error;
-
-    productFaqGlobalState.__glorisProductHelpCentersPopulateSupported = false;
-    return fetchLegacyProductResponse();
-  }
-}
-
-const productsRes = await fetchProductResponse();
+const productsRes = await fetchApi<ProductResponse>(api.products, {
+  locale,
+  populate: productBasePopulate,
+  filters: productFilters,
+  pagination: { pageSize: 1 },
+});
 
 const product = Array.isArray(productsRes?.data) && productsRes.data.length > 0 ? productsRes.data[0] : null;
 const category = (product as { category?: { slug?: string; name?: string } } | null)?.category;
@@ -172,10 +140,39 @@ type ProductHelpCenterEntry = Partial<Pick<HelpCenterAttributes, 'title' | 'slug
   help_category?: { slug?: string } | null;
 };
 
-const legacyHelpCenter = (product as { help_center?: ProductHelpCenterEntry | null } | null)?.help_center ?? null;
 const relatedHelpCenters = Array.isArray((product as { help_centers?: ProductHelpCenterEntry[] } | null)?.help_centers)
   ? ((product as { help_centers?: ProductHelpCenterEntry[] }).help_centers ?? [])
   : [];
+
+type ProductInsightEntry = InsightAttributes & {
+  id?: string | number;
+  documentId?: string;
+  cover?: unknown;
+};
+
+const relatedInsights = Array.isArray((product as { insights?: ProductInsightEntry[] } | null)?.insights)
+  ? ((product as { insights?: ProductInsightEntry[] }).insights ?? [])
+  : [];
+const relatedInsightItems: ProductInsightEntry[] = [];
+
+function getInsightKey(insight: ProductInsightEntry): string {
+  if (insight.documentId) return `document:${insight.documentId}`;
+  if (insight.id != null) return `id:${insight.id}`;
+
+  const category = insight.insight_category && typeof insight.insight_category === 'object' ? insight.insight_category : null;
+  const categorySlug = category?.slug ?? '';
+  if (insight.slug) return `slug:${categorySlug}:${insight.slug}`;
+
+  return `title:${insight.title}`;
+}
+
+for (const insight of relatedInsights) {
+  if (!insight?.slug || !insight?.title) continue;
+
+  const key = getInsightKey(insight);
+  const exists = relatedInsightItems.some((existingInsight) => getInsightKey(existingInsight) === key);
+  if (!exists) relatedInsightItems.push(insight);
+}
 
 type HelpCenterItem = {
   title?: string;
@@ -214,10 +211,6 @@ async function addFaqItem(entry: ProductHelpCenterEntry): Promise<void> {
   const key = getFaqItemKey(item);
   const exists = faqItems.some((existingItem) => getFaqItemKey(existingItem) === key);
   if (!exists) faqItems.push(item);
-}
-
-if (legacyHelpCenter) {
-  await addFaqItem(legacyHelpCenter);
 }
 
 for (const relatedHelpCenter of relatedHelpCenters) {
@@ -355,6 +348,17 @@ const breadcrumbItems = [
             <div class='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
               {downloadFilesList.map((item) => (
                 <DownloadFileCard item={item} downloadLabel={t(messages, 'footer.support.download')} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {relatedInsightItems.length > 0 && (
+          <section class='mb-12'>
+            <h2 class='text-3xl font-bold mb-6'>{t(messages, 'products.relatedInsights')}</h2>
+            <div class='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+              {relatedInsightItems.map((insight) => (
+                <InsightCard insight={insight} locale={locale} />
               ))}
             </div>
           </section>

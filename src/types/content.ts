@@ -104,8 +104,8 @@ export interface ProductAttributes {
   price?: number;
   sort?: number | null;
   specifications?: Record<string, unknown>;
-  help_center?: HelpCenterAttributes | null;
   help_centers?: HelpCenterAttributes[];
+  insights?: InsightAttributes[];
   seo?: StrapiSeo | null;
 }
 
