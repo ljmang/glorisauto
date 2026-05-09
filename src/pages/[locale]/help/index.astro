@@ -31,7 +31,7 @@ const [categoriesRes, articlesRes, siteSeo] = await Promise.all([
   }),
   fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
     locale,
-    populate: { help_category: true, products: true },
+    populate: { help_category: true, related_products: true },
     pagination: { pageSize: 500 },
   }),
   fetchSiteSeo(locale),
@@ -72,10 +72,10 @@ for (const article of [...articles].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0)
   const articleCategorySlug = article.help_category?.slug ?? '';
   const articleCategoryName = article.help_category?.name ?? '';
   const articleSlug = article.slug ?? '';
-  if (!articleCategorySlug || !articleSlug || !Array.isArray(article.products)) continue;
+  if (!articleCategorySlug || !articleSlug || !Array.isArray(article.related_products)) continue;
 
   const articleHref = toHref(`/help/${articleCategorySlug}/${articleSlug}`, locale);
-  for (const product of article.products) {
+  for (const product of article.related_products) {
     const productName = product?.name ?? '';
     const productSlug = product?.slug ?? productName;
     if (!productName || !productSlug || productHelpLinksMap.has(productSlug)) continue;

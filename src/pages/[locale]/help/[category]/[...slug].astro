@@ -192,7 +192,7 @@ const activeCategories = categories.filter((category) => {
   return slug !== '' && activeCategorySlugs.has(slug);
 });
 
-// 2. 获取当前文章（populate help_category, products, articles）
+// 2. 获取当前文章（populate help_category, related_products, articles）
 const articleRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
   locale,
   populate: {
@@ -204,7 +204,7 @@ const articleRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCen
         twitterImage: true,
       },
     },
-    products: { populate: { cover: true, images: true, category: true } },
+    related_products: { populate: { cover: true, images: true, category: true } },
     articles: { populate: { cover: true, insight_category: true } },
   },
   filters: {
@@ -236,7 +236,7 @@ const articleBodyMarkdown = stripRelatedResourceLinkLists(articleMarkdown);
 const articleMarkdownHtml = articleBodyMarkdown ? await markdownToHtml(articleBodyMarkdown, article.title) : '';
 
 // 3. 相关产品和文章
-const articleProducts = (article as { products?: ProductAttributes[] })?.products ?? [];
+const articleProducts = (article as { related_products?: ProductAttributes[] })?.related_products ?? [];
 const markdownProductSlugs = Array.from(new Set(markdownProductLinks.map((link) => link.productSlug))).filter(Boolean);
 const linkedProductsRes = markdownProductSlugs.length > 0
   ? await fetchApi<{ data?: ProductAttributes[] }>(api.products, {
