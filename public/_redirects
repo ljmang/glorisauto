@@ -1,27 +1,27 @@
 # Cloudflare Pages redirects
 # Keep default-language shortcuts working for top-level entry URLs.
 
-/ /en 302
-/about /en/about 302
-/products /en/products 302
-/support /en/support 302
-/help /en/help 302
-/top-brands /en/products 302
-/privacy-policy /en/privacy-policy 302
-/cookie-preferences /en/cookie-preferences 302
-/thank-you /en/thank-you 302
+/ /en/ 302
+/about /en/about/ 302
+/products /en/products/ 302
+/support /en/support/ 302
+/help /en/help/ 302
+/top-brands /en/products/ 301
+/privacy-policy /en/privacy-policy/ 302
+/cookie-preferences /en/cookie-preferences/ 302
+/thank-you /en/thank-you/ 302
 
-/en/top-brands /en/products 302
-/en/top-brands/* /en/products 302
-/zh-cn/top-brands /zh-cn/products 302
-/zh-cn/top-brands/* /zh-cn/products 302
+/en/top-brands /en/products/ 301
+/en/top-brands/* /en/products/ 301
+/zh-cn/top-brands /zh-cn/products/ 301
+/zh-cn/top-brands/* /zh-cn/products/ 301
 
 # Legacy localized product paths.
-/en/products/tpu-ppf/tpu-paint-protection-film /en/products/paint-protection-film/tpu-paint-protection-film 301
-/en/products/tpu-ppf/tpu-paint-protection-film/ /en/products/paint-protection-film/tpu-paint-protection-film 301
+/en/products/tpu-ppf/tpu-paint-protection-film /en/products/paint-protection-film/tpu-paint-protection-film/ 301
+/en/products/tpu-ppf/tpu-paint-protection-film/ /en/products/paint-protection-film/tpu-paint-protection-film/ 301
 
 # Legacy insights shortcuts.
-/insights /en/about/insights 301
+/insights /en/about/insights/ 301
 /insights/* /en/about/insights/:splat 301
 
 # Section-level fallbacks.
@@ -29,4 +29,4 @@
 /products/* /en/products/:splat 302
 /support/* /en/support/:splat 302
 /help/* /en/help/:splat 302
-/top-brands/* /en/products 302
+/top-brands/* /en/products/ 301

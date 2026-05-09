@@ -1,7 +1,7 @@
 ---
 import { type Messages, t } from '@/i18n';
 import { type Locale } from '@/i18n/config';
-import { Linkedin, Instagram, Facebook, Youtube } from '@/components/icons';
+import { Facebook, Youtube } from '@/components/icons';
 import { toHref, type NavItem, type NavLink } from '@/utils/navigationData';
 
 interface Props {
@@ -17,6 +17,9 @@ type FooterSection = {
 
 const { messages, locale, navData = [] } = Astro.props;
 const currentYear = new Date().getFullYear().toString();
+const homeHref = toHref('/', locale);
+const privacyHref = toHref('/privacy-policy', locale);
+const cookiePreferencesHref = toHref('/cookie-preferences', locale);
 
 function linksFromNavItem(item: NavItem): NavLink[] {
   if (Array.isArray(item.columns) && item.columns.length > 0) {
@@ -84,7 +87,7 @@ const footerSections: FooterSection[] = navData.length > 0
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
       <!-- Logo Column -->
       <div class="col-span-1">
-        <a href={`/${locale}`} class="text-2xl font-bold text-white no-underline hover:text-orange-500 transition-colors">
+        <a href={homeHref} class="text-2xl font-bold text-white no-underline hover:text-orange-500 transition-colors">
           <img src="https://assets.glorisauto.com/uploads/logo_w_a030442c50.webp" alt="GLORIS" class="h-12 object-contain">
         </a>
       </div>
@@ -115,25 +118,7 @@ const footerSections: FooterSection[] = navData.length > 0
       <!-- Social Media Icons -->
       <div class="flex items-center gap-4">
         <a
-          href="https://www.linkedin.com/company/gloris"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-gray-300 hover:text-orange-500 transition-colors"
-          aria-label="LinkedIn"
-        >
-          <Linkedin class="w-6 h-6" />
-        </a>
-        <a
-          href="https://www.instagram.com/gloris"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-gray-300 hover:text-orange-500 transition-colors"
-          aria-label="WeChat"
-        >
-          <Instagram class="w-6 h-6" />
-        </a>
-        <a
-          href="https://www.facebook.com/gloris"
+          href="https://www.facebook.com/share/1B1sp6u6gY/"
           target="_blank"
           rel="noopener noreferrer"
           class="text-gray-300 hover:text-orange-500 transition-colors"
@@ -142,7 +127,7 @@ const footerSections: FooterSection[] = navData.length > 0
           <Facebook class="w-6 h-6" />
         </a>
         <a
-          href="https://www.youtube.com/@gloris"
+          href="https://www.youtube.com/@haoyuanwang-v7f"
           target="_blank"
           rel="noopener noreferrer"
           class="text-gray-300 hover:text-orange-500 transition-colors"
@@ -157,13 +142,13 @@ const footerSections: FooterSection[] = navData.length > 0
         <span>{t(messages, 'footer.copyright', { year: currentYear })}</span>
         <div class="flex gap-4">
           <a
-            href={`/${locale}/privacy-policy`}
+            href={privacyHref}
             class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
           >
             {t(messages, 'footer.privacy')}
           </a>
           <a
-            href={`/${locale}/cookie-preferences`}
+            href={cookiePreferencesHref}
             class="text-gray-300 no-underline hover:text-orange-500 transition-colors"
           >
             {t(messages, 'footer.cookiePreferences')}

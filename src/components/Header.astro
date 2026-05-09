@@ -1,7 +1,7 @@
 ---
 import { t, type Messages } from "@/i18n";
 import { type Locale } from "@/i18n/config";
-import type { NavItem } from "@/utils/navigationData";
+import { toHref, type NavItem } from "@/utils/navigationData";
 import { getFreeSampleHref } from "@/utils/freeSampleLink";
 import type { SiteSeoAttributes } from "@/types/content";
 import LanguageSwitcher from "@/components/LanguageSwitcher.astro";
@@ -24,6 +24,8 @@ const currentPath = Astro.url.pathname;
 const searchIndex = await generateSearchIndex(locale);
 
 const siteContact = getSiteContactInfo(siteSeo);
+const homeHref = toHref('/', locale);
+const searchHref = toHref('/search', locale);
 const freeSampleHref = getFreeSampleHref(locale);
 const freeSampleLabel = t(messages, 'home.freeSampleCta');
 ---
@@ -58,7 +60,7 @@ const freeSampleLabel = t(messages, 'home.freeSampleCta');
   <nav class="container mx-auto px-4 flex items-center justify-between gap-4 relative">
     <!-- 左侧：logo + 桌面导航 -->
     <div class="flex items-center gap-4 min-w-0">
-      <a href={`/${locale}`} class="shrink-0">
+      <a href={homeHref} class="shrink-0">
         <img
           src="https://assets.glorisauto.com/uploads/logo_89e1563b6e.webp"
           alt="GLORIS"
@@ -70,7 +72,7 @@ const freeSampleLabel = t(messages, 'home.freeSampleCta');
     <!-- 右侧：窄屏搜索图标 + 桌面搜索框 + CTA + 汉堡 -->
     <div class="flex items-center gap-1 shrink-0 justify-end">
       <a
-        href={`/${locale}/search`}
+        href={searchHref}
         class="xl:hidden p-2 text-gray-700 hover:text-orange-500 transition-colors"
         aria-label="Search"
       >

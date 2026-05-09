@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import type { NavItem } from '@/utils/navigationData';
+  import { toHref, type NavItem } from '@/utils/navigationData';
   import { supportedLocales, localeDisplayConfig, type Locale } from '@/i18n/config';
   import { getFreeSampleHref } from '@/utils/freeSampleLink';
   import { PhoneCall, Mail, Menu, X, Plus, Minus, Gift } from 'lucide-svelte';
@@ -71,6 +71,7 @@
   const currentLocaleDisplay = $derived(localeDisplayConfig[locale as Locale]);
   const isRtl = $derived(locale === 'ar');
   const contactPhoneHref = $derived(`tel:${contactPhone.replace(/[^\d+]/g, '')}`);
+  const homeHref = $derived(toHref('/', locale));
   const freeSampleHref = $derived(getFreeSampleHref(locale));
 </script>
 <!-- 手机版汉堡菜单按钮（搜索入口在 Header 里，与汉堡并排） -->
@@ -135,7 +136,7 @@
           <div class={`${isRtl ? 'pr-6' : 'pl-6'} space-y-0.5`}>
             {#each supportedLocales as loc}
               <a
-                href={`/${loc}${pathWithoutLocale}`}
+                href={toHref(pathWithoutLocale, loc)}
                 onclick={close}
                 class={`flex items-center gap-2 py-2 rounded px-2 -mx-2 no-underline  transition-colors ${
                   loc === locale ? 'text-orange-500' : ' hover:text-orange-500'
@@ -161,10 +162,10 @@
     <!-- 中间可上下滑动：导航 -->
     <nav class="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-1 bg-gray-50">
         <a
-          href={`/${locale}`}
+          href={homeHref}
           onclick={close}
           class={`font-black text-xl block p-4 rounded bg-white transition-colors no-underline ${
-            isActive(`/${locale}`) ? 'text-orange-500' : ' hover:text-orange-500'
+            isActive(homeHref) ? 'text-orange-500' : ' hover:text-orange-500'
           }`}
         >
           {t('pageTitle.home')}

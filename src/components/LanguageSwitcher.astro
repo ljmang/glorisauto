@@ -1,6 +1,7 @@
 ---
 import { supportedLocales, localeDisplayConfig, isRtlLocale, type Locale } from '@/i18n/config';
 import { fetchApi, api } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
 
 interface Props {
   currentLocale: Locale;
@@ -133,7 +134,7 @@ if (productMatch) {
       {supportedLocales.map((locale) => (
         <li role="option" aria-selected={locale === currentLocale}>
           <a
-            href={`/${locale}${resolvedPathByLocale[locale]}`}
+            href={toHref(resolvedPathByLocale[locale], locale)}
             class={`flex items-center gap-2 px-3 py-2 text-sm no-underline transition-colors ${
               locale === currentLocale
                 ? 'text-orange-600'

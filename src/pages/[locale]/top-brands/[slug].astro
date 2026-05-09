@@ -1,6 +1,6 @@
 ---
 /**
- * Top Brands 暂无内容，详情页临时跳转到产品页。
+ * Top Brands 已合并到产品页，详情页永久跳转到产品页。
  */
 import { type Locale, getLocale } from '@/i18n/config';
 import { toHref } from '@/utils/navigationData';
@@ -11,5 +11,5 @@ export async function getStaticPaths() {
 
 const params = Astro.params as { locale?: string };
 const locale: Locale = getLocale(params.locale);
-return Astro.redirect(toHref('/products', locale), 302);
+return Astro.redirect(toHref('/products', locale), 301);
 ---
