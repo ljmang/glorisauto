@@ -3,6 +3,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import BlocksRenderer from '@/components/BlocksRenderer.astro';
 import ProductCard from '@/components/ProductCard.astro';
+import InsightCard from '@/components/InsightCard.astro';
 import ArticleSampleCta from '@/components/ArticleSampleCta.astro';
 import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
@@ -575,65 +576,14 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
             These related insights add market context, case evidence, and practical examples that support the solution
             logic shown above.
           </p>
-          <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div class="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {relatedInsights.map((insight: InsightAttributes) => {
               const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
                 ? (insight.insight_category as InsightCategoryAttributes)
                 : null;
               const categorySlug = category?.slug ?? '';
               const href = insight.slug && categorySlug ? toHref(`/about/insights/${categorySlug}/${insight.slug}`, locale) : '#';
-              const coverImage = parseImage(insight.cover || (insight as { coverImage?: unknown }).coverImage);
-              const summary = trimText(insight.excerpt || insight.description, 180);
-              return (
-                <a href={href} class="group border border-gray-200 bg-white p-4 transition-colors hover:border-orange-300">
-                  <div class="grid gap-4 md:grid-cols-[144px_minmax(0,1fr)] md:items-start">
-                    <div class="overflow-hidden border border-gray-100 bg-gray-100">
-                      {coverImage?.src ? (
-                        coverImage.width && coverImage.height ? (
-                          <Image
-                            src={coverImage.src}
-                            alt={coverImage.alt || insight.title}
-                            width={coverImage.width}
-                            height={coverImage.height}
-                            class="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            format="webp"
-                            quality={90}
-                            loading="lazy"
-                          />
-                        ) : (
-                          <img
-                            src={coverImage.src}
-                            alt={coverImage.alt || insight.title}
-                            class="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            loading="lazy"
-                          />
-                        )
-                      ) : (
-                        <div class="flex aspect-[4/3] items-center justify-center bg-slate-100">
-                          <span class="px-3 text-center text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-                            {category?.name || t(messages, 'solutions.relatedInsightsTitle')}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div class="min-w-0">
-                      {category?.name && (
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-500">
-                          {category.name}
-                        </p>
-                      )}
-                      <h3 class="mt-2 text-lg font-black leading-7 text-slate-950 transition-colors group-hover:text-orange-600">
-                        {insight.title}
-                      </h3>
-                      {summary && <p class="mt-2 text-sm leading-6 text-gray-600">{summary}</p>}
-                      <p class="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-orange-600">
-                        {t(messages, 'common.readMore')}
-                      </p>
-                    </div>
-                  </div>
-                </a>
-              );
+              return <InsightCard insight={insight} locale={locale} href={href} />;
             })}
           </div>
         </section>
