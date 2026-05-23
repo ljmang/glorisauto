@@ -80,6 +80,35 @@ const relatedHelpCenters = Array.isArray(solution.relatedHelpCenters) ? solution
 const relatedInsights = Array.isArray(solution.relatedInsights) ? solution.relatedInsights : [];
 const decisionFactors = Array.isArray(solution.decisionFactors) ? solution.decisionFactors : [];
 const overviewCount = Array.isArray(solution.overview) ? solution.overview.length : 0;
+const pageSections = [
+  audience.length > 0
+    ? { id: 'best-fit', label: solution.audienceTitle || t(messages, 'solutions.audienceTitle'), count: audience.length }
+    : null,
+  problemPoints.length > 0
+    ? { id: 'business-challenges', label: solution.problemPointsTitle || t(messages, 'solutions.problemPointsTitle'), count: problemPoints.length }
+    : null,
+  overviewCount > 0
+    ? { id: 'solution-overview', label: solution.overviewTitle || t(messages, 'solutions.overviewTitle') }
+    : null,
+  expectedResults.length > 0
+    ? { id: 'expected-results', label: solution.expectedResultsTitle || t(messages, 'solutions.expectedResultsTitle'), count: expectedResults.length }
+    : null,
+  processSteps.length > 0
+    ? { id: 'recommended-process', label: solution.processTitle || t(messages, 'solutions.processTitle'), count: processSteps.length }
+    : null,
+  recommendedProducts.length > 0
+    ? { id: 'recommended-products', label: solution.recommendedProductsTitle || t(messages, 'solutions.recommendedProductsTitle'), count: recommendedProducts.length }
+    : null,
+  decisionFactors.length > 0
+    ? { id: 'decision-factors', label: solution.decisionFactorsTitle || t(messages, 'solutions.decisionFactorsTitle'), count: decisionFactors.length }
+    : null,
+  relatedHelpCenters.length > 0
+    ? { id: 'related-guides', label: solution.relatedHelpCentersTitle || t(messages, 'solutions.relatedGuidesTitle'), count: relatedHelpCenters.length }
+    : null,
+  relatedInsights.length > 0
+    ? { id: 'related-insights', label: solution.relatedInsightsTitle || t(messages, 'solutions.relatedInsightsTitle'), count: relatedInsights.length }
+    : null,
+].filter(Boolean);
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -205,8 +234,115 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
         </section>
       )}
 
+      {pageSections.length > 0 && (
+        <section class="mt-8 border border-gray-200 bg-white p-6">
+          <p class="text-sm font-semibold uppercase tracking-[0.18em] text-orange-500">
+            {t(messages, 'solutions.pageSectionsTitle')}
+          </p>
+          <p class="mt-2 max-w-3xl text-sm leading-7 text-gray-600">
+            {t(messages, 'solutions.pageSectionsDescription')}
+          </p>
+
+          <div class="mt-5 flex flex-wrap gap-3">
+            {pageSections.map((section) => (
+              <a
+                href={`#${section.id}`}
+                class="inline-flex items-center gap-2 border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-300 hover:text-orange-600"
+              >
+                <span>{section.label}</span>
+                {'count' in section && typeof section.count === 'number' && <span class="text-xs text-gray-500">{section.count}</span>}
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {(recommendedProducts.length > 0 || relatedHelpCenters.length > 0 || relatedInsights.length > 0) && (
+        <section class="mt-8 border border-gray-200 bg-gray-50/80 p-6">
+          <p class="text-sm font-semibold uppercase tracking-[0.18em] text-orange-500">
+            {t(messages, 'solutions.includedContentTitle')}
+          </p>
+          <p class="mt-2 max-w-3xl text-sm leading-7 text-gray-600">
+            {t(messages, 'solutions.includedContentDescription')}
+          </p>
+
+          <div class="mt-6 grid gap-6 lg:grid-cols-3">
+            {recommendedProducts.length > 0 && (
+              <div class="border border-gray-200 bg-white p-5">
+                <h2 class="text-lg font-black text-slate-950">
+                  {solution.recommendedProductsTitle || t(messages, 'solutions.recommendedProductsTitle')}
+                </h2>
+                <ul class="mt-4 space-y-3">
+                  {recommendedProducts.slice(0, 5).map((product: ProductAttributes) => {
+                    const categorySlug =
+                      product.category && typeof product.category === 'object' && 'slug' in product.category
+                        ? (product.category as { slug?: string }).slug
+                        : '';
+                    const href = categorySlug
+                      ? toHref(`/products/${categorySlug}/${product.slug}`, locale)
+                      : toHref(`/products/${product.slug}`, locale);
+                    return (
+                      <li>
+                        <a href={href} class="text-sm font-semibold text-slate-700 transition-colors hover:text-orange-600">
+                          {product.name}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {relatedHelpCenters.length > 0 && (
+              <div class="border border-gray-200 bg-white p-5">
+                <h2 class="text-lg font-black text-slate-950">
+                  {solution.relatedHelpCentersTitle || t(messages, 'solutions.relatedGuidesTitle')}
+                </h2>
+                <ul class="mt-4 space-y-3">
+                  {relatedHelpCenters.slice(0, 5).map((article: HelpCenterAttributes) => {
+                    const categorySlug = article.help_category?.slug ?? '';
+                    const href = categorySlug && article.slug ? toHref(`/help/${categorySlug}/${article.slug}`, locale) : '#';
+                    return (
+                      <li>
+                        <a href={href} class="text-sm font-semibold text-slate-700 transition-colors hover:text-orange-600">
+                          {article.title}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {relatedInsights.length > 0 && (
+              <div class="border border-gray-200 bg-white p-5">
+                <h2 class="text-lg font-black text-slate-950">
+                  {solution.relatedInsightsTitle || t(messages, 'solutions.relatedInsightsTitle')}
+                </h2>
+                <ul class="mt-4 space-y-3">
+                  {relatedInsights.slice(0, 5).map((insight: InsightAttributes) => {
+                    const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
+                      ? (insight.insight_category as InsightCategoryAttributes)
+                      : null;
+                    const categorySlug = category?.slug ?? '';
+                    const href = insight.slug && categorySlug ? toHref(`/about/insights/${categorySlug}/${insight.slug}`, locale) : '#';
+                    return (
+                      <li>
+                        <a href={href} class="text-sm font-semibold text-slate-700 transition-colors hover:text-orange-600">
+                          {insight.title}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {audience.length > 0 && (
-        <section class="mt-14">
+        <section id="best-fit" class="mt-14 scroll-mt-24">
           <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 class="text-3xl font-black text-slate-950">
@@ -233,7 +369,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
       )}
 
       {problemPoints.length > 0 && (
-        <section class="mt-14">
+        <section id="business-challenges" class="mt-14 scroll-mt-24">
           <h2 class="text-3xl font-black text-slate-950">
             {solution.problemPointsTitle || t(messages, 'solutions.problemPointsTitle')}
           </h2>
@@ -249,7 +385,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
       )}
 
       {solution.overview && Array.isArray(solution.overview) && solution.overview.length > 0 && (
-        <section class="mt-14">
+        <section id="solution-overview" class="mt-14 scroll-mt-24">
           <h2 class="text-3xl font-black text-slate-950">
             {solution.overviewTitle || t(messages, 'solutions.overviewTitle')}
           </h2>
@@ -258,7 +394,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
       )}
 
       {expectedResults.length > 0 && (
-        <section class="mt-14">
+        <section id="expected-results" class="mt-14 scroll-mt-24">
           <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 class="text-3xl font-black text-slate-950">
@@ -283,7 +419,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
       )}
 
       {processSteps.length > 0 && (
-        <section class="mt-14">
+        <section id="recommended-process" class="mt-14 scroll-mt-24">
           <h2 class="text-3xl font-black text-slate-950">
             {solution.processTitle || t(messages, 'solutions.processTitle')}
           </h2>
@@ -304,7 +440,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
       )}
 
       {recommendedProducts.length > 0 && (
-        <section class="mt-16">
+        <section id="recommended-products" class="mt-16 scroll-mt-24">
           <h2 class="text-3xl font-black text-slate-950">
             {solution.recommendedProductsTitle || t(messages, 'solutions.recommendedProductsTitle')}
           </h2>
@@ -321,7 +457,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
       )}
 
       {decisionFactors.length > 0 && (
-        <section class="mt-16">
+        <section id="decision-factors" class="mt-16 scroll-mt-24">
           <h2 class="text-3xl font-black text-slate-950">
             {solution.decisionFactorsTitle || t(messages, 'solutions.decisionFactorsTitle')}
           </h2>
@@ -341,7 +477,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
       )}
 
       {relatedHelpCenters.length > 0 && (
-        <section class="mt-16">
+        <section id="related-guides" class="mt-16 scroll-mt-24">
           <h2 class="text-3xl font-black text-slate-950">
             {solution.relatedHelpCentersTitle || t(messages, 'solutions.relatedGuidesTitle')}
           </h2>
@@ -365,7 +501,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
       )}
 
       {relatedInsights.length > 0 && (
-        <section class="mt-16">
+        <section id="related-insights" class="mt-16 scroll-mt-24">
           <h2 class="text-3xl font-black text-slate-950">
             {solution.relatedInsightsTitle || t(messages, 'solutions.relatedInsightsTitle')}
           </h2>
