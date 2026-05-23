@@ -9,7 +9,14 @@ import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api, parseImage } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
-import type { HelpCenterAttributes, InsightAttributes, InsightCategoryAttributes, ProductAttributes, SolutionAttributes } from '@/types/content';
+import type {
+  CategoryAttributes,
+  HelpCenterAttributes,
+  InsightAttributes,
+  InsightCategoryAttributes,
+  ProductAttributes,
+  SolutionAttributes,
+} from '@/types/content';
 import { Image } from 'astro:assets';
 
 export async function getStaticPaths() {
@@ -80,6 +87,22 @@ const relatedHelpCenters = Array.isArray(solution.relatedHelpCenters) ? solution
 const relatedInsights = Array.isArray(solution.relatedInsights) ? solution.relatedInsights : [];
 const decisionFactors = Array.isArray(solution.decisionFactors) ? solution.decisionFactors : [];
 const overviewCount = Array.isArray(solution.overview) ? solution.overview.length : 0;
+const trimText = (value?: string | null, maxLength = 160) => {
+  const normalized = (value ?? '').replace(/\s+/g, ' ').trim();
+  if (!normalized) return '';
+  if (normalized.length <= maxLength) return normalized;
+
+  const shortened = normalized.slice(0, maxLength);
+  const lastSpace = shortened.lastIndexOf(' ');
+  return `${(lastSpace > 72 ? shortened.slice(0, lastSpace) : shortened).trim()}...`;
+};
+const getProductCategory = (product: ProductAttributes): CategoryAttributes | null => {
+  if (!product.category || typeof product.category !== 'object' || !('name' in product.category)) return null;
+  return product.category as CategoryAttributes;
+};
+const featuredRecommendedProducts = recommendedProducts.slice(0, 3);
+const featuredHelpCenters = relatedHelpCenters.slice(0, 3);
+const featuredInsights = relatedInsights.slice(0, 3);
 const pageSections = [
   audience.length > 0
     ? { id: 'best-fit', label: solution.audienceTitle || t(messages, 'solutions.audienceTitle'), count: audience.length }
@@ -267,25 +290,38 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
           </p>
 
           <div class="mt-6 grid gap-6 lg:grid-cols-3">
-            {recommendedProducts.length > 0 && (
-              <div class="border border-gray-200 bg-white p-5">
-                <h2 class="text-lg font-black text-slate-950">
-                  {solution.recommendedProductsTitle || t(messages, 'solutions.recommendedProductsTitle')}
-                </h2>
-                <ul class="mt-4 space-y-3">
-                  {recommendedProducts.slice(0, 5).map((product: ProductAttributes) => {
-                    const categorySlug =
-                      product.category && typeof product.category === 'object' && 'slug' in product.category
-                        ? (product.category as { slug?: string }).slug
-                        : '';
+            {featuredRecommendedProducts.length > 0 && (
+              <div class="flex h-full flex-col border border-gray-200 bg-white p-5">
+                <div class="flex items-start justify-between gap-4">
+                  <h2 class="text-lg font-black text-slate-950">
+                    {solution.recommendedProductsTitle || t(messages, 'solutions.recommendedProductsTitle')}
+                  </h2>
+                  <a
+                    href="#recommended-products"
+                    class="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-orange-600 transition-colors hover:text-orange-700"
+                  >
+                    {t(messages, 'common.viewAll')}
+                  </a>
+                </div>
+                <ul class="mt-4 space-y-4">
+                  {featuredRecommendedProducts.map((product: ProductAttributes) => {
+                    const category = getProductCategory(product);
+                    const categorySlug = category?.slug ?? '';
                     const href = categorySlug
                       ? toHref(`/products/${categorySlug}/${product.slug}`, locale)
                       : toHref(`/products/${product.slug}`, locale);
+                    const summary = trimText(product.shortDescription || product.description, 156);
                     return (
-                      <li>
-                        <a href={href} class="text-sm font-semibold text-slate-700 transition-colors hover:text-orange-600">
+                      <li class="border-t border-gray-100 pt-4 first:border-t-0 first:pt-0">
+                        {category?.name && (
+                          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-500">
+                            {category.name}
+                          </p>
+                        )}
+                        <a href={href} class="mt-2 block text-sm font-bold leading-6 text-slate-900 transition-colors hover:text-orange-600">
                           {product.name}
                         </a>
+                        {summary && <p class="mt-2 text-sm leading-6 text-gray-600">{summary}</p>}
                       </li>
                     );
                   })}
@@ -293,20 +329,35 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
               </div>
             )}
 
-            {relatedHelpCenters.length > 0 && (
-              <div class="border border-gray-200 bg-white p-5">
-                <h2 class="text-lg font-black text-slate-950">
-                  {solution.relatedHelpCentersTitle || t(messages, 'solutions.relatedGuidesTitle')}
-                </h2>
-                <ul class="mt-4 space-y-3">
-                  {relatedHelpCenters.slice(0, 5).map((article: HelpCenterAttributes) => {
+            {featuredHelpCenters.length > 0 && (
+              <div class="flex h-full flex-col border border-gray-200 bg-white p-5">
+                <div class="flex items-start justify-between gap-4">
+                  <h2 class="text-lg font-black text-slate-950">
+                    {solution.relatedHelpCentersTitle || t(messages, 'solutions.relatedGuidesTitle')}
+                  </h2>
+                  <a
+                    href="#related-guides"
+                    class="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-orange-600 transition-colors hover:text-orange-700"
+                  >
+                    {t(messages, 'common.viewAll')}
+                  </a>
+                </div>
+                <ul class="mt-4 space-y-4">
+                  {featuredHelpCenters.map((article: HelpCenterAttributes) => {
                     const categorySlug = article.help_category?.slug ?? '';
                     const href = categorySlug && article.slug ? toHref(`/help/${categorySlug}/${article.slug}`, locale) : '#';
+                    const summary = trimText(article.description, 156);
                     return (
-                      <li>
-                        <a href={href} class="text-sm font-semibold text-slate-700 transition-colors hover:text-orange-600">
+                      <li class="border-t border-gray-100 pt-4 first:border-t-0 first:pt-0">
+                        {article.help_category?.name && (
+                          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-500">
+                            {article.help_category.name}
+                          </p>
+                        )}
+                        <a href={href} class="mt-2 block text-sm font-bold leading-6 text-slate-900 transition-colors hover:text-orange-600">
                           {article.title}
                         </a>
+                        {summary && <p class="mt-2 text-sm leading-6 text-gray-600">{summary}</p>}
                       </li>
                     );
                   })}
@@ -314,23 +365,39 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
               </div>
             )}
 
-            {relatedInsights.length > 0 && (
-              <div class="border border-gray-200 bg-white p-5">
-                <h2 class="text-lg font-black text-slate-950">
-                  {solution.relatedInsightsTitle || t(messages, 'solutions.relatedInsightsTitle')}
-                </h2>
-                <ul class="mt-4 space-y-3">
-                  {relatedInsights.slice(0, 5).map((insight: InsightAttributes) => {
-                    const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
-                      ? (insight.insight_category as InsightCategoryAttributes)
-                      : null;
+            {featuredInsights.length > 0 && (
+              <div class="flex h-full flex-col border border-gray-200 bg-white p-5">
+                <div class="flex items-start justify-between gap-4">
+                  <h2 class="text-lg font-black text-slate-950">
+                    {solution.relatedInsightsTitle || t(messages, 'solutions.relatedInsightsTitle')}
+                  </h2>
+                  <a
+                    href="#related-insights"
+                    class="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-orange-600 transition-colors hover:text-orange-700"
+                  >
+                    {t(messages, 'common.viewAll')}
+                  </a>
+                </div>
+                <ul class="mt-4 space-y-4">
+                  {featuredInsights.map((insight: InsightAttributes) => {
+                    const category =
+                      insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
+                        ? (insight.insight_category as InsightCategoryAttributes)
+                        : null;
                     const categorySlug = category?.slug ?? '';
                     const href = insight.slug && categorySlug ? toHref(`/about/insights/${categorySlug}/${insight.slug}`, locale) : '#';
+                    const summary = trimText(insight.excerpt || insight.description, 156);
                     return (
-                      <li>
-                        <a href={href} class="text-sm font-semibold text-slate-700 transition-colors hover:text-orange-600">
+                      <li class="border-t border-gray-100 pt-4 first:border-t-0 first:pt-0">
+                        {category?.name && (
+                          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-500">
+                            {category.name}
+                          </p>
+                        )}
+                        <a href={href} class="mt-2 block text-sm font-bold leading-6 text-slate-900 transition-colors hover:text-orange-600">
                           {insight.title}
                         </a>
+                        {summary && <p class="mt-2 text-sm leading-6 text-gray-600">{summary}</p>}
                       </li>
                     );
                   })}
