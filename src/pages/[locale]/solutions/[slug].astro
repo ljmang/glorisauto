@@ -75,6 +75,7 @@ const processSteps = Array.isArray(solution.processSteps) ? solution.processStep
 const recommendedProducts = Array.isArray(solution.recommendedProducts) ? solution.recommendedProducts : [];
 const relatedHelpCenters = Array.isArray(solution.relatedHelpCenters) ? solution.relatedHelpCenters : [];
 const relatedInsights = Array.isArray(solution.relatedInsights) ? solution.relatedInsights : [];
+const overviewCount = Array.isArray(solution.overview) ? solution.overview.length : 0;
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -149,6 +150,84 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
         )}
       </section>
 
+      {(solution.summary || audience.length > 0 || recommendedProducts.length > 0 || relatedHelpCenters.length > 0 || relatedInsights.length > 0) && (
+        <section class="mt-10 border border-slate-200 bg-slate-950 text-white">
+          <div class="grid gap-8 px-6 py-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:px-8">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[0.18em] text-orange-300">
+                {t(messages, 'solutions.atAGlance')}
+              </p>
+              {solution.summary && (
+                <p class="mt-4 max-w-3xl text-lg leading-8 text-slate-200">
+                  {solution.summary}
+                </p>
+              )}
+              {overviewCount > 0 && (
+                <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
+                  {solution.heroTitle || solution.title} connects business pain points, process guidance, related
+                  technical articles, and product recommendations into one scenario page so teams can move from
+                  general product browsing to a more practical operating decision.
+                </p>
+              )}
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2">
+              <div class="border border-white/10 bg-white/5 p-4">
+                <p class="text-3xl font-black text-white">{audience.length || '-'}</p>
+                <p class="mt-2 text-sm leading-6 text-slate-300">
+                  {solution.audienceTitle || t(messages, 'solutions.audienceTitle')}
+                </p>
+              </div>
+              <div class="border border-white/10 bg-white/5 p-4">
+                <p class="text-3xl font-black text-white">{recommendedProducts.length || '-'}</p>
+                <p class="mt-2 text-sm leading-6 text-slate-300">
+                  {solution.recommendedProductsTitle || t(messages, 'solutions.recommendedProductsTitle')}
+                </p>
+              </div>
+              <div class="border border-white/10 bg-white/5 p-4">
+                <p class="text-3xl font-black text-white">{relatedHelpCenters.length || '-'}</p>
+                <p class="mt-2 text-sm leading-6 text-slate-300">
+                  {solution.relatedHelpCentersTitle || t(messages, 'solutions.relatedGuidesTitle')}
+                </p>
+              </div>
+              <div class="border border-white/10 bg-white/5 p-4">
+                <p class="text-3xl font-black text-white">{relatedInsights.length || '-'}</p>
+                <p class="mt-2 text-sm leading-6 text-slate-300">
+                  {solution.relatedInsightsTitle || t(messages, 'solutions.relatedInsightsTitle')}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {audience.length > 0 && (
+        <section class="mt-14">
+          <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 class="text-3xl font-black text-slate-950">
+                {solution.audienceTitle || t(messages, 'solutions.audienceTitle')}
+              </h2>
+              <p class="mt-3 max-w-3xl text-base leading-7 text-gray-600">
+                This solution is most relevant when the buying decision, process setup, and expected delivery quality
+                need to be aligned around a specific operating scenario rather than a single standalone product.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-6 grid gap-4 md:grid-cols-3">
+            {audience.map((item) => (
+              <div class="border border-gray-200 bg-white p-6">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
+                  {t(messages, 'solutions.audienceTitle')}
+                </p>
+                <h3 class="mt-3 text-xl font-bold text-slate-950">{item}</h3>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {problemPoints.length > 0 && (
         <section class="mt-14">
           <h2 class="text-3xl font-black text-slate-950">
@@ -200,6 +279,10 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
           <h2 class="text-3xl font-black text-slate-950">
             {solution.recommendedProductsTitle || t(messages, 'solutions.recommendedProductsTitle')}
           </h2>
+          <p class="mt-3 max-w-3xl text-base leading-7 text-gray-600">
+            These products are grouped as a working combination for this scenario, so the page can guide selection in
+            a more operational way than a category page alone.
+          </p>
           <div class="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {recommendedProducts.map((product: ProductAttributes) => (
               <ProductCard product={product} locale={locale} ctaLabel={t(messages, 'common.readMore')} />
@@ -213,6 +296,10 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
           <h2 class="text-3xl font-black text-slate-950">
             {solution.relatedHelpCentersTitle || t(messages, 'solutions.relatedGuidesTitle')}
           </h2>
+          <p class="mt-3 max-w-3xl text-base leading-7 text-gray-600">
+            Use these technical guides to go deeper on material choice, process control, and common field questions
+            connected to this solution.
+          </p>
           <div class="mt-6 grid gap-4 md:grid-cols-2">
             {relatedHelpCenters.map((article: HelpCenterAttributes) => {
               const categorySlug = article.help_category?.slug ?? '';
@@ -233,6 +320,10 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
           <h2 class="text-3xl font-black text-slate-950">
             {solution.relatedInsightsTitle || t(messages, 'solutions.relatedInsightsTitle')}
           </h2>
+          <p class="mt-3 max-w-3xl text-base leading-7 text-gray-600">
+            These related insights add market context, case evidence, and practical examples that support the solution
+            logic shown above.
+          </p>
           <div class="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {relatedInsights.map((insight: InsightAttributes) => {
               const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category

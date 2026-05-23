@@ -12,6 +12,8 @@
     "solutions": "ソリューション"
   },
   "solutions": {
+    "atAGlance": "クイック概要",
+    "audienceTitle": "最適な対象",
     "noSolutions": "現在公開中のソリューションはありません。",
     "overviewTitle": "ソリューション概要",
     "problemPointsTitle": "よくある業務課題",
