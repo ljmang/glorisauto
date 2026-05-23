@@ -183,6 +183,7 @@ export interface SolutionAttributes {
   heroButtonUrl?: string;
   audienceTitle?: string;
   targetAudience?: SolutionListOption[];
+  audienceImage?: StrapiMedia | null;
   problemPointsTitle?: string;
   problemPoints?: SolutionListInfo[];
   overviewTitle?: string;

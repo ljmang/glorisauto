@@ -20,6 +20,8 @@
     "expectedResultsTitle": "期待できる結果",
     "atAGlanceDescription": "{title} は、業務上の課題、工程ガイド、関連技術記事、製品提案をひとつのシナリオページにまとめ、単なる製品閲覧から実務判断へ進みやすくします。",
     "audienceDescription": "単一製品だけを見るのではなく、購買判断、工程設計、納車品質を特定の運用シナリオに沿って整理したい場面で、このソリューションは特に有効です。",
+    "audienceImagePlaceholderTitle": "対象セクション画像",
+    "audienceImagePlaceholderDescription": "ここには後から 16:9 の画像を配置できます。Strapi の solution エントリからアップロードしてください。",
     "expectedResultsDescription": "このセクションでは、工程の考え方を、日常運用、購買評価、納車品質管理の中で判断しやすい実務成果に置き換えて整理しています。",
     "pageSectionsTitle": "ページ内セクション",
     "pageSectionsDescription": "プロセス適合性、期待成果、関連技術資料など、今確認したい項目へすぐ移動できます。",

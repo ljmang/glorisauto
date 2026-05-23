@@ -46,6 +46,7 @@ const solutionRes = await fetchApiWithLocaleFallback<{ data?: SolutionAttributes
   },
   populate: {
     cover: true,
+    audienceImage: true,
     expectedResults: true,
     processSteps: true,
     decisionFactors: true,
@@ -76,6 +77,7 @@ if (!solution) {
 }
 
 const cover = parseImage(solution.cover);
+const audienceImage = parseImage(solution.audienceImage);
 const audience = Array.isArray(solution.targetAudience)
   ? solution.targetAudience.map((item) => item?.name?.trim()).filter(Boolean)
   : [];
@@ -430,6 +432,39 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
                 <h3 class="mt-3 text-xl font-bold text-slate-950">{item}</h3>
               </div>
             ))}
+          </div>
+
+          <div class="mt-8 overflow-hidden border border-gray-200 bg-white">
+            {audienceImage?.src ? (
+              audienceImage.width && audienceImage.height ? (
+                <Image
+                  src={audienceImage.src}
+                  alt={audienceImage.alt || (solution.audienceTitle || t(messages, 'solutions.audienceTitle'))}
+                  width={audienceImage.width}
+                  height={audienceImage.height}
+                  class="aspect-video w-full object-cover"
+                  format="webp"
+                  quality={90}
+                />
+              ) : (
+                <img
+                  src={audienceImage.src}
+                  alt={audienceImage.alt || (solution.audienceTitle || t(messages, 'solutions.audienceTitle'))}
+                  class="aspect-video w-full object-cover"
+                />
+              )
+            ) : (
+              <div class="flex aspect-video w-full items-center justify-center bg-gray-50 p-6 text-center">
+                <div>
+                  <p class="text-sm font-semibold text-slate-950">
+                    {t(messages, 'solutions.audienceImagePlaceholderTitle')}
+                  </p>
+                  <p class="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
+                    {t(messages, 'solutions.audienceImagePlaceholderDescription')}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       )}

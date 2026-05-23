@@ -20,6 +20,8 @@
     "expectedResultsTitle": "预期结果",
     "atAGlanceDescription": "{title} 把业务痛点、流程建议、相关技术文章和产品推荐整合到同一场景页面中，帮助团队从泛泛看产品，转向更贴近实际决策的方案评估。",
     "audienceDescription": "当采购决策、流程配置和交付质量都需要围绕某个具体业务场景统一判断时，这个方案会尤其有参考价值，而不是只看某一个单独产品。",
+    "audienceImagePlaceholderTitle": "适用对象区图片",
+    "audienceImagePlaceholderDescription": "这里预留了一张 16:9 图片位，后续可在 Strapi 的 solution 条目中上传。",
     "expectedResultsDescription": "这一部分把方案从流程语言转换成更容易评估的业务结果，方便团队结合日常运营、采购评估和交付质量控制来判断价值。",
     "pageSectionsTitle": "页面分区",
     "pageSectionsDescription": "可直接跳转到当前最关心的内容区块，无论你是在看流程匹配度、预期结果，还是相关技术资源。",
