@@ -17,9 +17,11 @@
     "noSolutions": "現在公開中のソリューションはありません。",
     "overviewTitle": "ソリューション概要",
     "problemPointsTitle": "よくある業務課題",
+    "expectedResultsTitle": "期待できる結果",
     "processTitle": "推奨プロセス",
     "stepLabel": "ステップ",
     "recommendedProductsTitle": "推奨製品",
+    "decisionFactorsTitle": "導入前にそろえるべき前提",
     "relatedGuidesTitle": "関連ガイド",
     "relatedInsightsTitle": "関連インサイト"
   },

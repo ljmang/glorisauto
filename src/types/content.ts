@@ -187,6 +187,8 @@ export interface SolutionAttributes {
   problemPoints?: SolutionListInfo[];
   overviewTitle?: string;
   overview?: BlockNode[];
+  expectedResultsTitle?: string;
+  expectedResults?: SolutionListInfo[];
   processTitle?: string;
   processSteps?: SolutionListItem[];
   recommendedProductsTitle?: string;
@@ -195,6 +197,8 @@ export interface SolutionAttributes {
   relatedHelpCenters?: HelpCenterAttributes[];
   relatedInsightsTitle?: string;
   relatedInsights?: InsightAttributes[];
+  decisionFactorsTitle?: string;
+  decisionFactors?: SolutionListInfo[];
   sort?: number | null;
   seo?: StrapiSeo | null;
 }

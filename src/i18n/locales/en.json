@@ -17,9 +17,11 @@
     "noSolutions": "No solutions available yet.",
     "overviewTitle": "Solution Overview",
     "problemPointsTitle": "Common Business Challenges",
+    "expectedResultsTitle": "Expected Results",
     "processTitle": "Recommended Process",
     "stepLabel": "Step",
     "recommendedProductsTitle": "Recommended Products",
+    "decisionFactorsTitle": "What To Align Before Rollout",
     "relatedGuidesTitle": "Related Guides",
     "relatedInsightsTitle": "Related Insights"
   },

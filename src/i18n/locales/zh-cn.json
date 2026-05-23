@@ -17,9 +17,11 @@
     "noSolutions": "暂时还没有可展示的解决方案。",
     "overviewTitle": "方案概览",
     "problemPointsTitle": "常见业务问题",
+    "expectedResultsTitle": "预期结果",
     "processTitle": "推荐方案流程",
     "stepLabel": "步骤",
     "recommendedProductsTitle": "推荐产品",
+    "decisionFactorsTitle": "落地前需要对齐的事项",
     "relatedGuidesTitle": "相关指南",
     "relatedInsightsTitle": "相关洞察"
   },

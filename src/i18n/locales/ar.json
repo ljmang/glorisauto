@@ -17,9 +17,11 @@
     "noSolutions": "لا توجد حلول منشورة حاليًا.",
     "overviewTitle": "نظرة عامة على الحل",
     "problemPointsTitle": "تحديات الأعمال الشائعة",
+    "expectedResultsTitle": "النتائج المتوقعة",
     "processTitle": "العملية الموصى بها",
     "stepLabel": "الخطوة",
     "recommendedProductsTitle": "المنتجات الموصى بها",
+    "decisionFactorsTitle": "ما يجب مواءمته قبل التطبيق",
     "relatedGuidesTitle": "الأدلة ذات الصلة",
     "relatedInsightsTitle": "الرؤى ذات الصلة"
   },

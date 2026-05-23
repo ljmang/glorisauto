@@ -39,7 +39,9 @@ const solutionRes = await fetchApiWithLocaleFallback<{ data?: SolutionAttributes
   },
   populate: {
     cover: true,
+    expectedResults: true,
     processSteps: true,
+    decisionFactors: true,
     recommendedProducts: {
       populate: { cover: true, images: true, category: true },
     },
@@ -71,10 +73,12 @@ const audience = Array.isArray(solution.targetAudience)
   ? solution.targetAudience.map((item) => item?.name?.trim()).filter(Boolean)
   : [];
 const problemPoints = Array.isArray(solution.problemPoints) ? solution.problemPoints : [];
+const expectedResults = Array.isArray(solution.expectedResults) ? solution.expectedResults : [];
 const processSteps = Array.isArray(solution.processSteps) ? solution.processSteps : [];
 const recommendedProducts = Array.isArray(solution.recommendedProducts) ? solution.recommendedProducts : [];
 const relatedHelpCenters = Array.isArray(solution.relatedHelpCenters) ? solution.relatedHelpCenters : [];
 const relatedInsights = Array.isArray(solution.relatedInsights) ? solution.relatedInsights : [];
+const decisionFactors = Array.isArray(solution.decisionFactors) ? solution.decisionFactors : [];
 const overviewCount = Array.isArray(solution.overview) ? solution.overview.length : 0;
 
 const breadcrumbItems = [
@@ -253,6 +257,31 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
         </section>
       )}
 
+      {expectedResults.length > 0 && (
+        <section class="mt-14">
+          <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 class="text-3xl font-black text-slate-950">
+                {solution.expectedResultsTitle || t(messages, 'solutions.expectedResultsTitle')}
+              </h2>
+              <p class="mt-3 max-w-3xl text-base leading-7 text-gray-600">
+                This section translates the solution from process language into practical outcomes teams can evaluate
+                in daily operations, purchasing review, and delivery quality control.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-6 grid gap-4 md:grid-cols-2">
+            {expectedResults.map((item) => (
+              <div class="border border-emerald-200 bg-emerald-50/60 p-6">
+                {item.title && <h3 class="text-lg font-bold text-slate-950">{item.title}</h3>}
+                {item.description && <p class="mt-2 text-sm leading-6 text-gray-700">{item.description}</p>}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {processSteps.length > 0 && (
         <section class="mt-14">
           <h2 class="text-3xl font-black text-slate-950">
@@ -286,6 +315,26 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
           <div class="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {recommendedProducts.map((product: ProductAttributes) => (
               <ProductCard product={product} locale={locale} ctaLabel={t(messages, 'common.readMore')} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {decisionFactors.length > 0 && (
+        <section class="mt-16">
+          <h2 class="text-3xl font-black text-slate-950">
+            {solution.decisionFactorsTitle || t(messages, 'solutions.decisionFactorsTitle')}
+          </h2>
+          <p class="mt-3 max-w-3xl text-base leading-7 text-gray-600">
+            A solution page becomes more useful when it helps a team align around the conditions that will shape real
+            implementation, not only around the products themselves.
+          </p>
+          <div class="mt-6 grid gap-4 md:grid-cols-2">
+            {decisionFactors.map((item) => (
+              <div class="border border-amber-200 bg-amber-50/60 p-6">
+                {item.title && <h3 class="text-lg font-bold text-slate-950">{item.title}</h3>}
+                {item.description && <p class="mt-2 text-sm leading-6 text-gray-700">{item.description}</p>}
+              </div>
             ))}
           </div>
         </section>
