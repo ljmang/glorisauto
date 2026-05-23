@@ -66,11 +66,11 @@ const html = renderBlocks(blocks);
   }
   
   .blocks-content :global(figure) {
-    @apply my-6;
+    @apply my-6 max-w-full;
   }
   
   .blocks-content :global(figure img) {
-    @apply w-full h-auto rounded;
+    @apply block w-auto max-w-full h-auto rounded;
   }
   
   .blocks-content :global(figcaption) {

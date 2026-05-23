@@ -1,6 +1,6 @@
 # AGENT.md
 
-最后核验时间：2026-04-17 21:24 CST
+最后核验时间：2026-05-10 10:00 CST
 
 这个工作区包含 GLORISAUTO 的前台网站和 Strapi 后台项目。后续 AI 或工程师接手时，请优先阅读本文件。
 
@@ -14,8 +14,115 @@
 
 - 前台网站：`/Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto`
 - 后台 / CMS：`/Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto-admin`
+- 品牌视频素材：`/Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto-brand-video`
 
 注意：根目录本身不是 Git 仓库，两个子项目目录分别是独立 Git 仓库。
+
+## 项目总览
+
+这是一个内容驱动的多语言官网项目：
+
+- 前台 `glorisauto` 使用 Astro 5 + Svelte 5 + Tailwind CSS 4，负责页面渲染、SEO、导航、搜索、产品与内容展示。
+- 后台 `glorisauto-admin` 使用 Strapi 5.34，负责内容模型、媒体、导航、SEO、产品、帮助中心、下载文件和多语言内容管理。
+- 媒体资源默认通过 `https://assets.glorisauto.com` 访问，后台上传配置中包含 R2 相关环境变量。
+- 支持语言：`en`、`zh-cn`、`ja`、`ar`，前台通过 URL 前缀区分语言，例如 `/en/`、`/zh-cn/`。
+- 前台可按 Astro SSR Node 服务运行，也可通过 `BUILD_TARGET=pages` / `CF_PAGES` 构建为 Cloudflare Pages 静态站。
+
+重要边界：
+
+- 前台和后台是两个独立 Git 仓库，提交、构建、部署互不自动联动。
+- 前台页面数据主要来自 Strapi REST API；若后台内容模型字段调整，需要同步检查前台类型、populate、解析逻辑和页面空状态。
+- 前台 SEO 默认值来自页面自身、Strapi `site-seo` 和 `seo-page`，最终在 `BaseLayout.astro` 里合并。
+- 修改后台 content type、component、权限或上传配置后，一般需要重新 `strapi build` 并重启后台。
+
+## 前台项目地图
+
+前台目录：`/Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto`
+
+核心栈：
+
+- Astro：`astro@^5.17.1`
+- Svelte：`svelte@^5.49.2`，用于 Hero、导航、搜索等交互组件
+- Tailwind CSS：`tailwindcss@^4.1.18`
+- 部署适配：`@astrojs/node` standalone SSR；Cloudflare Pages 静态构建通过环境变量切换
+
+关键文件：
+
+- `astro.config.mjs`：站点 URL、SSR/static 构建切换、Svelte/Tailwind 集成、远程图片域名。
+- `src/pages`：路由入口，包括首页、产品、Top Brands、帮助中心、支持、下载、搜索等。
+- `src/layouts/BaseLayout.astro`：全站 HTML shell、导航数据、SEO、hreflang、JSON-LD、GTM。
+- `src/utils/strapi.ts`：Strapi 请求封装、重试、超时、运行时缓存、媒体 URL。
+- `src/utils/strapiApi.ts`：API 路径常量、locale fallback、图片/视频/媒体字段解析。
+- `src/i18n/config.ts`：支持语言、默认语言、RTL 判断。
+- `src/i18n/locales/*.json`：前台静态 UI 文案。
+- `src/utils/siteConfig.ts`、`src/utils/seo.ts`：站点 SEO、页面 SEO 和结构化数据。
+
+主要路由：
+
+- `/[locale]/`：首页。
+- `/[locale]/products`、`/[locale]/products/[category]`、`/[locale]/products/[category]/[...slug]`：产品集合、分类和详情。
+- `/[locale]/top-brands`、`/[locale]/top-brands/[slug]`：品牌页。
+- `/[locale]/help` 和 `/[locale]/support/help`：帮助中心兼容路由。
+- `/[locale]/support`、`/[locale]/support/download`、`/[locale]/support/training`、`/[locale]/support/customer-service`：支持相关页面。
+- `/[locale]/search`：站内搜索。
+
+前台本地常用命令：
+
+```bash
+cd /Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto
+npm install
+npm run dev
+npm run build
+npm run preview
+npm run build:pages
+npm run preview:pages
+```
+
+前台环境变量：
+
+- 本地示例文件：`.env.example`
+- 本地实际文件：`.env`，不要打印或提交
+- 关键变量：`PUBLIC_STRAPI_URL`
+- SSR 运行时可用变量：`STRAPI_INTERNAL_URL`、`STRAPI_BUILD_URL`、`STRAPI_CACHE_TTL_MS`、`STRAPI_FETCH_TIMEOUT_MS`、`STRAPI_FETCH_RETRIES`
+
+## 后台项目地图
+
+后台目录：`/Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto-admin`
+
+核心栈：
+
+- Strapi：`@strapi/strapi@5.34.0`
+- 数据库：通过 `DATABASE_CLIENT` 切换，配置支持 `sqlite`、`mysql`、`postgres`
+- 上传：配置中包含 AWS S3 provider，生产环境使用 R2 相关变量
+
+关键文件：
+
+- `config/database.ts`：数据库连接配置。
+- `config/server.ts`：Host、Port、Public URL、proxy、admin panel 配置。
+- `config/plugins.ts`：插件和上传 provider 配置。
+- `src/api/*/content-types/*/schema.json`：Strapi 内容模型。
+- `src/components/*/*.json`：Strapi 可复用组件，如导航、SEO、列表模块。
+- `src/middlewares`：后台中间件，例如消息限流、默认发布状态、admin path 规范化。
+- `scripts`：翻译、同步、修复、迁移、发布检查和生产构建脚本。
+
+主要内容模型：
+
+- 单页/站点配置：`home`、`about-us`、`brand-home`、`brand-story`、`become-dealer`、`contact-us`、`support`、`training`、`site-seo`
+- 集合内容：`product`、`category`、`top-brand`、`insight`、`insight-category`、`help-center`、`help-category`、`download-file`、`production-base`
+- 导航和 SEO：`navigation`、`seo-page`
+- 用户提交：`message`
+
+后台本地常用命令：
+
+```bash
+cd /Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto-admin
+npm install
+npm run dev
+npm run build
+npm run start
+```
+
+后台脚本入口较多，涉及数据翻译、locale 同步、媒体同步、SEO 页面同步和关系迁移。执行任何 `scripts/*` 前先阅读脚本头部和环境变量要求，并确认目标语言、运行模式和数据库连接。
 
 ## GitHub 仓库
 
@@ -23,19 +130,23 @@
 
 - 本地路径：`/Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto`
 - 远端仓库：`git@github.com:ljmang/glorisauto.git`
-- 分支：`main`
-- 已核验本地 HEAD：`319f55e55f1b48beff967d7ab0a377ebc82b2d1b`
-- 最新核验提交：`319f55e 2026-04-14 10:06:05 +0800 ljmang feat: refine product media rendering and api mapping`
+- 当前本地分支：`master`
+- 远端默认分支：`origin/HEAD -> origin/main`
+- 已观察到远端分支：`origin/main`、`origin/master`
+- 已核验本地 HEAD：`eda8f5a88b5bcbc97c5a06adb75ed20d880b28e4`
+- 最新核验提交：`eda8f5a 2026-05-09 16:35:38 +0800 ljmang fix: normalize internal links and redirects`
 
 后台 / CMS：
 
 - 本地路径：`/Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto-admin`
 - 远端仓库：`git@github.com:ljmang/glorisauto-admin.git`
 - 分支：`master`
-- 已核验本地 HEAD：`9d888591ce125dd2c79d3c784f30fe3497f9be5a`
-- 最新核验提交：`9d88859 2026-04-17 16:57:42 +0800 ljmang feat: add seo page content type`
+- 已核验本地 HEAD：`67720572ae46abe64ce72b2df3ce680e771f851f`
+- 最新核验提交：`6772057 2026-05-09 10:58:02 +0800 ljmang feat: support multiple product faqs and insights`
 
-截至上方核验时间，两个本地仓库工作区都是干净状态，并且都与各自的 `origin` 分支一致。
+本次文档编辑前，两个本地仓库工作区都是干净状态，并且都与各自当前跟踪分支一致。
+
+注意：前台仓库同时存在 `main` 和 `master`，且远端默认分支仍指向 `main`；本地当前工作分支是 `master`。部署或合并前必须先确认目标分支。
 
 ## 本机 GitHub SSH（2026-04-20 更新）
 
@@ -91,7 +202,9 @@ ssh root@8.138.154.183
 - 前台网站：`/srv/glorisauto.com/www`
 - 后台 / CMS：`/srv/glorisauto.com/admin`
 
-## 生产代码状态
+## 生产代码状态（历史记录）
+
+以下生产状态为 2026-04-17 21:24 CST 的历史核验记录。本次 2026-05-10 文档更新只核验了本地仓库，未登录服务器重新核验生产分支和 HEAD。线上操作前必须重新执行 `git status --short --branch`、`git rev-parse --abbrev-ref HEAD` 和 `git rev-parse HEAD`。
 
 服务器前台：
 
@@ -287,8 +400,9 @@ npm run sync:page-defaults
 ssh root@8.138.154.183
 cd /srv/glorisauto.com/www
 git status --short --branch
+current_branch="$(git rev-parse --abbrev-ref HEAD)"
 git fetch origin
-git pull --ff-only origin main
+git pull --ff-only origin "$current_branch"
 npm install
 npm run build
 pm2 restart glorisauto-www
