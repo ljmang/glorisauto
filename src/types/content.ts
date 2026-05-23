@@ -160,6 +160,7 @@ export type InsightContent = StrapiContent<InsightAttributes>;
 
 export interface SolutionListOption {
   name?: string;
+  image?: StrapiMedia | null;
 }
 
 export interface SolutionListInfo {
@@ -183,7 +184,6 @@ export interface SolutionAttributes {
   heroButtonUrl?: string;
   audienceTitle?: string;
   targetAudience?: SolutionListOption[];
-  audienceImage?: StrapiMedia | null;
   problemPointsTitle?: string;
   problemPoints?: SolutionListInfo[];
   overviewTitle?: string;
