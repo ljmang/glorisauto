@@ -8,7 +8,18 @@
     "customerService": "客户服务",
     "thankYou": "感谢提交",
     "about": "关于我们",
-    "topBrands": "知名品牌"
+    "topBrands": "知名品牌",
+    "solutions": "解决方案"
+  },
+  "solutions": {
+    "noSolutions": "暂时还没有可展示的解决方案。",
+    "overviewTitle": "方案概览",
+    "problemPointsTitle": "常见业务问题",
+    "processTitle": "推荐方案流程",
+    "stepLabel": "步骤",
+    "recommendedProductsTitle": "推荐产品",
+    "relatedGuidesTitle": "相关指南",
+    "relatedInsightsTitle": "相关洞察"
   },
   "products": {
     "allProducts": "全部产品",

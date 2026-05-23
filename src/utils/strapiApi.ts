@@ -285,6 +285,7 @@ export const api = {
   seoPages: 'seo-pages',
   downloadFiles: 'download-files',
   trainings: 'trainings',
+  solutions: 'solutions',
   productionBases: 'production-bases',
   navigation: 'navigation',
   fileCategories: 'flie-categories',

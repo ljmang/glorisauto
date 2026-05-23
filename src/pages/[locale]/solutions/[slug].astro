@@ -1,0 +1,252 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import BlocksRenderer from '@/components/BlocksRenderer.astro';
+import ProductCard from '@/components/ProductCard.astro';
+import InsightCard from '@/components/InsightCard.astro';
+import ArticleSampleCta from '@/components/ArticleSampleCta.astro';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+import { fetchApiWithLocaleFallback, api, parseImage } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import type { HelpCenterAttributes, InsightAttributes, InsightCategoryAttributes, ProductAttributes, SolutionAttributes } from '@/types/content';
+import { Image } from 'astro:assets';
+
+export async function getStaticPaths() {
+  const paths: { params: { locale: string; slug: string } }[] = [];
+  for (const locale of supportedLocales) {
+    const res = await fetchApiWithLocaleFallback<{ data?: SolutionAttributes[] }>(api.solutions, {
+      locale,
+      pagination: { pageSize: 200 },
+    });
+    const rows = Array.isArray(res?.data) ? res.data : [];
+    for (const row of rows) {
+      if (row.slug) paths.push({ params: { locale, slug: row.slug } });
+    }
+  }
+  return paths;
+}
+
+const params = Astro.params as { locale?: string; slug?: string };
+const locale: Locale = getLocale(params.locale);
+const slug = params.slug ?? '';
+const messages = await loadMessages(locale);
+
+const solutionRes = await fetchApiWithLocaleFallback<{ data?: SolutionAttributes[] }>(api.solutions, {
+  locale,
+  filters: {
+    slug: { $eq: slug },
+  },
+  populate: {
+    cover: true,
+    processSteps: true,
+    recommendedProducts: {
+      populate: { cover: true, images: true, category: true },
+    },
+    relatedHelpCenters: {
+      populate: { help_category: true },
+    },
+    relatedInsights: {
+      populate: { cover: true, insight_category: true },
+    },
+    seo: {
+      populate: {
+        metaImage: true,
+        ogImage: true,
+        twitterImage: true,
+      },
+    },
+  },
+  pagination: { pageSize: 1 },
+});
+
+const solution = solutionRes?.data?.[0];
+
+if (!solution) {
+  return Astro.redirect(toHref('/solutions', locale));
+}
+
+const cover = parseImage(solution.cover);
+const audience = Array.isArray(solution.targetAudience)
+  ? solution.targetAudience.map((item) => item?.name?.trim()).filter(Boolean)
+  : [];
+const problemPoints = Array.isArray(solution.problemPoints) ? solution.problemPoints : [];
+const processSteps = Array.isArray(solution.processSteps) ? solution.processSteps : [];
+const recommendedProducts = Array.isArray(solution.recommendedProducts) ? solution.recommendedProducts : [];
+const relatedHelpCenters = Array.isArray(solution.relatedHelpCenters) ? solution.relatedHelpCenters : [];
+const relatedInsights = Array.isArray(solution.relatedInsights) ? solution.relatedInsights : [];
+
+const breadcrumbItems = [
+  { label: t(messages, 'pageTitle.home'), href: '/' },
+  { label: t(messages, 'pageTitle.solutions'), href: '/solutions' },
+  { label: solution.title },
+];
+
+const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={solution.summary || solution.heroSubtitle}
+  image={solution.cover}
+  seo={solution.seo}
+  pageType="collection"
+  breadcrumbs={breadcrumbItems}
+  messages={messages}
+  locale={locale}
+>
+  <div class="container mx-auto px-4 py-8">
+    <Breadcrumb items={breadcrumbItems} locale={locale} />
+
+    <article class="mx-auto max-w-6xl">
+      <section class="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] lg:items-center">
+        <div>
+          <h1 class="text-4xl font-black text-slate-950 lg:text-6xl">
+            {solution.heroTitle || solution.title}
+          </h1>
+          {solution.heroSubtitle && (
+            <p class="mt-4 max-w-3xl text-lg leading-8 text-gray-600">
+              {solution.heroSubtitle}
+            </p>
+          )}
+          {audience.length > 0 && (
+            <div class="mt-6 flex flex-wrap gap-2">
+              {audience.map((item) => (
+                <span class="border border-gray-300 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-gray-600">
+                  {item}
+                </span>
+              ))}
+            </div>
+          )}
+          {solution.heroButtonLabel && solution.heroButtonUrl && (
+            <div class="mt-8">
+              <a
+                href={toHref(solution.heroButtonUrl, locale)}
+                class="inline-flex items-center justify-center rounded-md bg-orange-500 px-6 py-3 font-medium text-white transition-colors hover:bg-orange-600"
+              >
+                {solution.heroButtonLabel}
+              </a>
+            </div>
+          )}
+        </div>
+
+        {cover?.src && (
+          <div class="overflow-hidden border border-gray-200 bg-white">
+            {cover.width && cover.height ? (
+              <Image
+                src={cover.src}
+                alt={cover.alt || solution.title}
+                width={cover.width}
+                height={cover.height}
+                class="h-full w-full object-cover"
+                format="webp"
+                quality={90}
+              />
+            ) : (
+              <img src={cover.src} alt={cover.alt || solution.title} class="h-full w-full object-cover" />
+            )}
+          </div>
+        )}
+      </section>
+
+      {problemPoints.length > 0 && (
+        <section class="mt-14">
+          <h2 class="text-3xl font-black text-slate-950">
+            {solution.problemPointsTitle || t(messages, 'solutions.problemPointsTitle')}
+          </h2>
+          <div class="mt-6 grid gap-4 md:grid-cols-2">
+            {problemPoints.map((item) => (
+              <div class="border border-gray-200 bg-white p-5">
+                {item.title && <h3 class="text-lg font-bold text-slate-900">{item.title}</h3>}
+                {item.description && <p class="mt-2 text-sm leading-6 text-gray-600">{item.description}</p>}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {solution.overview && Array.isArray(solution.overview) && solution.overview.length > 0 && (
+        <section class="mt-14">
+          <h2 class="text-3xl font-black text-slate-950">
+            {solution.overviewTitle || t(messages, 'solutions.overviewTitle')}
+          </h2>
+          <BlocksRenderer blocks={solution.overview} class="article-content mt-6" />
+        </section>
+      )}
+
+      {processSteps.length > 0 && (
+        <section class="mt-14">
+          <h2 class="text-3xl font-black text-slate-950">
+            {solution.processTitle || t(messages, 'solutions.processTitle')}
+          </h2>
+          <div class="mt-6 grid gap-6 lg:grid-cols-2">
+            {processSteps.map((step, index) => (
+              <div class="border border-gray-200 bg-white p-6">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
+                  {t(messages, 'solutions.stepLabel')} {index + 1}
+                </p>
+                {step.title && <h3 class="mt-2 text-xl font-bold text-slate-950">{step.title}</h3>}
+                {step.description && step.description.length > 0 && (
+                  <BlocksRenderer blocks={step.description} class="article-content mt-4" />
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {recommendedProducts.length > 0 && (
+        <section class="mt-16">
+          <h2 class="text-3xl font-black text-slate-950">
+            {solution.recommendedProductsTitle || t(messages, 'solutions.recommendedProductsTitle')}
+          </h2>
+          <div class="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {recommendedProducts.map((product: ProductAttributes) => (
+              <ProductCard product={product} locale={locale} ctaLabel={t(messages, 'common.readMore')} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {relatedHelpCenters.length > 0 && (
+        <section class="mt-16">
+          <h2 class="text-3xl font-black text-slate-950">
+            {solution.relatedHelpCentersTitle || t(messages, 'solutions.relatedGuidesTitle')}
+          </h2>
+          <div class="mt-6 grid gap-4 md:grid-cols-2">
+            {relatedHelpCenters.map((article: HelpCenterAttributes) => {
+              const categorySlug = article.help_category?.slug ?? '';
+              const href = categorySlug && article.slug ? toHref(`/help/${categorySlug}/${article.slug}`, locale) : '#';
+              return (
+                <a href={href} class="border border-gray-200 bg-white p-5 transition-colors hover:border-orange-300">
+                  <h3 class="text-lg font-bold text-slate-950">{article.title}</h3>
+                  {article.description && <p class="mt-2 text-sm leading-6 text-gray-600">{article.description}</p>}
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {relatedInsights.length > 0 && (
+        <section class="mt-16">
+          <h2 class="text-3xl font-black text-slate-950">
+            {solution.relatedInsightsTitle || t(messages, 'solutions.relatedInsightsTitle')}
+          </h2>
+          <div class="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {relatedInsights.map((insight: InsightAttributes) => {
+              const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
+                ? (insight.insight_category as InsightCategoryAttributes)
+                : null;
+              const categorySlug = category?.slug ?? '';
+              const href = insight.slug && categorySlug ? toHref(`/about/insights/${categorySlug}/${insight.slug}`, locale) : '#';
+              return <InsightCard insight={insight} locale={locale} href={href} />;
+            })}
+          </div>
+        </section>
+      )}
+
+      <ArticleSampleCta locale={locale} messages={messages} />
+    </article>
+  </div>
+</BaseLayout>

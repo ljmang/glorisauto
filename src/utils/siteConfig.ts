@@ -48,6 +48,7 @@ export async function fetchSiteSeo(locale: Locale = defaultLocale): Promise<Site
         productsCollectionPage: true,
         helpCenterCollectionPage: true,
         insightsCollectionPage: true,
+        solutionsCollectionPage: true,
       },
     });
     return response?.data ?? null;

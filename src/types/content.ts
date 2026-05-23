@@ -72,6 +72,7 @@ export interface SiteSeoAttributes {
   productsCollectionPage?: CollectionPageCopyFields | null;
   helpCenterCollectionPage?: CollectionPageCopyFields | null;
   insightsCollectionPage?: CollectionPageCopyFields | null;
+  solutionsCollectionPage?: CollectionPageCopyFields | null;
 }
 
 export type SiteSeoContent = StrapiContent<SiteSeoAttributes>;
@@ -156,6 +157,49 @@ export interface InsightAttributes {
 }
 
 export type InsightContent = StrapiContent<InsightAttributes>;
+
+export interface SolutionListOption {
+  name?: string;
+}
+
+export interface SolutionListInfo {
+  title?: string;
+  description?: string;
+}
+
+export interface SolutionListItem {
+  title?: string;
+  description?: BlockNode[];
+}
+
+export interface SolutionAttributes {
+  title: string;
+  slug: string;
+  summary?: string;
+  cover?: StrapiMedia | null;
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroButtonLabel?: string;
+  heroButtonUrl?: string;
+  audienceTitle?: string;
+  targetAudience?: SolutionListOption[];
+  problemPointsTitle?: string;
+  problemPoints?: SolutionListInfo[];
+  overviewTitle?: string;
+  overview?: BlockNode[];
+  processTitle?: string;
+  processSteps?: SolutionListItem[];
+  recommendedProductsTitle?: string;
+  recommendedProducts?: ProductAttributes[];
+  relatedHelpCentersTitle?: string;
+  relatedHelpCenters?: HelpCenterAttributes[];
+  relatedInsightsTitle?: string;
+  relatedInsights?: InsightAttributes[];
+  sort?: number | null;
+  seo?: StrapiSeo | null;
+}
+
+export type SolutionContent = StrapiContent<SolutionAttributes>;
 
 /**
  * Top Brand 顶级品牌类型（与 Strapi admin schema 一致）

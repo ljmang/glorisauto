@@ -8,7 +8,18 @@
     "customerService": "カスタマーサービス",
     "thankYou": "ありがとうございます",
     "about": "会社情報",
-    "topBrands": "主要ブランド"
+    "topBrands": "主要ブランド",
+    "solutions": "ソリューション"
+  },
+  "solutions": {
+    "noSolutions": "現在公開中のソリューションはありません。",
+    "overviewTitle": "ソリューション概要",
+    "problemPointsTitle": "よくある業務課題",
+    "processTitle": "推奨プロセス",
+    "stepLabel": "ステップ",
+    "recommendedProductsTitle": "推奨製品",
+    "relatedGuidesTitle": "関連ガイド",
+    "relatedInsightsTitle": "関連インサイト"
   },
   "products": {
     "allProducts": "すべての製品",

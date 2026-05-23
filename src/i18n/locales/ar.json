@@ -8,7 +8,18 @@
     "customerService": "خدمة العملاء",
     "thankYou": "شكرًا لك",
     "about": "من نحن",
-    "topBrands": "أبرز العلامات التجارية"
+    "topBrands": "أبرز العلامات التجارية",
+    "solutions": "الحلول"
+  },
+  "solutions": {
+    "noSolutions": "لا توجد حلول منشورة حاليًا.",
+    "overviewTitle": "نظرة عامة على الحل",
+    "problemPointsTitle": "تحديات الأعمال الشائعة",
+    "processTitle": "العملية الموصى بها",
+    "stepLabel": "الخطوة",
+    "recommendedProductsTitle": "المنتجات الموصى بها",
+    "relatedGuidesTitle": "الأدلة ذات الصلة",
+    "relatedInsightsTitle": "الرؤى ذات الصلة"
   },
   "products": {
     "allProducts": "جميع المنتجات",

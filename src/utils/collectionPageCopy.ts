@@ -1,7 +1,7 @@
 import type { Locale } from '@/i18n/config';
 import type { CollectionPageCopyFields, SiteSeoAttributes } from '@/types/content';
 
-type PageKey = 'products' | 'help' | 'insights';
+type PageKey = 'products' | 'help' | 'insights' | 'solutions';
 
 export interface CollectionPageCopy {
   heading: string;
@@ -36,6 +36,14 @@ const copyByLocale: Record<Locale, Record<PageKey, CollectionPageCopy>> = {
       intro:
         'Insights brings together current articles on repair process improvement, material selection, market direction, and surface care trends. It is the content hub for distributors, body shops, and aftermarket operators who want practical context beyond product specs.',
     },
+    solutions: {
+      heading: 'Automotive Aftermarket Solutions',
+      seoTitle: 'Automotive Aftermarket Solutions | Repair, Aftersales & Window Film',
+      seoDescription:
+        'Explore Gloris solution pages for collision repair efficiency, dealership aftersales standardization, and automotive window film upgrade scenarios.',
+      intro:
+        'These solution pages organize Gloris products, guides, and insights around real customer scenarios. Use them to evaluate complete approaches for body shops, dealership groups, and window film installers.',
+    },
   },
   'zh-cn': {
     products: {
@@ -61,6 +69,14 @@ const copyByLocale: Record<Locale, Record<PageKey, CollectionPageCopy>> = {
         '阅读 Gloris 最新汽车修补行业洞察，涵盖材料技术、市场趋势、工艺优化、汽车窗膜和漆面保护等主题。',
       intro:
         '洞察栏目汇集汽车修补与表面护理相关的技术文章、市场趋势和应用方法，帮助经销商、门店和售后从业者在产品之外获得更完整的业务判断与工艺参考。',
+    },
+    solutions: {
+      heading: '汽车后市场解决方案',
+      seoTitle: '汽车后市场解决方案 | 钣喷效率、售后标准化与车膜升级',
+      seoDescription:
+        '查看 Gloris 面向钣喷效率提升、经销商售后耗材标准化和汽车窗膜升级场景的解决方案页面。',
+      intro:
+        '解决方案页面围绕真实业务场景组织产品、帮助内容和行业洞察，方便经销商、钣喷门店和车膜渠道更快评估成套方案，而不只是单个产品。',
     },
   },
   'ja': {
@@ -88,6 +104,14 @@ const copyByLocale: Record<Locale, Record<PageKey, CollectionPageCopy>> = {
       intro:
         '施工工程の改善、材料選定、市場の方向性、表面ケアのトレンドなど、現場と事業判断に役立つ情報をまとめています。製品スペックだけでは得られない実践的な視点を提供します。',
     },
+    solutions: {
+      heading: '自動車アフターマーケット向けソリューション',
+      seoTitle: '自動車アフターマーケット向けソリューション | 板金塗装・販売店・ウィンドウフィルム',
+      seoDescription:
+        '板金塗装効率化、販売店アフターサービス標準化、ウィンドウフィルム提案に向けた Gloris のソリューションページをご覧ください。',
+      intro:
+        'ソリューションページでは、実際の顧客課題に合わせて製品、ガイド、インサイトを整理しています。個別製品ではなく、現場導入しやすい全体像を把握したいときに最適です。',
+    },
   },
   'ar': {
     products: {
@@ -113,6 +137,14 @@ const copyByLocale: Record<Locale, Record<PageKey, CollectionPageCopy>> = {
         'اقرأ أحدث رؤى Gloris حول تقنيات إصلاح السيارات، اتجاهات السوق، تحسين سير العمل، أفلام النوافذ، وحلول حماية الطلاء.',
       intro:
         'يجمع قسم الرؤى مقالات عملية حول تحسين العمليات، اختيار المواد، اتجاهات السوق، والعناية بالأسطح لدعم قرارات الأعمال والتطبيق الميداني.',
+    },
+    solutions: {
+      heading: 'حلول خدمات ما بعد البيع للسيارات',
+      seoTitle: 'حلول خدمات ما بعد البيع للسيارات | الكفاءة والإمداد وترقية أفلام النوافذ',
+      seoDescription:
+        'استعرض صفحات حلول Gloris لرفع كفاءة إصلاح الهيكل، وتوحيد مستهلكات ما بعد البيع، وترقية أفلام نوافذ السيارات.',
+      intro:
+        'تنظم صفحات الحلول منتجات Gloris ومقالات المساعدة والرؤى حسب سيناريوهات العمل الفعلية، لتسهيل تقييم الحلول المتكاملة على الموزعين وورش الإصلاح وقنوات أفلام النوافذ.',
     },
   },
 };
@@ -146,6 +178,7 @@ export function resolveCollectionPageCopy(
     products: siteSeo.productsCollectionPage,
     help: siteSeo.helpCenterCollectionPage,
     insights: siteSeo.insightsCollectionPage,
+    solutions: siteSeo.solutionsCollectionPage,
   };
 
   return mergeCopy(fallback, overrideMap[key]);

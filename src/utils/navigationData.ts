@@ -47,6 +47,7 @@ const ROOT_SEGMENT_ALIAS_MAP = new Map<string, string>([
   ['brand-story', 'brand-story'],
   ['dealer', 'dealer'],
   ['top-brands', 'top-brands'],
+  ['solutions', 'solutions'],
   // arabic aliases that may come from translated nav links
   ['منتجات', 'products'],
   ['يدعم', 'support'],
@@ -64,6 +65,7 @@ const ROOT_SEGMENT_ALIAS_MAP = new Map<string, string>([
   ['وكيل', 'dealer'],
   ['الوكلاء', 'dealer'],
   ['أهم-العلامات-التجارية', 'top-brands'],
+  ['الحلول', 'solutions'],
 ]);
 
 function normalizeRootSegment(segment: string): string {
