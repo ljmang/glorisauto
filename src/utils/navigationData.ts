@@ -1,3 +1,5 @@
+import { isSolutionsEnabled } from './featureFlags';
+
 /**
  * Strapi navigation 数据转导航组件结构
  *
@@ -179,6 +181,9 @@ function isVisibleNavNode(node: ComponentNavNode, locale: string): boolean {
   }
 
   const normalizedPath = normalizeInternalPath(resolveNodeHref(node, locale, ''));
+  if (!isSolutionsEnabled() && normalizedPath === '/solutions') {
+    return false;
+  }
   return !TEMPORARILY_HIDDEN_PATHS.has(normalizedPath);
 }
 

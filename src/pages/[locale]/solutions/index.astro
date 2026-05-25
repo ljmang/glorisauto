@@ -7,6 +7,7 @@ import { loadMessages, t } from '@/i18n';
 import { fetchApi, api } from '@/utils/strapiApi';
 import { resolveCollectionPageCopy } from '@/utils/collectionPageCopy';
 import { fetchSiteSeo } from '@/utils/siteConfig';
+import { isSolutionsEnabled } from '@/utils/featureFlags';
 import type { SolutionAttributes } from '@/types/content';
 
 export async function getStaticPaths() {
@@ -17,6 +18,12 @@ export async function getStaticPaths() {
 
 const params = Astro.params as { locale?: string };
 const locale: Locale = getLocale(params.locale);
+
+if (!isSolutionsEnabled()) {
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
+}
+
 const messages = await loadMessages(locale);
 
 const [solutionsRes, siteSeo] = await Promise.all([
