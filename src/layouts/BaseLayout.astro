@@ -173,8 +173,9 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
     {resolvedSeo.alternates.map((alternate) => (
       <link rel="alternate" hreflang={alternate.hrefLang} href={alternate.href} />
     ))}
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" sizes="any" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/favicon-48x48.png" />
     <title>{resolvedSeo.title}</title>
 
     <meta property="og:site_name" content={siteName} />
