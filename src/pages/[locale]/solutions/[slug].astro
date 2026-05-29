@@ -21,6 +21,10 @@ import type {
 import { Image } from 'astro:assets';
 
 export async function getStaticPaths() {
+  if (!isSolutionsEnabled()) {
+    return [];
+  }
+
   const paths: { params: { locale: string; slug: string } }[] = [];
   for (const locale of supportedLocales) {
     const res = await fetchApiWithLocaleFallback<{ data?: SolutionAttributes[] }>(api.solutions, {

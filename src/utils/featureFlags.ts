@@ -1,6 +1,13 @@
 const truthyValues = new Set(['1', 'true', 'yes', 'on']);
 const falsyValues = new Set(['0', 'false', 'no', 'off']);
 
+type EnvName =
+  | 'PUBLIC_SOLUTIONS_ENABLED'
+  | 'CF_PAGES'
+  | 'CF_PAGES_BRANCH'
+  | 'CF_PAGES_URL'
+  | 'BUILD_TARGET';
+
 function parseBooleanEnv(value: string | undefined, fallback: boolean): boolean {
   if (typeof value !== 'string') return fallback;
 
@@ -10,7 +17,7 @@ function parseBooleanEnv(value: string | undefined, fallback: boolean): boolean 
   return fallback;
 }
 
-function readEnv(name: 'PUBLIC_SOLUTIONS_ENABLED'): string | undefined {
+function readEnv(name: EnvName): string | undefined {
   if (
     typeof process !== 'undefined' &&
     process.env &&
@@ -22,6 +29,45 @@ function readEnv(name: 'PUBLIC_SOLUTIONS_ENABLED'): string | undefined {
   return import.meta.env[name];
 }
 
+function isCanonicalProductionSite(): boolean {
+  const siteUrl = import.meta.env.SITE;
+  if (typeof siteUrl !== 'string' || siteUrl.trim() === '') return false;
+
+  try {
+    const { hostname } = new URL(siteUrl);
+    return hostname === 'www.glorisauto.com' || hostname === 'glorisauto.com';
+  } catch {
+    return false;
+  }
+}
+
+function isPagesBuild(): boolean {
+  return /^(1|true)$/i.test(readEnv('CF_PAGES') ?? '') || readEnv('BUILD_TARGET') === 'pages';
+}
+
+function isCloudflareProductionBuild(): boolean {
+  if (!isPagesBuild()) return false;
+
+  const branch = readEnv('CF_PAGES_BRANCH')?.trim().toLowerCase();
+  if (branch) return branch === 'main' || branch === 'master';
+
+  const pagesUrl = readEnv('CF_PAGES_URL')?.trim().toLowerCase();
+  if (pagesUrl) {
+    return pagesUrl === 'www.glorisauto.com' || pagesUrl === 'glorisauto.com';
+  }
+
+  return isCanonicalProductionSite();
+}
+
 export function isSolutionsEnabled(): boolean {
-  return parseBooleanEnv(readEnv('PUBLIC_SOLUTIONS_ENABLED'), true);
+  const configured = readEnv('PUBLIC_SOLUTIONS_ENABLED');
+  if (typeof configured === 'string') {
+    return parseBooleanEnv(configured, false);
+  }
+
+  if (isCloudflareProductionBuild()) {
+    return false;
+  }
+
+  return true;
 }

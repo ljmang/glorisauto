@@ -11,6 +11,10 @@ import { isSolutionsEnabled } from '@/utils/featureFlags';
 import type { SolutionAttributes } from '@/types/content';
 
 export async function getStaticPaths() {
+  if (!isSolutionsEnabled()) {
+    return [];
+  }
+
   return supportedLocales.map((locale) => ({
     params: { locale },
   }));
