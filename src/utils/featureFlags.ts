@@ -10,6 +10,18 @@ function parseBooleanEnv(value: string | undefined, fallback: boolean): boolean 
   return fallback;
 }
 
+function readEnv(name: 'PUBLIC_SOLUTIONS_ENABLED'): string | undefined {
+  if (
+    typeof process !== 'undefined' &&
+    process.env &&
+    typeof process.env[name] === 'string'
+  ) {
+    return process.env[name];
+  }
+
+  return import.meta.env[name];
+}
+
 export function isSolutionsEnabled(): boolean {
-  return parseBooleanEnv(import.meta.env.PUBLIC_SOLUTIONS_ENABLED, true);
+  return parseBooleanEnv(readEnv('PUBLIC_SOLUTIONS_ENABLED'), true);
 }
