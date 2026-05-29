@@ -6,7 +6,8 @@ type EnvName =
   | 'CF_PAGES'
   | 'CF_PAGES_BRANCH'
   | 'CF_PAGES_URL'
-  | 'BUILD_TARGET';
+  | 'BUILD_TARGET'
+  | 'NODE_ENV';
 
 function parseBooleanEnv(value: string | undefined, fallback: boolean): boolean {
   if (typeof value !== 'string') return fallback;
@@ -59,13 +60,17 @@ function isCloudflareProductionBuild(): boolean {
   return isCanonicalProductionSite();
 }
 
+function isProductionServerRuntime(): boolean {
+  return readEnv('NODE_ENV') === 'production' && isCanonicalProductionSite();
+}
+
 export function isSolutionsEnabled(): boolean {
   const configured = readEnv('PUBLIC_SOLUTIONS_ENABLED');
   if (typeof configured === 'string') {
     return parseBooleanEnv(configured, false);
   }
 
-  if (isCloudflareProductionBuild()) {
+  if (isCloudflareProductionBuild() || isProductionServerRuntime()) {
     return false;
   }
 
