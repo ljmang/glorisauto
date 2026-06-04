@@ -13,6 +13,18 @@ import type { StrapiResponse } from '@/types';
 import { Image } from 'astro:assets';
 import { CircleChevronRight, Phone, Mail } from 'lucide-svelte';
 
+const ABOUT_PAGE_ADDRESS_BY_LOCALE: Record<Locale, string> = {
+  en: 'Fengheyuan Logistics Center, Baisha Road, Nanhai District, Foshan, Guangdong, China',
+  'zh-cn': '中国广东省佛山市南海区白沙路丰禾园物流中心',
+  ja: 'Fengheyuan Logistics Center, Baisha Road, Nanhai District, Foshan, Guangdong, China',
+  ar: 'Fengheyuan Logistics Center, Baisha Road, Nanhai District, Foshan, Guangdong, China',
+};
+
+const ABOUT_PAGE_MAP_QUERY =
+  'Fengheyuan Logistics Center, Baisha Road, Nanhai District, Foshan, Guangdong, China';
+const ABOUT_PAGE_MAP_LINK_URL = `https://www.google.com/maps?q=${encodeURIComponent(ABOUT_PAGE_MAP_QUERY)}`;
+const ABOUT_PAGE_MAP_EMBED_URL = `https://maps.google.com/maps?q=${encodeURIComponent(ABOUT_PAGE_MAP_QUERY)}&z=12&output=embed`;
+
 export async function getStaticPaths() {
   return supportedLocales.map((locale) => ({
     params: { locale },
@@ -88,7 +100,13 @@ const siteContact = getSiteContactInfo(siteSeo);
 const phoneTitle = aboutUs?.phoneTitle?.trim() || t(messages, 'form.phone');
 const addressTitle = siteContact.addressTitle || t(messages, 'contactInfo.address');
 const mapLinkLabel = siteContact.mapLinkLabel || t(messages, 'contactInfo.mapLink');
-const mapEmbedTitle = siteContact.mapEmbedTitle || 'Google Map - Guangzhou';
+const mapEmbedTitle = siteContact.mapEmbedTitle || 'Gloris location map';
+const aboutPageContact = {
+  ...siteContact,
+  address: ABOUT_PAGE_ADDRESS_BY_LOCALE[locale],
+  mapLinkUrl: ABOUT_PAGE_MAP_LINK_URL,
+  mapEmbedUrl: ABOUT_PAGE_MAP_EMBED_URL,
+};
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -271,16 +289,16 @@ const breadcrumbItems = [
                   </div>
                 )}
 
-                {siteContact.address && (
+                {aboutPageContact.address && (
                   <div>
                     <h3 class="text-xl font-bold  mb-2">
                       {addressTitle}
                     </h3>
                     <p class="">
-                      {siteContact.address}
+                      {aboutPageContact.address}
                     </p>
                     <a
-                      href={siteContact.mapLinkUrl}
+                      href={aboutPageContact.mapLinkUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       class="inline-block mt-3 text-cyan-600 hover:text-orange-600 transition-colors"
@@ -294,7 +312,7 @@ const breadcrumbItems = [
               <!-- 右侧：Google 地图（默认广州） -->
               <div class="w-full h-[400px] rounded-lg overflow-hidden bg-gray-200">
                 <iframe
-                  src={siteContact.mapEmbedUrl}
+                  src={aboutPageContact.mapEmbedUrl}
                   width="100%"
                   height="100%"
                   style="border:0;"
