@@ -117,9 +117,6 @@ const tocItems = markdownResult.toc;
       <article class="flex-1 min-w-0">
         <h1 class="text-4xl lg:text-5xl font-black mb-4">{article.title}</h1>
         {publishedDate && <p class="text-sm text-gray-500 mb-6">{publishedDate}</p>}
-        {(article.description || article.excerpt) && (
-          <p class="text-lg text-gray-700 mb-8 leading-relaxed">{article.description || article.excerpt}</p>
-        )}
         {articleHtml && (
           <div class="article-content prose prose-lg max-w-none mb-12" set:html={articleHtml} />
         )}

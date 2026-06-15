@@ -305,9 +305,30 @@ export interface BecomeDealerFocusItem {
   cover?: StrapiMedia | StrapiMedia[] | null;
 }
 
+export interface BecomeDealerSupportItem {
+  id?: number;
+  icon?: StrapiMedia | null;
+  title?: string;
+  description?: string;
+}
+
+export interface BecomeDealerProcessStep {
+  id?: number;
+  cover?: StrapiMedia | null;
+  title?: string;
+  description?: string;
+  stepLabel?: string;
+}
+
 export interface BecomeDealerAttributes {
   title?: string;
   heroMedia?: StrapiMedia | StrapiMedia[] | null;
+  introContent?: BlockNode[];
+  introMedia?: StrapiMedia | StrapiMedia[] | null;
+  supportTitle?: string;
+  supportItems?: BecomeDealerSupportItem[];
+  processTitle?: string;
+  processSteps?: BecomeDealerProcessStep[];
   joinUsTitle?: string;
   yourName?: string;
   yourEmail?: string;
@@ -316,6 +337,13 @@ export interface BecomeDealerAttributes {
   message?: string;
   customerServiceTitle?: string;
   advantagesTitle?: string;
+  productsTitle?: string;
+  productsLinkLabel?: string;
+  productsLink?: string;
+  products?: ProductAttributes[];
+  articlesTitle?: string;
+  articlesLinkLabel?: string;
+  articlesLink?: string;
   focus?: BecomeDealerFocusItem[];
   insights?: (InsightAttributes & { cover?: unknown })[];
   seo?: StrapiSeo | null;
