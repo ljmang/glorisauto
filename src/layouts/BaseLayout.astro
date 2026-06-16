@@ -25,6 +25,7 @@ interface Props {
   publishedTime?: string;
   modifiedTime?: string;
   authorName?: string;
+  siteSeo?: SiteSeoAttributes | null;
 }
 
 const {
@@ -40,6 +41,7 @@ const {
   publishedTime,
   modifiedTime,
   authorName,
+  siteSeo: providedSiteSeo = undefined,
 } = Astro.props;
 
 type NavItem = ReturnType<typeof transformNavigations>;
@@ -128,7 +130,7 @@ async function getSeoPage(currentLocale: Locale, pathname: string): Promise<SeoP
 
 const [navData, siteSeo, seoPage] = await Promise.all([
   getNavData(locale),
-  getSiteSeo(locale),
+  providedSiteSeo === undefined ? getSiteSeo(locale) : Promise.resolve(providedSiteSeo),
   getSeoPage(locale, Astro.url.pathname),
 ]);
 
@@ -171,8 +173,9 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
     {resolvedSeo.alternates.map((alternate) => (
       <link rel="alternate" hreflang={alternate.hrefLang} href={alternate.href} />
     ))}
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" sizes="any" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/favicon-48x48.png" />
     <title>{resolvedSeo.title}</title>
 
     <meta property="og:site_name" content={siteName} />
@@ -193,22 +196,32 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
       <meta property="article:modified_time" content={modifiedTime || publishedTime} />
     )}
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WGFHNVN3WZ"></script>
+    <!-- Google Tag Manager -->
     <script is:inline>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag('js', new Date());
-      gtag('config', 'G-WGFHNVN3WZ');
+      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-MBDTPXL3');
     </script>
+    <!-- End Google Tag Manager -->
 
     {resolvedSeo.jsonLd.map((schema, index) => (
       <script type="application/ld+json" set:html={JSON.stringify(schema)} data-schema={String(index)} />
     ))}
   </head>
   <body class="min-h-screen flex flex-col bg-gray-50 font-sans font-normal tracking-tight antialiased">
-    <Header messages={messages} locale={locale} navData={navData} />
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+      <iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-MBDTPXL3"
+        height="0"
+        width="0"
+        style="display:none;visibility:hidden"
+      ></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <Header messages={messages} locale={locale} navData={navData} siteSeo={siteSeo} />
     <main class="flex-1">
       <slot />
     </main>

@@ -1,19 +1,24 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import type { NavItem } from '@/utils/navigationData';
+  import { toHref, type NavItem } from '@/utils/navigationData';
   import { supportedLocales, localeDisplayConfig, type Locale } from '@/i18n/config';
-  import { PhoneCall, Mail, Menu, X, Plus, Minus } from 'lucide-svelte';
+  import { getFreeSampleHref } from '@/utils/freeSampleLink';
+  import { PhoneCall, Mail, Menu, X, Plus, Minus, Gift } from 'lucide-svelte';
 
   let {
     currentPath = '',
     locale = '',
     messages = {},
     navData = [],
+    contactPhone = '+86 19128973352',
+    contactEmail = 'Sales@glorisauto.com',
   }: {
     currentPath?: string;
     locale?: string;
     messages?: Record<string, unknown>;
     navData?: NavItem[];
+    contactPhone?: string;
+    contactEmail?: string;
   } = $props();
 
   let isOpen = $state(false);
@@ -65,11 +70,14 @@
   );
   const currentLocaleDisplay = $derived(localeDisplayConfig[locale as Locale]);
   const isRtl = $derived(locale === 'ar');
+  const contactPhoneHref = $derived(`tel:${contactPhone.replace(/[^\d+]/g, '')}`);
+  const homeHref = $derived(toHref('/', locale));
+  const freeSampleHref = $derived(getFreeSampleHref(locale));
 </script>
 <!-- 手机版汉堡菜单按钮（搜索入口在 Header 里，与汉堡并排） -->
 <button
   onclick={toggle}
-  class="md:hidden p-2  hover:text-orange-500 transition-colors"
+  class="xl:hidden p-2  hover:text-orange-500 transition-colors"
   aria-label="Toggle menu"
 >
   {#if isOpen}
@@ -81,7 +89,7 @@
 
 {#if isOpen}
   <div
-    class="md:hidden fixed inset-0 z-50 flex flex-col bg-white font-medium text-lg"
+    class="xl:hidden fixed inset-0 z-50 flex flex-col bg-white font-medium text-lg"
     transition:fade={{ duration: 200 }}
   >
     <!-- 右上角关闭 -->
@@ -97,14 +105,14 @@
     <div class="shrink-0 flex flex-col gap-3 px-4 py-4 pt-14 border-b border-gray-200 bg-white">
       <div class="flex items-center gap-2">
         <PhoneCall class="w-4 h-4 shrink-0 text-gray-500" />
-        <a href="tel:+8618122288163" class=" hover:text-orange-500 transition-colors no-underline"
-          >+86 18122288163</a
+        <a href={contactPhoneHref} class=" hover:text-orange-500 transition-colors no-underline"
+          >{contactPhone}</a
         >
       </div>
       <div class="flex items-center gap-2">
         <Mail class="w-4 h-4 shrink-0 text-gray-500" />
-        <a href="mailto:Sales@glorisauto.com" class=" hover:text-orange-500 transition-colors no-underline"
-          >Sales@glorisauto.com</a
+        <a href={`mailto:${contactEmail}`} class=" hover:text-orange-500 transition-colors no-underline"
+          >{contactEmail}</a
         >
       </div>
       <div class="space-y-1 font-medium text-lg">
@@ -128,7 +136,7 @@
           <div class={`${isRtl ? 'pr-6' : 'pl-6'} space-y-0.5`}>
             {#each supportedLocales as loc}
               <a
-                href={`/${loc}${pathWithoutLocale}`}
+                href={toHref(pathWithoutLocale, loc)}
                 onclick={close}
                 class={`flex items-center gap-2 py-2 rounded px-2 -mx-2 no-underline  transition-colors ${
                   loc === locale ? 'text-orange-500' : ' hover:text-orange-500'
@@ -141,15 +149,23 @@
           </div>
         {/if}
       </div>
+      <a
+        href={freeSampleHref}
+        onclick={close}
+        class="inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-5 py-3 text-base font-bold text-white shadow-sm transition-colors no-underline hover:bg-orange-600"
+      >
+        <Gift class="h-5 w-5 shrink-0" />
+        {t('home.freeSampleCta')}
+      </a>
     </div>
 
     <!-- 中间可上下滑动：导航 -->
     <nav class="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-1 bg-gray-50">
         <a
-          href={`/${locale}`}
+          href={homeHref}
           onclick={close}
           class={`font-black text-xl block p-4 rounded bg-white transition-colors no-underline ${
-            isActive(`/${locale}`) ? 'text-orange-500' : ' hover:text-orange-500'
+            isActive(homeHref) ? 'text-orange-500' : ' hover:text-orange-500'
           }`}
         >
           {t('pageTitle.home')}

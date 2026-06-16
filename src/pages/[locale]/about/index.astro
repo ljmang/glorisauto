@@ -6,10 +6,24 @@ import { supportedLocales, type Locale, getLocale, isRtlLocale } from '@/i18n/co
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api, parseImage } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
+import { fetchSiteSeo } from '@/utils/siteConfig';
+import { getSiteContactInfo } from '@/utils/siteContact';
 import type { AboutUsAttributes, InsightAttributes } from '@/types/content';
 import type { StrapiResponse } from '@/types';
 import { Image } from 'astro:assets';
 import { CircleChevronRight, Phone, Mail } from 'lucide-svelte';
+
+const ABOUT_PAGE_ADDRESS_BY_LOCALE: Record<Locale, string> = {
+  en: 'Fengheyuan Logistics Center, Baisha Road, Nanhai District, Foshan, Guangdong, China',
+  'zh-cn': '中国广东省佛山市南海区白沙路丰禾园物流中心',
+  ja: 'Fengheyuan Logistics Center, Baisha Road, Nanhai District, Foshan, Guangdong, China',
+  ar: 'Fengheyuan Logistics Center, Baisha Road, Nanhai District, Foshan, Guangdong, China',
+};
+
+const ABOUT_PAGE_MAP_QUERY =
+  'Fengheyuan Logistics Center, Baisha Road, Nanhai District, Foshan, Guangdong, China';
+const ABOUT_PAGE_MAP_LINK_URL = `https://www.google.com/maps?q=${encodeURIComponent(ABOUT_PAGE_MAP_QUERY)}`;
+const ABOUT_PAGE_MAP_EMBED_URL = `https://maps.google.com/maps?q=${encodeURIComponent(ABOUT_PAGE_MAP_QUERY)}&z=12&output=embed`;
 
 export async function getStaticPaths() {
   return supportedLocales.map((locale) => ({
@@ -27,20 +41,23 @@ const normalizeInsightsCount = (value: number | undefined, fallback: number) =>
     ? Math.floor(value)
     : fallback;
 
-const aboutUsRes = await fetchApiWithLocaleFallback<StrapiResponse<AboutUsAttributes>>(api.aboutUs, {
-  locale,
-  populate: {
-    heroMedia: true,
-    seo: {
-      populate: {
-        metaImage: true,
-        ogImage: true,
-        twitterImage: true,
+const [aboutUsRes, siteSeo] = await Promise.all([
+  fetchApiWithLocaleFallback<StrapiResponse<AboutUsAttributes>>(api.aboutUs, {
+    locale,
+    populate: {
+      heroMedia: true,
+      seo: {
+        populate: {
+          metaImage: true,
+          ogImage: true,
+          twitterImage: true,
+        },
       },
+      insights: { populate: { cover: true, insight_category: true } },
     },
-    insights: { populate: { cover: true, insight_category: true } },
-  },
-});
+  }),
+  fetchSiteSeo(locale),
+]);
 
 // 处理 about-us 数据（单类型）
 const aboutUs = aboutUsRes?.data;
@@ -79,26 +96,23 @@ const latestInsightsLinkLabel =
   aboutUs?.latestInsightsLinkLabel?.trim() || t(messages, 'common.viewAll');
 const latestInsightsLinkHref = toHref(aboutUs?.latestInsightsLink?.trim() || '/about/insights', locale);
 const messageButtonHref = toHref(aboutUs?.messageButtonLink?.trim() || '/contact', locale);
+const siteContact = getSiteContactInfo(siteSeo);
+const phoneTitle = aboutUs?.phoneTitle?.trim() || t(messages, 'form.phone');
+const addressTitle = siteContact.addressTitle || t(messages, 'contactInfo.address');
+const mapLinkLabel = siteContact.mapLinkLabel || t(messages, 'contactInfo.mapLink');
+const mapEmbedTitle = siteContact.mapEmbedTitle || 'Gloris location map';
+const aboutPageContact = {
+  ...siteContact,
+  address: ABOUT_PAGE_ADDRESS_BY_LOCALE[locale],
+  mapLinkUrl: ABOUT_PAGE_MAP_LINK_URL,
+  mapEmbedUrl: ABOUT_PAGE_MAP_EMBED_URL,
+};
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
   { label: t(messages, 'pageTitle.about'), href: undefined },
 ];
 
-// 后端无 googleMaps 时使用默认广州
-const defaultMapEmbedUrl = 'https://maps.google.com/maps?q=23.1291,113.2644&z=12&output=embed';
-const defaultMapLinkUrl = 'https://www.google.com/maps?q=23.1291,113.2644';
-
-const googleMaps = aboutUs?.googleMaps?.trim() || '';
-const mapLinkUrl = googleMaps || defaultMapLinkUrl;
-const mapLinkLabel = aboutUs?.mapLinkLabel?.trim() || 'View on Google Map';
-// 打开链接转成 iframe 嵌入地址：加 output=embed，域名用 maps.google.com
-const mapEmbedUrl = googleMaps
-  ? googleMaps.includes('output=embed')
-    ? googleMaps
-    : `https://maps.google.com/maps?${new URL(googleMaps).searchParams.toString()}&z=12&output=embed`
-  : defaultMapEmbedUrl;
-const mapEmbedTitle = aboutUs?.mapEmbedTitle?.trim() || 'Google Map - Guangzhou';
 ---
 
 <BaseLayout
@@ -110,6 +124,7 @@ const mapEmbedTitle = aboutUs?.mapEmbedTitle?.trim() || 'Google Map - Guangzhou'
   breadcrumbs={breadcrumbItems}
   messages={messages}
   locale={locale}
+  siteSeo={siteSeo}
 >
   {aboutUs && (
     <>
@@ -128,7 +143,7 @@ const mapEmbedTitle = aboutUs?.mapEmbedTitle?.trim() || 'Google Map - Guangzhou'
             height={heroMedia.height || 1120}
             class="w-full h-full object-cover absolute inset-0"
             format="webp"
-            quality={85}
+            quality={100}
             loading="eager"
           />
           <!-- 白色半透明内容框 -->
@@ -186,7 +201,7 @@ const mapEmbedTitle = aboutUs?.mapEmbedTitle?.trim() || 'Google Map - Guangzhou'
                         height={coverImage.height}
                         class="w-full h-auto object-cover"
                         format="webp"
-                        quality={85}
+                        quality={100}
                         loading="lazy"
                       />
                     </div>
@@ -245,47 +260,45 @@ const mapEmbedTitle = aboutUs?.mapEmbedTitle?.trim() || 'Google Map - Guangzhou'
                   </div>
                 )}
 
-                {aboutUs.phoneTitle && (
+                {(aboutUs.phoneTitle || siteContact.phone || siteContact.email) && (
                   <div>
                     <h3 class="text-xl font-bold  mb-2">
-                      {aboutUs.phoneTitle}
+                      {phoneTitle}
                     </h3>
                     {aboutUs.phoneDescription && (
                       <p class=" mb-1">
                         {aboutUs.phoneDescription}
                       </p>
                     )}
-                    {aboutUs.phoneNumber && (
+                    {siteContact.phone && (
                       <p class=" mb-1">
-                        <a href={`tel:${aboutUs.phoneNumber}`} class="hover:text-orange-600 flex items-center gap-2">
+                        <a href={siteContact.phoneHref} class="hover:text-orange-600 flex items-center gap-2">
                           <Phone class="w-4 h-4" />
-                          {aboutUs.phoneNumber}
+                          {siteContact.phone}
                         </a>
                       </p>
                     )}
-                    {aboutUs.phoneEmail && (
+                    {siteContact.email && (
                       <p class="">
-                        <a href={`mailto:${aboutUs.phoneEmail}`} class="hover:text-orange-600 flex items-center gap-2">
+                        <a href={`mailto:${siteContact.email}`} class="hover:text-orange-600 flex items-center gap-2">
                           <Mail class="w-4 h-4" />
-                          {aboutUs.phoneEmail}
+                          {siteContact.email}
                         </a>
                       </p>
                     )}
                   </div>
                 )}
 
-                {aboutUs.addressTitle && (
+                {aboutPageContact.address && (
                   <div>
                     <h3 class="text-xl font-bold  mb-2">
-                      {aboutUs.addressTitle}
+                      {addressTitle}
                     </h3>
-                    {aboutUs.addressDescription && (
-                      <p class="">
-                        {aboutUs.addressDescription}
-                      </p>
-                    )}
+                    <p class="">
+                      {aboutPageContact.address}
+                    </p>
                     <a
-                      href={mapLinkUrl}
+                      href={aboutPageContact.mapLinkUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       class="inline-block mt-3 text-cyan-600 hover:text-orange-600 transition-colors"
@@ -299,7 +312,7 @@ const mapEmbedTitle = aboutUs?.mapEmbedTitle?.trim() || 'Google Map - Guangzhou'
               <!-- 右侧：Google 地图（默认广州） -->
               <div class="w-full h-[400px] rounded-lg overflow-hidden bg-gray-200">
                 <iframe
-                  src={mapEmbedUrl}
+                  src={aboutPageContact.mapEmbedUrl}
                   width="100%"
                   height="100%"
                   style="border:0;"

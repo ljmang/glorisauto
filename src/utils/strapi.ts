@@ -49,7 +49,9 @@ const getBase = (): string => {
 
   const url = import.meta.env.PUBLIC_STRAPI_URL;
   if (!url || typeof url !== 'string') {
-    throw new Error('PUBLIC_STRAPI_URL is not set');
+    throw new Error(
+      'PUBLIC_STRAPI_URL is not set. Create .env from .env.example and set PUBLIC_STRAPI_URL to your Strapi origin.'
+    );
   }
   return url.replace(/\/$/, '');
 };

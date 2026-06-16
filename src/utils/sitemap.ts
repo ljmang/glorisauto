@@ -6,7 +6,6 @@ import type {
   InsightAttributes,
   InsightCategoryAttributes,
   ProductAttributes,
-  TopBrandAttributes,
 } from '@/types/content';
 import { fetchApi, api } from './strapiApi';
 import { toHref } from './navigationData';
@@ -36,7 +35,6 @@ type InsightRecord = InsightAttributes & {
   publishedAt?: string;
   insight_category?: { slug?: string } | null;
 };
-type TopBrandRecord = TopBrandAttributes & { updatedAt?: string; publishedAt?: string };
 type FileCategoryRecord = { slug?: string; updatedAt?: string; publishedAt?: string };
 
 const STATIC_PAGE_PATHS = [
@@ -51,13 +49,18 @@ const STATIC_PAGE_PATHS = [
   '/support/customer-service',
   '/support/download',
   '/support/training',
-  '/top-brands',
   '/privacy-policy',
   '/cookie-preferences',
 ] as const;
 
+function normalizeSitemapPath(path: string): string {
+  if (path === '/') return path;
+  return path.endsWith('/') ? path : `${path}/`;
+}
+
 function toAbsoluteUrl(siteUrl: string, path: string): string {
-  return new URL(path.startsWith('/') ? path : `/${path}`, `${siteUrl}/`).toString();
+  const normalizedPath = normalizeSitemapPath(path.startsWith('/') ? path : `/${path}`);
+  return new URL(normalizedPath, `${siteUrl}/`).toString();
 }
 
 function toIsoDate(value?: string | null): string | undefined {
@@ -79,7 +82,6 @@ async function collectLocaleEntries(locale: Locale, addEntry: AddEntry): Promise
     helpArticlesRes,
     insightCategoriesRes,
     insightsRes,
-    topBrandsRes,
     fileCategoriesRes,
   ] = await Promise.all([
     fetchApi<{ data?: CategoryRecord[] }>(api.categories, {
@@ -108,10 +110,6 @@ async function collectLocaleEntries(locale: Locale, addEntry: AddEntry): Promise
       locale,
       populate: { insight_category: true },
       pagination: { pageSize: 500 },
-    }),
-    fetchApi<{ data?: TopBrandRecord[] }>(api.topBrands, {
-      locale,
-      pagination: { pageSize: 200 },
     }),
     fetchApi<{ data?: FileCategoryRecord[] }>(api.fileCategories, {
       locale,
@@ -159,11 +157,6 @@ async function collectLocaleEntries(locale: Locale, addEntry: AddEntry): Promise
       toHref(`/about/insights/${categorySlug}/${article.slug}`, locale),
       article.updatedAt ?? article.publishedAt
     );
-  }
-
-  for (const brand of topBrandsRes?.data ?? []) {
-    if (!brand?.slug) continue;
-    addEntry(toHref(`/top-brands/${brand.slug}`, locale), brand.updatedAt ?? brand.publishedAt);
   }
 
   for (const category of fileCategoriesRes?.data ?? []) {

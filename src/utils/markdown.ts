@@ -3,8 +3,37 @@
  * 供品牌故事、洞察文章等页面复用
  */
 
+import { sanitizeMediaAltText } from './strapiApi';
+
+function escapeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function sanitizeRenderedImageAlts(html: string, fallbackAlt?: string): string {
+  const fallback = sanitizeMediaAltText(fallbackAlt);
+
+  return html.replace(/<img\b[^>]*>/gi, (tag) => {
+    if (/\salt\s*=/i.test(tag)) {
+      return tag.replace(/\salt=(["'])(.*?)\1/i, (_match, quote: string, alt: string) => {
+        const cleanAlt = sanitizeMediaAltText(alt) || fallback;
+        return ` alt=${quote}${escapeHtmlAttribute(cleanAlt)}${quote}`;
+      });
+    }
+
+    if (!fallback) return tag;
+    return tag.replace(/<img\b/i, `<img alt="${escapeHtmlAttribute(fallback)}"`);
+  });
+}
+
 /** 将 markdown 转为 HTML，使用与 Astro 一致的 remark/rehype 管道 */
-export async function markdownToHtml(markdown: string | null | undefined): Promise<string> {
+export async function markdownToHtml(
+  markdown: string | null | undefined,
+  fallbackImageAlt?: string
+): Promise<string> {
   if (!markdown) return '';
   const { unified } = await import('unified');
   const { default: remarkParse } = await import('remark-parse');
@@ -21,7 +50,7 @@ export async function markdownToHtml(markdown: string | null | undefined): Promi
     .use(rehypeStringify)
     .process(markdown);
 
-  return String(result);
+  return sanitizeRenderedImageAlts(String(result), fallbackImageAlt);
 }
 
 export interface TOCItem {
@@ -52,9 +81,10 @@ export function extractTOCFromHtml(html: string): TOCItem[] {
 
 /** 渲染 markdown 并返回 HTML + 目录（供 insights [slug].astro 使用） */
 export async function renderMarkdownWithTOC(
-  markdown: string | null | undefined
+  markdown: string | null | undefined,
+  fallbackImageAlt?: string
 ): Promise<{ html: string; toc: TOCItem[] }> {
-  const html = await markdownToHtml(markdown);
+  const html = await markdownToHtml(markdown, fallbackImageAlt);
   const toc = extractTOCFromHtml(html);
   return { html, toc };
 }

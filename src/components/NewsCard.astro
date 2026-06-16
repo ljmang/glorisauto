@@ -41,10 +41,10 @@ const noContentLabel = noContentLabelByLocale[locale] || noContentLabelByLocale.
   href={href}
   class="group block overflow-hidden bg-white transition-all duration-300 h-full flex flex-col"
 >
-  <!-- 封面图区域 - 占约 2/3 高度 -->
+  <!-- 封面图区域 - 固定 16:9，避免后台不同尺寸图片裁切不一致 -->
   {coverImage && coverImage.src ? (
     coverImage.width && coverImage.height ? (
-      <div class="relative w-full flex-[2] min-h-[200px] overflow-hidden">
+      <div class="relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
         <Image
           src={coverImage.src}
           alt={coverImage.alt || news.title}
@@ -52,12 +52,12 @@ const noContentLabel = noContentLabelByLocale[locale] || noContentLabelByLocale.
           height={coverImage.height}
           class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           format="webp"
-          quality={85}
+          quality={100}
           loading="lazy"
         />
       </div>
     ) : (
-      <div class="relative w-full flex-[2] min-h-[200px] overflow-hidden bg-gray-200 flex items-center justify-center">
+      <div class="relative aspect-[16/9] w-full overflow-hidden bg-gray-200 flex items-center justify-center">
         <img
           src={coverImage.src}
           alt={coverImage.alt || news.title}
@@ -67,13 +67,13 @@ const noContentLabel = noContentLabelByLocale[locale] || noContentLabelByLocale.
       </div>
     )
   ) : (
-    <div class="relative w-full flex-[2] min-h-[200px] bg-gray-300 flex items-center justify-center">
+    <div class="relative aspect-[16/9] w-full bg-gray-300 flex items-center justify-center">
       <span class="text-gray-500 text-sm">{noCoverLabel}</span>
     </div>
   )}
   
-  <!-- 文字内容区域 - 深灰色背景，占约 1/3 高度 -->
-  <div class="px-6 lg:px-10 py-5 flex-[1] flex flex-col justify-center">
+  <!-- 文字内容区域 -->
+  <div class="px-6 lg:px-10 py-5 flex flex-1 flex-col justify-center">
     <h3 class="text-xl font-bold mb-2 group-hover:text-orange-500 transition-colors">
       {news.title}
     </h3>

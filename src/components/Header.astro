@@ -1,23 +1,33 @@
 ---
-import { type Messages } from "@/i18n";
+import { t, type Messages } from "@/i18n";
 import { type Locale } from "@/i18n/config";
-import type { NavItem } from "@/utils/navigationData";
+import { toHref, type NavItem } from "@/utils/navigationData";
+import { getFreeSampleHref } from "@/utils/freeSampleLink";
+import type { SiteSeoAttributes } from "@/types/content";
 import LanguageSwitcher from "@/components/LanguageSwitcher.astro";
 import Navigation from "@/components/Navigation.svelte";
 import MobileNavigation from "@/components/MobileNavigation.svelte";
 import SearchBox from "@/components/SearchBox.svelte";
 import { generateSearchIndex } from "@/utils/searchIndex";
-import { PhoneCall, Mail, Search } from "lucide-svelte";
+import { getSiteContactInfo } from "@/utils/siteContact";
+import { PhoneCall, Mail, Search, Gift } from "lucide-svelte";
 
 interface Props {
   messages: Messages;
   locale: Locale;
   navData?: NavItem[];
+  siteSeo?: SiteSeoAttributes | null;
 }
 
-const { messages, locale, navData = [] } = Astro.props;
+const { messages, locale, navData = [], siteSeo = null } = Astro.props;
 const currentPath = Astro.url.pathname;
 const searchIndex = await generateSearchIndex(locale);
+
+const siteContact = getSiteContactInfo(siteSeo);
+const homeHref = toHref('/', locale);
+const searchHref = toHref('/search', locale);
+const freeSampleHref = getFreeSampleHref(locale);
+const freeSampleLabel = t(messages, 'home.freeSampleCta');
 ---
 
 <header class="bg-white sticky top-0 z-40 shadow-sm">
@@ -29,16 +39,16 @@ const searchIndex = await generateSearchIndex(locale);
     <div class="flex items-center gap-2">
       <PhoneCall class="w-4 h-4" />
       <a
-        href="tel:+8618122288163"
-        class="hover:text-orange-500 transition-colors">+86 18122288163</a
+        href={siteContact.phoneHref}
+        class="hover:text-orange-500 transition-colors">{siteContact.phone}</a
       >
     </div>
     <!-- email -->
     <div class="flex items-center gap-2">
       <Mail class="w-4 h-4" />
       <a
-        href="mailto:Sales@glorisauto.com"
-        class="hover:text-orange-500 transition-colors">Sales@glorisauto.com</a
+        href={`mailto:${siteContact.email}`}
+        class="hover:text-orange-500 transition-colors">{siteContact.email}</a
       >
     </div>
     <!-- language switcher -->
@@ -50,7 +60,7 @@ const searchIndex = await generateSearchIndex(locale);
   <nav class="container mx-auto px-4 flex items-center justify-between gap-4 relative">
     <!-- 左侧：logo + 桌面导航 -->
     <div class="flex items-center gap-4 min-w-0">
-      <a href={`/${locale}`} class="shrink-0">
+      <a href={homeHref} class="shrink-0">
         <img
           src="https://assets.glorisauto.com/uploads/logo_89e1563b6e.webp"
           alt="GLORIS"
@@ -59,16 +69,16 @@ const searchIndex = await generateSearchIndex(locale);
       </a>
       <Navigation client:load locale={locale} currentPath={currentPath} navData={navData} />
     </div>
-    <!-- 右侧：手机端搜索图标 + 桌面搜索框 + 汉堡 -->
+    <!-- 右侧：窄屏搜索图标 + 桌面搜索框 + CTA + 汉堡 -->
     <div class="flex items-center gap-1 shrink-0 justify-end">
       <a
-        href={`/${locale}/search`}
-        class="md:hidden p-2 text-gray-700 hover:text-orange-500 transition-colors"
+        href={searchHref}
+        class="xl:hidden p-2 text-gray-700 hover:text-orange-500 transition-colors"
         aria-label="Search"
       >
         <Search class="w-6 h-6" />
       </a>
-      <div class="hidden md:block">
+      <div class="hidden xl:block">
         <SearchBox
           client:load
           searchIndex={searchIndex}
@@ -76,12 +86,21 @@ const searchIndex = await generateSearchIndex(locale);
           messages={messages}
         />
       </div>
+      <a
+        href={freeSampleHref}
+        class="hidden xl:inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 lg:px-5"
+      >
+        <Gift class="h-4 w-4 shrink-0" />
+        {freeSampleLabel}
+      </a>
       <MobileNavigation
         client:load
         currentPath={currentPath}
         locale={locale}
         messages={messages}
         navData={navData}
+        contactPhone={siteContact.phone}
+        contactEmail={siteContact.email}
       />
     </div>
   </nav>

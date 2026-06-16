@@ -48,7 +48,7 @@
   });
 </script>
 
-<nav data-nav-root class="hidden md:flex items-center gap-6 flex-1">
+<nav data-nav-root class="hidden xl:flex items-center gap-6 flex-1">
   <!-- 顶栏仅后端导航项，Home 通过点击 logo 进入 -->
   {#each navData as item, i}
     {#if item.columns && item.columns.length > 0}

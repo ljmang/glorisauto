@@ -1,0 +1,47 @@
+---
+import { ArrowRight, Gift } from 'lucide-svelte';
+import { type Locale, isRtlLocale } from '@/i18n/config';
+import { type Messages, t } from '@/i18n';
+import { getFreeSampleHref } from '@/utils/freeSampleLink';
+
+interface Props {
+  locale: Locale;
+  messages: Messages;
+}
+
+const { locale, messages } = Astro.props;
+const isRtl = isRtlLocale(locale);
+const ctaHref = getFreeSampleHref(locale);
+---
+
+<aside
+  class="my-12 overflow-hidden rounded-3xl border border-orange-100 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6 shadow-sm sm:p-8"
+  dir={isRtl ? 'rtl' : undefined}
+>
+  <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+    <div class="flex max-w-2xl gap-4">
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-white shadow-lg shadow-orange-200">
+        <Gift class="h-6 w-6" />
+      </div>
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.18em] text-orange-500">
+          {t(messages, 'home.freeSampleCta')}
+        </p>
+        <h2 class="mt-2 text-2xl font-black text-slate-950 sm:text-3xl">
+          {t(messages, 'articleSampleCta.title')}
+        </h2>
+        <p class="mt-3 text-base leading-relaxed text-slate-600">
+          {t(messages, 'articleSampleCta.description')}
+        </p>
+      </div>
+    </div>
+
+    <a
+      href={ctaHref}
+      class="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-orange-500 px-6 py-3 font-semibold text-white shadow-lg shadow-orange-200 transition-colors hover:bg-orange-600"
+    >
+      <span>{t(messages, 'home.freeSampleCta')}</span>
+      <ArrowRight class={`h-4 w-4 ${isRtl ? 'rotate-180' : ''}`} />
+    </a>
+  </div>
+</aside>

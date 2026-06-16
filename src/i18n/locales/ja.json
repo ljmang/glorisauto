@@ -8,13 +8,42 @@
     "customerService": "カスタマーサービス",
     "thankYou": "ありがとうございます",
     "about": "会社情報",
-    "topBrands": "主要ブランド"
+    "topBrands": "主要ブランド",
+    "solutions": "ソリューション"
+  },
+  "solutions": {
+    "atAGlance": "クイック概要",
+    "audienceTitle": "最適な対象",
+    "noSolutions": "現在公開中のソリューションはありません。",
+    "overviewTitle": "ソリューション概要",
+    "problemPointsTitle": "よくある業務課題",
+    "expectedResultsTitle": "期待できる結果",
+    "atAGlanceDescription": "{title} は、業務上の課題、工程ガイド、関連技術記事、製品提案をひとつのシナリオページにまとめ、単なる製品閲覧から実務判断へ進みやすくします。",
+    "audienceDescription": "単一製品だけを見るのではなく、購買判断、工程設計、納車品質を特定の運用シナリオに沿って整理したい場面で、このソリューションは特に有効です。",
+    "audienceCardImagePlaceholderTitle": "対象画像",
+    "audienceCardImagePlaceholderDescription": "この対象向け画像は後から Strapi で追加できます。",
+    "expectedResultsDescription": "このセクションでは、工程の考え方を、日常運用、購買評価、納車品質管理の中で判断しやすい実務成果に置き換えて整理しています。",
+    "pageSectionsTitle": "ページ内セクション",
+    "pageSectionsDescription": "プロセス適合性、期待成果、関連技術資料など、今確認したい項目へすぐ移動できます。",
+    "processTitle": "推奨プロセス",
+    "stepLabel": "ステップ",
+    "recommendedProductsTitle": "推奨製品",
+    "decisionFactorsTitle": "導入前にそろえるべき前提",
+    "recommendedProductsDescription": "これらの製品は、このシナリオで機能する組み合わせとしてまとめられており、カテゴリーページよりも実務に近い形で選定を進めやすくします。",
+    "decisionFactorsDescription": "本当に役立つソリューションページは、製品を並べるだけでなく、実装結果を左右する前提条件をチームでそろえる助けにもなるべきです。",
+    "includedContentTitle": "このソリューションに含まれる関連内容",
+    "includedContentDescription": "このページでは、このシナリオに関連する製品、実務ガイド、インサイトをまとめて確認できます。",
+    "relatedGuidesTitle": "関連ガイド",
+    "relatedGuidesDescription": "これらの技術ガイドを活用することで、このソリューションに結び付く材料選定、工程管理、現場でよくある疑問をさらに深く確認できます。",
+    "relatedInsightsTitle": "関連インサイト",
+    "relatedInsightsDescription": "これらの関連インサイトは、市場背景、事例の根拠、実務的な示唆を補い、上記のソリューションロジックをより立体的に理解するのに役立ちます。"
   },
   "products": {
     "allProducts": "すべての製品",
     "technicalDetails": "技術仕様",
     "features": "製品特長",
     "downloads": "ダウンロード",
+    "relatedInsights": "関連インサイト",
     "faq": "よくある質問",
     "becomeDealer": "販売代理店になる",
     "leaveMessage": "お問い合わせ",
@@ -89,10 +118,19 @@
     "phonePlaceholder": "電話番号を入力",
     "countryPlaceholder": "国/地域を選択",
     "messagePlaceholder": "お問い合わせ内容をご入力ください",
+    "inquiryType": "お問い合わせ種別",
+    "inquiryFreeSample": "無料サンプルを入手",
+    "inquiryBuyProducts": "製品を購入",
+    "inquiryBecomeDealer": "販売代理店になる",
+    "inquiryOther": "その他",
     "submitSuccess": "送信が完了しました。担当よりご連絡いたします。",
     "submitConfigError": "送信設定に問題があります。しばらくしてから再度お試しください。",
     "submitting": "送信中…",
     "submitFailed": "送信に失敗しました。しばらくしてから再度お試しください。"
+  },
+  "contactInfo": {
+    "address": "住所",
+    "mapLink": "Googleマップで見る"
   },
   "privacyPolicy": {
     "lastUpdated": "最終更新：2025年2月",
@@ -119,7 +157,12 @@
   },
   "home": {
     "heroTitle": "ようこそ",
-    "heroCta": "お問い合わせ"
+    "heroCta": "お問い合わせ",
+    "freeSampleCta": "無料サンプルを入手"
+  },
+  "articleSampleCta": {
+    "title": "テスト用サンプルが必要ですか？",
+    "description": "用途と対象市場をお知らせください。Gloris チームが適切な製品とサンプル案をご提案します。"
   },
   "error404": {
     "title": "ページが見つかりません",

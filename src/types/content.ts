@@ -15,6 +15,7 @@ export interface HomeAttributes {
   heroButton: string;
   heroButtonLink: string;
   heroMedia: StrapiMedia | StrapiMedia[] | null;
+  heroDefaultBackground?: StrapiMedia | null;
   aboutGlorisTitle?: string;
   aboutGlorisTitleH1: string;
   aboutGlorisTitleH2: string;
@@ -55,7 +56,14 @@ export interface SiteSeoAttributes {
   companyLogo?: StrapiMedia | null;
   contactEmail?: string;
   contactPhone?: string;
+  contactWhatsapp?: string;
+  contactWhatsappLabel?: string;
+  contactChatLabel?: string;
+  addressTitle?: string;
   address?: string;
+  googleMaps?: string | null;
+  mapLinkLabel?: string;
+  mapEmbedTitle?: string;
   sameAsLinks?: StrapiLinkItem[];
   defaultLocale?: string;
   supportedLocales?: string[] | null;
@@ -64,6 +72,7 @@ export interface SiteSeoAttributes {
   productsCollectionPage?: CollectionPageCopyFields | null;
   helpCenterCollectionPage?: CollectionPageCopyFields | null;
   insightsCollectionPage?: CollectionPageCopyFields | null;
+  solutionsCollectionPage?: CollectionPageCopyFields | null;
 }
 
 export type SiteSeoContent = StrapiContent<SiteSeoAttributes>;
@@ -96,6 +105,8 @@ export interface ProductAttributes {
   price?: number;
   sort?: number | null;
   specifications?: Record<string, unknown>;
+  help_centers?: HelpCenterAttributes[];
+  insights?: InsightAttributes[];
   seo?: StrapiSeo | null;
 }
 
@@ -146,6 +157,54 @@ export interface InsightAttributes {
 }
 
 export type InsightContent = StrapiContent<InsightAttributes>;
+
+export interface SolutionListOption {
+  name?: string;
+  image?: StrapiMedia | null;
+}
+
+export interface SolutionListInfo {
+  title?: string;
+  description?: string;
+}
+
+export interface SolutionListItem {
+  title?: string;
+  description?: BlockNode[];
+}
+
+export interface SolutionAttributes {
+  title: string;
+  slug: string;
+  summary?: string;
+  cover?: StrapiMedia | null;
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroButtonLabel?: string;
+  heroButtonUrl?: string;
+  audienceTitle?: string;
+  targetAudience?: SolutionListOption[];
+  problemPointsTitle?: string;
+  problemPoints?: SolutionListInfo[];
+  overviewTitle?: string;
+  overview?: BlockNode[];
+  expectedResultsTitle?: string;
+  expectedResults?: SolutionListInfo[];
+  processTitle?: string;
+  processSteps?: SolutionListItem[];
+  recommendedProductsTitle?: string;
+  recommendedProducts?: ProductAttributes[];
+  relatedHelpCentersTitle?: string;
+  relatedHelpCenters?: HelpCenterAttributes[];
+  relatedInsightsTitle?: string;
+  relatedInsights?: InsightAttributes[];
+  decisionFactorsTitle?: string;
+  decisionFactors?: SolutionListInfo[];
+  sort?: number | null;
+  seo?: StrapiSeo | null;
+}
+
+export type SolutionContent = StrapiContent<SolutionAttributes>;
 
 /**
  * Top Brand 顶级品牌类型（与 Strapi admin schema 一致）
@@ -217,10 +276,6 @@ export interface AboutUsAttributes {
   latestInsightsTitle?: string;
   latestInsightsLinkLabel?: string;
   latestInsightsLink?: string;
-  /** Google 地图链接 */
-  googleMaps?: string | null;
-  mapLinkLabel?: string;
-  mapEmbedTitle?: string;
   /** 联系我们区块 */
   contactGlorisTitle?: string;
   messageTitle?: string;
@@ -229,10 +284,6 @@ export interface AboutUsAttributes {
   messageButtonLink?: string;
   phoneTitle?: string;
   phoneDescription?: string;
-  phoneNumber?: string;
-  phoneEmail?: string;
-  addressTitle?: string;
-  addressDescription?: string;
   seo?: StrapiSeo | null;
 }
 
@@ -254,9 +305,30 @@ export interface BecomeDealerFocusItem {
   cover?: StrapiMedia | StrapiMedia[] | null;
 }
 
+export interface BecomeDealerSupportItem {
+  id?: number;
+  icon?: StrapiMedia | null;
+  title?: string;
+  description?: string;
+}
+
+export interface BecomeDealerProcessStep {
+  id?: number;
+  cover?: StrapiMedia | null;
+  title?: string;
+  description?: string;
+  stepLabel?: string;
+}
+
 export interface BecomeDealerAttributes {
   title?: string;
   heroMedia?: StrapiMedia | StrapiMedia[] | null;
+  introContent?: BlockNode[];
+  introMedia?: StrapiMedia | StrapiMedia[] | null;
+  supportTitle?: string;
+  supportItems?: BecomeDealerSupportItem[];
+  processTitle?: string;
+  processSteps?: BecomeDealerProcessStep[];
   joinUsTitle?: string;
   yourName?: string;
   yourEmail?: string;
@@ -264,15 +336,14 @@ export interface BecomeDealerAttributes {
   yourPhone?: string;
   message?: string;
   customerServiceTitle?: string;
-  customerServicePhone?: string;
-  customerServiceEmail?: string;
-  customerServiceWhatsapp?: string;
-  customerServiceChat?: string;
-  addressTitle?: string;
-  addressContent?: string;
-  addressGoogleMaps?: string;
-  addressGoogleMapsUrl?: string;
   advantagesTitle?: string;
+  productsTitle?: string;
+  productsLinkLabel?: string;
+  productsLink?: string;
+  products?: ProductAttributes[];
+  articlesTitle?: string;
+  articlesLinkLabel?: string;
+  articlesLink?: string;
   focus?: BecomeDealerFocusItem[];
   insights?: (InsightAttributes & { cover?: unknown })[];
   seo?: StrapiSeo | null;
@@ -325,6 +396,7 @@ export type SupportContent = StrapiContent<SupportAttributes>;
 export interface HelpCategoryAttributes {
   name: string;
   slug: string;
+  descrition?: string;
   description?: string;
   sort?: number;
   seo?: StrapiSeo | null;
@@ -337,13 +409,14 @@ export interface HelpCenterAttributes {
   title: string;
   slug: string;
   description?: string;
-  content?: BlockNode[];
+  contentMarkdown?: string | null;
   sort?: number;
   recommend?: boolean;
   publishedAt?: string;
   updatedAt?: string;
   help_category?: HelpCategoryAttributes | null;
   products?: ProductAttributes[];
+  related_products?: ProductAttributes[];
   seo?: StrapiSeo | null;
 }
 

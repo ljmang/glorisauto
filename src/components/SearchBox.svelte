@@ -3,6 +3,7 @@
   import type { FuseResult } from 'fuse.js';
   import { Search } from 'lucide-svelte';
   import type { SearchItem } from '@/utils/searchIndex';
+  import { toHref } from '@/utils/navigationData';
 
   let { searchIndex, locale, messages, onSelect }: {
     searchIndex: SearchItem[];
@@ -19,6 +20,7 @@
   let fuse: Fuse<SearchItem> | null = $state(null);
   let mounted = $state(false);
   const isRtl = $derived(locale === 'ar');
+  const searchResultsHref = $derived(toHref(`/search?q=${encodeURIComponent(query)}`, locale));
 
   // 初始化 Fuse.js（仅在客户端）
   function initFuse() {
@@ -155,7 +157,7 @@
         {/each}
         <div class="px-4 py-2 border-t border-gray-200">
           <a
-            href={`/${locale}/search?q=${encodeURIComponent(query)}`}
+            href={searchResultsHref}
             class="text-sm text-blue-600 hover:text-blue-700 no-underline"
           >
             {t('search.allResults')}

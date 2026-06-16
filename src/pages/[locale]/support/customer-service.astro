@@ -8,6 +8,8 @@ import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api, getStrapiUrl, parseHeroMedia } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
+import { fetchSiteSeo } from '@/utils/siteConfig';
+import { getSiteContactInfo } from '@/utils/siteContact';
 import type { BecomeDealerAttributes } from '@/types/content';
 import type { StrapiResponse } from '@/types';
 import { Image } from 'astro:assets';
@@ -27,13 +29,21 @@ const params = Astro.params as { locale?: string };
 const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
 
-const dealerRes = await fetchApiWithLocaleFallback<StrapiResponse<BecomeDealerAttributes>>(api.becomeDealer, {
-  locale,
-  populate: { heroMedia: true },
-});
+const [dealerRes, siteSeo] = await Promise.all([
+  fetchApiWithLocaleFallback<StrapiResponse<BecomeDealerAttributes>>(api.becomeDealer, {
+    locale,
+    populate: { heroMedia: true },
+  }),
+  fetchSiteSeo(locale),
+]);
 
 const contact = dealerRes?.data ?? null;
 const heroMedia = contact ? parseHeroMedia(contact.heroMedia) : null;
+const siteContact = getSiteContactInfo(siteSeo);
+const contactWhatsappLabel = siteContact.whatsappLabel || t(messages, 'dealer.whatsapp');
+const contactChatLabel = siteContact.chatLabel || t(messages, 'dealer.chatNow');
+const contactAddressTitle = siteContact.addressTitle || t(messages, 'contactInfo.address');
+const contactMapLinkLabel = siteContact.mapLinkLabel || t(messages, 'contactInfo.mapLink');
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -48,7 +58,15 @@ const formTexts = {
   submitting: t(messages, 'form.submitting'),
   submitFailed: t(messages, 'form.submitFailed'),
   submit: t(messages, 'common.submit'),
+  inquiryType: t(messages, 'form.inquiryType'),
 };
+
+const inquiryOptions = [
+  { value: 'free-sample', label: t(messages, 'form.inquiryFreeSample') },
+  { value: 'buy-products', label: t(messages, 'form.inquiryBuyProducts') },
+  { value: 'become-dealer', label: t(messages, 'form.inquiryBecomeDealer') },
+  { value: 'other', label: t(messages, 'form.inquiryOther') },
+];
 
 const formApiBase = (() => {
   try {
@@ -59,7 +77,7 @@ const formApiBase = (() => {
 })();
 ---
 
-<BaseLayout title={t(messages, 'pageTitle.contact')} messages={messages} locale={locale}>
+<BaseLayout title={t(messages, 'pageTitle.contact')} messages={messages} locale={locale} siteSeo={siteSeo}>
   <div class="container mx-auto px-4 pb-12">
     <div class="pt-4 pb-2">
       <Breadcrumb items={breadcrumbItems} locale={locale} />
@@ -75,7 +93,7 @@ const formApiBase = (() => {
           height={600}
           class="w-full h-full object-cover absolute inset-0"
           format="webp"
-          quality={85}
+          quality={100}
           loading="eager"
         />
         <div class="absolute inset-0 bg-black/30" />
@@ -93,14 +111,29 @@ const formApiBase = (() => {
         <!-- <h2 class="text-2xl font-bold mb-6">{t(messages, 'pageTitle.contact')}</h2> -->
         <form
           id="contact-form"
-          class="space-y-4"
+          class="scroll-mt-28 space-y-4 lg:scroll-mt-32"
           data-thank-you={toHref('/thank-you', locale)}
           data-type={MESSAGE_TYPE_CONTACT}
           data-api-base={formApiBase}
         >
           <div>
+            <label for="contact-inquiry-type" class="block text-sm font-medium text-gray-700 mb-1">
+              {t(messages, 'form.inquiryType')} <span class="text-orange-500">*</span>
+            </label>
+            <select
+              id="contact-inquiry-type"
+              name="inquiryType"
+              required
+              class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            >
+              {inquiryOptions.map((option) => (
+                <option value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label for="contact-name" class="block text-sm font-medium text-gray-700 mb-1">
-              {contact?.yourName ?? t(messages, 'form.name')} *
+              {contact?.yourName ?? t(messages, 'form.name')} <span class="text-orange-500">*</span>
             </label>
             <input
               type="text"
@@ -113,7 +146,7 @@ const formApiBase = (() => {
           </div>
           <div>
             <label for="contact-email" class="block text-sm font-medium text-gray-700 mb-1">
-              {contact?.yourEmail ?? t(messages, 'form.email')} *
+              {contact?.yourEmail ?? t(messages, 'form.email')} <span class="text-orange-500">*</span>
             </label>
             <input
               type="email"
@@ -138,7 +171,7 @@ const formApiBase = (() => {
           </div>
           <div>
             <label for="contact-message" class="block text-sm font-medium text-gray-700 mb-1">
-              {contact?.message ?? t(messages, 'form.message')} *
+              {contact?.message ?? t(messages, 'form.message')} <span class="text-orange-500">*</span>
             </label>
             <textarea
               id="contact-message"
@@ -162,26 +195,26 @@ const formApiBase = (() => {
         <h3 class="text-xl font-bold mb-4">
           {t(messages, 'pageTitle.contact')}
         </h3>
-        {contact?.customerServicePhone && (
+        {siteContact.phone && (
           <p class="flex items-center gap-2 text-gray-700 mb-2">
             <Phone class="w-5 h-5 text-orange-500 shrink-0" />
-            <a href={`tel:${contact.customerServicePhone.replace(/\s/g, '')}`} class="hover:text-orange-600">
-              {contact.customerServicePhone}
+            <a href={siteContact.phoneHref} class="hover:text-orange-600">
+              {siteContact.phone}
             </a>
           </p>
         )}
-        {contact?.customerServiceEmail && (
+        {siteContact.email && (
           <p class="flex items-center gap-2 text-gray-700 mb-4">
             <Mail class="w-5 h-5 text-orange-500 shrink-0" />
-            <a href={`mailto:${contact.customerServiceEmail}`} class="hover:text-orange-600 break-all">
-              {contact.customerServiceEmail}
+            <a href={`mailto:${siteContact.email}`} class="hover:text-orange-600 break-all">
+              {siteContact.email}
             </a>
           </p>
         )}
         <div class="flex flex-wrap gap-3 mb-4">
-          {contact?.customerServicePhone && (
+          {siteContact.whatsappHref && (
             <a
-              href={`https://wa.me/${contact.customerServicePhone.replace(/\D/g, '')}`}
+              href={siteContact.whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-green-500 text-green-600 hover:bg-green-50 transition-colors"
@@ -189,33 +222,33 @@ const formApiBase = (() => {
               <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
               </svg>
-              <span>{contact.customerServiceWhatsapp ?? t(messages, 'dealer.whatsapp')}</span>
+              <span>{contactWhatsappLabel}</span>
             </a>
           )}
           <a
             href="#"
             class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-orange-500 text-orange-600 hover:bg-orange-50 transition-colors"
-            aria-label={t(messages, 'dealer.chatNow')}
+            aria-label={contactChatLabel}
           >
             <MessageCircle class="w-5 h-5 shrink-0" />
-            <span>{contact?.customerServiceChat ?? t(messages, 'dealer.chatNow')}</span>
+            <span>{contactChatLabel}</span>
           </a>
         </div>
-        {contact?.addressTitle && (
+        {siteContact.address && (
           <>
-            <p class="mb-1">{contact.addressTitle}</p>
+            <p class="mb-1">{contactAddressTitle}</p>
             <p class="flex items-start gap-2  mb-2">
               <MapPin class="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-              <span>{contact.addressContent}</span>
+              <span>{siteContact.address}</span>
             </p>
-            {contact.addressGoogleMaps && (
+            {siteContact.mapLinkUrl && (
               <a
-                href={contact.addressGoogleMapsUrl || 'https://www.google.com/maps'}
+                href={siteContact.mapLinkUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="text-orange-600 hover:underline text-sm"
               >
-                {contact.addressGoogleMaps}
+                {contactMapLinkLabel}
               </a>
             )}
           </>
@@ -233,6 +266,19 @@ const formApiBase = (() => {
     const thankYouUrl = form.getAttribute('data-thank-you') || `/${locale}/thank-you`;
     const messageType = form.getAttribute('data-type') || '联系我们';
     const base = form.getAttribute('data-api-base') || '';
+    const inquiryTypeEl = form.querySelector('[name="inquiryType"]');
+    const requestedType = new URLSearchParams(window.location.search).get('type');
+    if (requestedType && inquiryTypeEl) {
+      const hasOption = Array.from(inquiryTypeEl.options).some((option) => option.value === requestedType);
+      if (hasOption) inquiryTypeEl.value = requestedType;
+    }
+
+    if (window.location.hash === '#contact-form' || requestedType === 'free-sample') {
+      window.requestAnimationFrame(() => {
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        inquiryTypeEl?.focus?.({ preventScroll: true });
+      });
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -240,13 +286,18 @@ const formApiBase = (() => {
       const nameEl = form.querySelector('[name="name"]');
       const emailEl = form.querySelector('[name="email"]');
       const phoneEl = form.querySelector('[name="phone"]');
+      const inquiryTypeEl = form.querySelector('[name="inquiryType"]');
       const messageEl = form.querySelector('[name="message"]');
       const name = nameEl?.value?.trim();
       const email = emailEl?.value?.trim();
       const phone = phoneEl?.value?.trim() || '';
+      const inquiryTypeLabel =
+        inquiryTypeEl?.selectedOptions?.[0]?.textContent?.trim() ||
+        inquiryTypeEl?.value?.trim() ||
+        '';
       const message = messageEl?.value?.trim();
 
-      if (!name || !email || !message) return;
+      if (!name || !email || !inquiryTypeLabel || !message) return;
       if (!base) {
         alert(formTexts.configError);
         return;
@@ -268,7 +319,7 @@ const formApiBase = (() => {
               name,
               email,
               phone,
-              message,
+              message: `${formTexts.inquiryType}: ${inquiryTypeLabel}\n\n${message}`,
             },
           }),
         });

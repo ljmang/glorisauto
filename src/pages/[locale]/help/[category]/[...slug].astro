@@ -3,18 +3,162 @@
  * 帮助中心文章详情页：文章内容 + 相关产品和文章
  */
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { type Locale, getLocale, isRtlLocale } from '@/i18n/config';
+import { type Locale, getLocale, localeDateTag } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
-import { fetchApi, api, parseImage } from '@/utils/strapiApi';
+import { fetchApi, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { getHelpArticleStaticPaths } from '@/utils/helpStaticPaths';
+import { markdownToHtml } from '@/utils/markdown';
+import { buildHelpSearchItems } from '@/utils/helpSearch';
 import Breadcrumb from '@/components/Breadcrumb.astro';
-import BlocksRenderer from '@/components/BlocksRenderer.astro';
 import ProductCard from '@/components/ProductCard.astro';
 import InsightCard from '@/components/InsightCard.astro';
-import { Image } from 'astro:assets';
+import ArticleSampleCta from '@/components/ArticleSampleCta.astro';
+import HelpSearch from '@/components/HelpSearch.svelte';
 import type { HelpCategoryAttributes, HelpCenterAttributes, ProductAttributes, InsightAttributes } from '@/types/content';
-import type { BlockNode, ImageNode } from '@/types/blocks';
+
+type RelatedProductLink = {
+  label: string;
+  href: string;
+  categorySlug: string;
+  productSlug: string;
+};
+
+type RelatedArticleLink = {
+  label: string;
+  href: string;
+  categorySlug: string;
+  articleSlug: string;
+};
+
+function parseProductHref(href: string): Omit<RelatedProductLink, 'label' | 'href'> | null {
+  const path = href.replace(/^https?:\/\/[^/]+/i, '').split('?')[0]?.split('#')[0] ?? '';
+  const segments = path.split('/').filter(Boolean);
+  const productsIndex = segments.findIndex((segment) => segment === 'products');
+  if (productsIndex === -1) return null;
+
+  const categorySlug = segments[productsIndex + 1] ?? '';
+  const productSlug = segments[productsIndex + 2] ?? '';
+  if (!categorySlug || !productSlug) return null;
+
+  return { categorySlug, productSlug };
+}
+
+function parseInsightHref(href: string): Omit<RelatedArticleLink, 'label' | 'href'> | null {
+  const path = href.replace(/^https?:\/\/[^/]+/i, '').split('?')[0]?.split('#')[0] ?? '';
+  const segments = path.split('/').filter(Boolean);
+  const insightsIndex = segments.findIndex((segment, index) => segment === 'insights' && segments[index - 1] === 'about');
+  if (insightsIndex === -1) return null;
+
+  const categorySlug = segments[insightsIndex + 1] ?? '';
+  const articleSlug = segments[insightsIndex + 2] ?? '';
+  if (!categorySlug || !articleSlug) return null;
+
+  return { categorySlug, articleSlug };
+}
+
+function extractRelatedProductLinks(markdown: string): RelatedProductLink[] {
+  const links: RelatedProductLink[] = [];
+  const linkPattern = /\[([^\]]+)\]\(([^)]*\/products\/[^)]*)\)/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = linkPattern.exec(markdown)) !== null) {
+    const label = match[1]?.trim() ?? '';
+    const href = match[2]?.trim() ?? '';
+    const parsed = parseProductHref(href);
+    if (!label || !href || !parsed) continue;
+    links.push({ label, href, ...parsed });
+  }
+
+  return links;
+}
+
+function extractRelatedArticleLinks(markdown: string): RelatedArticleLink[] {
+  const links: RelatedArticleLink[] = [];
+  const linkPattern = /\[([^\]]+)\]\(([^)]*\/about\/insights\/[^)]*)\)/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = linkPattern.exec(markdown)) !== null) {
+    const label = match[1]?.trim() ?? '';
+    const href = match[2]?.trim() ?? '';
+    const parsed = parseInsightHref(href);
+    if (!label || !href || !parsed) continue;
+    links.push({ label, href, ...parsed });
+  }
+
+  return links;
+}
+
+function isRelatedResourceLinkListLine(line: string): boolean {
+  return /^\s*[-*+]\s+\[[^\]]+\]\([^)]*\/(?:products|about\/insights)\/[^)]*\)\s*$/.test(line);
+}
+
+function looksLikeRelatedResourceHeading(line: string): boolean {
+  const normalized = line.replace(/^#{1,6}\s*/, '').trim();
+  if (!normalized || normalized.length > 120) return false;
+  return /related|recommended|further\s+reading|read\s+more|learn\s+more|product|products|article|articles|insight|insights|产品|商品|製品|関連|文章|相关文章|延伸阅读|延伸閱讀|推荐阅读|関連記事|続きを読む|منتج|منتجات|مقال|مقالات|قراءة|المزيد/i.test(normalized);
+}
+
+function stripRelatedResourceLinkLists(markdown: string): string {
+  const lines = markdown.split(/\r?\n/);
+  const output: string[] = [];
+
+  for (let i = 0; i < lines.length; i += 1) {
+    if (!isRelatedResourceLinkListLine(lines[i] ?? '')) {
+      output.push(lines[i] ?? '');
+      continue;
+    }
+
+    while (output.length > 0 && output[output.length - 1]?.trim() === '') {
+      output.pop();
+    }
+
+    if (output.length > 0 && looksLikeRelatedResourceHeading(output[output.length - 1] ?? '')) {
+      output.pop();
+    }
+
+    while (i < lines.length && ((lines[i]?.trim() ?? '') === '' || isRelatedResourceLinkListLine(lines[i] ?? ''))) {
+      i += 1;
+    }
+    i -= 1;
+
+    while (i + 1 < lines.length && (lines[i + 1]?.trim() ?? '') === '') {
+      i += 1;
+    }
+
+    if (output.length > 0 && output[output.length - 1]?.trim() !== '' && i + 1 < lines.length) {
+      output.push('');
+    }
+  }
+
+  return output.join('\n').trim();
+}
+
+function getProductKey(product: ProductAttributes): string {
+  const record = product as ProductAttributes & { id?: string | number; documentId?: string };
+  const categorySlug =
+    product.category && typeof product.category === 'object' && 'slug' in product.category
+      ? ((product.category as { slug?: string }).slug ?? '')
+      : '';
+
+  if (product.slug) return `slug:${product.slug}`;
+  if (record.documentId) return `document:${record.documentId}`;
+  if (record.id != null) return `id:${record.id}`;
+  return `name:${product.name}-${categorySlug}`;
+}
+
+function getArticleKey(insight: InsightAttributes): string {
+  const record = insight as InsightAttributes & { id?: string | number; documentId?: string };
+  const categorySlug =
+    insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
+      ? ((insight.insight_category as { slug?: string }).slug ?? '')
+      : '';
+
+  if (insight.slug) return `slug:${insight.slug}`;
+  if (record.documentId) return `document:${record.documentId}`;
+  if (record.id != null) return `id:${record.id}`;
+  return `title:${insight.title}-${categorySlug}`;
+}
 
 export async function getStaticPaths() {
   return getHelpArticleStaticPaths();
@@ -22,7 +166,6 @@ export async function getStaticPaths() {
 
 const params = Astro.params as { locale?: string; category?: string; slug?: string };
 const locale: Locale = getLocale(params.locale);
-const isRtl = isRtlLocale(locale);
 const categorySlug = params.category ?? '';
 const articleSlug = params.slug ?? '';
 const messages = await loadMessages(locale);
@@ -40,6 +183,7 @@ const allArticlesRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.hel
   pagination: { pageSize: 500 },
 });
 const allArticles = allArticlesRes?.data ?? [];
+const helpSearchItems = buildHelpSearchItems(allArticles, locale);
 const activeCategorySlugs = new Set(
   allArticles.map((entry) => entry.help_category?.slug).filter((slug): slug is string => Boolean(slug))
 );
@@ -48,7 +192,7 @@ const activeCategories = categories.filter((category) => {
   return slug !== '' && activeCategorySlugs.has(slug);
 });
 
-// 2. 获取当前文章（populate help_category, products, articles）
+// 2. 获取当前文章（populate help_category, related_products, articles）
 const articleRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
   locale,
   populate: {
@@ -60,8 +204,8 @@ const articleRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCen
         twitterImage: true,
       },
     },
-    products: { populate: { cover: true, images: true, category: true } },
-    articles: { populate: { cover: true } },
+    related_products: { populate: { cover: true, images: true, category: true } },
+    articles: { populate: { cover: true, insight_category: true } },
   },
   filters: {
     slug: { $eq: articleSlug },
@@ -85,26 +229,83 @@ if (categorySlug !== canonicalCategorySlug) {
 
 const categoryName = article.help_category?.name ?? canonicalCategorySlug;
 
-// 3. 从 content blocks 中提取第一张图片作为配图
-function extractFirstImage(blocks: BlockNode[] | null | undefined): ImageNode | null {
-  if (!blocks || !Array.isArray(blocks)) return null;
-  for (const block of blocks) {
-    if (block.type === 'image' && 'image' in block) {
-      return block as ImageNode;
-    }
-    if (block.children && Array.isArray(block.children)) {
-      const found = extractFirstImage(block.children);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-const coverImageNode = extractFirstImage(article.content);
-const coverImage = coverImageNode?.image ? parseImage(coverImageNode.image) : null;
+const articleMarkdown = article.contentMarkdown?.trim() ?? '';
+const markdownProductLinks = extractRelatedProductLinks(articleMarkdown);
+const markdownArticleLinks = extractRelatedArticleLinks(articleMarkdown);
+const articleBodyMarkdown = stripRelatedResourceLinkLists(articleMarkdown);
+const articleMarkdownHtml = articleBodyMarkdown ? await markdownToHtml(articleBodyMarkdown, article.title) : '';
 
-// 4. 相关产品和文章
-const relatedProducts = (article as { products?: ProductAttributes[] })?.products ?? [];
-const relatedArticles = (article as { articles?: InsightAttributes[] })?.articles ?? [];
+// 3. 相关产品和文章
+const articleProducts = (article as { related_products?: ProductAttributes[] })?.related_products ?? [];
+const markdownProductSlugs = Array.from(new Set(markdownProductLinks.map((link) => link.productSlug))).filter(Boolean);
+const linkedProductsRes = markdownProductSlugs.length > 0
+  ? await fetchApi<{ data?: ProductAttributes[] }>(api.products, {
+      locale,
+      populate: { cover: true, images: true, category: true },
+      filters: { slug: { $in: markdownProductSlugs } },
+      pagination: { pageSize: Math.max(markdownProductSlugs.length, 1) },
+    })
+  : null;
+const linkedProducts = linkedProductsRes?.data ?? [];
+const productsBySlug = new Map(linkedProducts.map((product) => [product.slug, product]));
+const seenProductKeys = new Set<string>();
+const relatedProducts: ProductAttributes[] = [];
+
+for (const link of markdownProductLinks) {
+  const product =
+    productsBySlug.get(link.productSlug) ??
+    ({
+      name: link.label,
+      slug: link.productSlug,
+      category: { slug: link.categorySlug },
+    } as ProductAttributes);
+  const key = getProductKey(product);
+  if (seenProductKeys.has(key)) continue;
+  seenProductKeys.add(key);
+  relatedProducts.push(product);
+}
+
+for (const product of articleProducts) {
+  const key = getProductKey(product);
+  if (seenProductKeys.has(key)) continue;
+  seenProductKeys.add(key);
+  relatedProducts.push(product);
+}
+const articleRelations = (article as { articles?: InsightAttributes[] })?.articles ?? [];
+const markdownArticleSlugs = Array.from(new Set(markdownArticleLinks.map((link) => link.articleSlug))).filter(Boolean);
+const linkedArticlesRes = markdownArticleSlugs.length > 0
+  ? await fetchApi<{ data?: InsightAttributes[] }>(api.insights, {
+      locale,
+      populate: { cover: true, insight_category: true },
+      filters: { slug: { $in: markdownArticleSlugs } },
+      pagination: { pageSize: Math.max(markdownArticleSlugs.length, 1) },
+    })
+  : null;
+const linkedArticles = linkedArticlesRes?.data ?? [];
+const articlesBySlug = new Map(linkedArticles.map((insight) => [insight.slug, insight]));
+const seenArticleKeys = new Set<string>();
+const relatedArticles: InsightAttributes[] = [];
+
+for (const link of markdownArticleLinks) {
+  const insight =
+    articlesBySlug.get(link.articleSlug) ??
+    ({
+      title: link.label,
+      slug: link.articleSlug,
+      insight_category: { name: link.categorySlug, slug: link.categorySlug },
+    } as InsightAttributes);
+  const key = getArticleKey(insight);
+  if (seenArticleKeys.has(key)) continue;
+  seenArticleKeys.add(key);
+  relatedArticles.push(insight);
+}
+
+for (const insight of articleRelations) {
+  const key = getArticleKey(insight);
+  if (seenArticleKeys.has(key)) continue;
+  seenArticleKeys.add(key);
+  relatedArticles.push(insight);
+}
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -113,12 +314,18 @@ const breadcrumbItems = [
   { label: article.title },
 ];
 const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')}`;
+const publishedDate = article.publishedAt
+  ? new Date(article.publishedAt).toLocaleDateString(localeDateTag[locale], {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  : '';
 ---
 
 <BaseLayout
   title={pageTitle}
   description={article.description}
-  image={coverImageNode?.image ?? null}
   seo={article.seo}
   pageType="article"
   breadcrumbs={breadcrumbItems}
@@ -136,21 +343,7 @@ const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')
 
       <!-- 搜索框 -->
       <div class="mb-6">
-        <div class="relative max-w-2xl">
-          <input
-            type="text"
-            placeholder={t(messages, 'search.placeholder') || 'Search...'}
-            class={`w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${isRtl ? 'pr-12 text-right' : 'pl-12'}`}
-          />
-          <svg
-            class={`absolute top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 ${isRtl ? 'right-4' : 'left-4'}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
+        <HelpSearch client:load items={helpSearchItems} locale={locale} messages={messages} />
       </div>
 
       <!-- 分类标签 -->
@@ -180,39 +373,43 @@ const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')
     </div>
 
     <!-- 文章内容 -->
-    <article class="max-w-4xl">
-      <!-- 文章标题 -->
-      <h2 class="text-4xl lg:text-5xl font-black mb-6">{article.title}</h2>
-
-      <!-- 文章配图 -->
-      {coverImage && coverImage.src && coverImage.width && coverImage.height && (
-        <div class="mb-8 w-full aspect-video overflow-hidden rounded-lg">
-          <Image
-            src={coverImage.src}
-            alt={coverImage.alt || article.title}
-            width={coverImage.width}
-            height={coverImage.height}
-            class="w-full h-full object-cover"
-            format="webp"
-            quality={85}
-            loading="eager"
-          />
+    <article class="max-w-[820px]">
+      <header class="mb-10 border-b border-slate-200 pb-8">
+        <div class="mb-4 flex flex-wrap items-center gap-3">
+          <span class="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-orange-600">
+            {categoryName}
+          </span>
+          {publishedDate && (
+            <span class="text-sm font-medium text-slate-500">{publishedDate}</span>
+          )}
         </div>
-      )}
+        <h2 class="mb-4 text-4xl font-black leading-tight text-slate-950 lg:text-5xl">{article.title}</h2>
+        {article.description && (
+          <p class="max-w-[760px] text-xl leading-8 text-slate-600">
+            {article.description}
+          </p>
+        )}
+      </header>
 
       <!-- 文章正文 -->
-      {article.content && Array.isArray(article.content) && article.content.length > 0 && (
-        <div class="prose prose-lg max-w-none mb-12">
-          <BlocksRenderer blocks={article.content as BlockNode[]} />
-        </div>
+      {articleMarkdownHtml && (
+        <div
+          class="article-content prose prose-lg mb-16 max-w-none"
+          set:html={articleMarkdownHtml}
+        />
       )}
+
+      <ArticleSampleCta locale={locale} messages={messages} />
     </article>
 
     <!-- 相关产品 -->
     {relatedProducts.length > 0 && (
-      <section class="mt-16 mb-12">
-        <h2 class="text-3xl font-bold mb-6">{t(messages, 'helpCenter.relatedProducts')}</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section class="mt-20 border-t border-slate-200 pt-12">
+        <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
+          Product references
+        </p>
+        <h2 class="mb-6 text-3xl font-extrabold text-slate-950">{t(messages, 'helpCenter.relatedProducts')}</h2>
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {relatedProducts.map((product) => (
             <ProductCard product={product} locale={locale} />
           ))}
@@ -222,9 +419,12 @@ const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')
 
     <!-- 相关文章 -->
     {relatedArticles.length > 0 && (
-      <section class="mt-12 mb-12">
-        <h2 class="text-3xl font-bold mb-6">{t(messages, 'helpCenter.relatedArticles')}</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section class="mt-20 border-t border-slate-200 pt-12">
+        <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
+          Continue reading
+        </p>
+        <h2 class="mb-6 text-3xl font-extrabold text-slate-950">{t(messages, 'helpCenter.relatedArticles')}</h2>
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {relatedArticles.map((insight) => {
             // 相关文章的链接：如果是 help-center 关联的，应该链接到 help center 文章
             // 否则链接到 insights 详情页（包含分类 slug）

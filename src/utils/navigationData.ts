@@ -1,3 +1,5 @@
+import { isSolutionsEnabled } from './featureFlags';
+
 /**
  * Strapi navigation 数据转导航组件结构
  *
@@ -47,6 +49,7 @@ const ROOT_SEGMENT_ALIAS_MAP = new Map<string, string>([
   ['brand-story', 'brand-story'],
   ['dealer', 'dealer'],
   ['top-brands', 'top-brands'],
+  ['solutions', 'solutions'],
   // arabic aliases that may come from translated nav links
   ['منتجات', 'products'],
   ['يدعم', 'support'],
@@ -64,6 +67,7 @@ const ROOT_SEGMENT_ALIAS_MAP = new Map<string, string>([
   ['وكيل', 'dealer'],
   ['الوكلاء', 'dealer'],
   ['أهم-العلامات-التجارية', 'top-brands'],
+  ['الحلول', 'solutions'],
 ]);
 
 function normalizeRootSegment(segment: string): string {
@@ -82,6 +86,38 @@ function canonicalizeKnownRoutePath(path: string): string {
   }
   const joined = segments.join('/');
   return hasLeadingSlash ? `/${joined}` : joined;
+}
+
+function splitPathSuffix(url: string): { path: string; suffix: string } {
+  const queryIndex = url.indexOf('?');
+  const hashIndex = url.indexOf('#');
+  const suffixIndex =
+    queryIndex === -1
+      ? hashIndex
+      : hashIndex === -1
+        ? queryIndex
+        : Math.min(queryIndex, hashIndex);
+
+  if (suffixIndex === -1) {
+    return { path: url, suffix: '' };
+  }
+
+  return {
+    path: url.slice(0, suffixIndex),
+    suffix: url.slice(suffixIndex),
+  };
+}
+
+function withCanonicalTrailingSlash(path: string): string {
+  if (!path || path === '/') return '/';
+
+  const normalized = path.replace(/\/+$/, '');
+  if (!normalized || normalized === '/') return '/';
+
+  const lastSegment = normalized.split('/').pop() ?? '';
+  if (lastSegment.includes('.')) return normalized;
+
+  return `${normalized}/`;
 }
 
 function byOrder(a: ComponentNavNode, b: ComponentNavNode): number {
@@ -103,14 +139,15 @@ function normalizeInternalPath(url: string | undefined): string {
     return '';
   }
 
-  let path = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
+  const { path: rawPath } = splitPathSuffix(cleaned);
+  let path = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
   path = path.replace(/^\/(en|zh-cn|zh|cn|ja|ar)(?=\/|$)/i, '');
   path = canonicalizeKnownRoutePath(path);
   path = path.replace(/\/+$/, '');
   return path || '/';
 }
 
-/** 将后端返回的路径（如 /products）转为带 locale 的前缀路径（如 /en/products），外链不处理 */
+/** 将后端返回的路径（如 /products）转为带 locale 的规范路径（如 /en/products/），外链不处理 */
 export function toHref(url: string | undefined, locale: string): string {
   if (!url) return '#';
 
@@ -119,14 +156,16 @@ export function toHref(url: string | undefined, locale: string): string {
     return cleaned;
   }
 
-  let path = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
+  const { path: rawPath, suffix } = splitPathSuffix(cleaned);
+  let path = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
 
   path = path.replace(/^\/(en|zh-cn|zh|cn|ja|ar)(?=\/|$)/i, '');
   path = canonicalizeKnownRoutePath(path);
+  path = withCanonicalTrailingSlash(path);
   if (path === '') path = '/';
 
-  if (path === '/' || path === '') return `/${locale}`;
-  return `/${locale}${path}`;
+  if (path === '/' || path === '') return `/${locale}/${suffix}`;
+  return `/${locale}${path}${suffix}`;
 }
 
 function resolveNodeHref(node: ComponentNavNode, locale: string, fallback: string = '#'): string {
@@ -142,6 +181,9 @@ function isVisibleNavNode(node: ComponentNavNode, locale: string): boolean {
   }
 
   const normalizedPath = normalizeInternalPath(resolveNodeHref(node, locale, ''));
+  if (!isSolutionsEnabled() && normalizedPath === '/solutions') {
+    return false;
+  }
   return !TEMPORARILY_HIDDEN_PATHS.has(normalizedPath);
 }
 

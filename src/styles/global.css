@@ -1,6 +1,81 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+.article-content {
+  @apply text-[18px] leading-[1.8] text-slate-700;
+}
+
+.article-content :where(img) {
+  display: block;
+  width: auto;
+  max-width: min(100%, 56rem);
+  height: auto;
+  border-radius: 0.75rem;
+}
+
+.article-content :where(figure) {
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.article-content :where(h2) {
+  @apply mt-14 mb-5 text-3xl font-extrabold leading-tight text-slate-950 lg:text-4xl;
+}
+
+.article-content :where(h3) {
+  @apply mt-10 mb-4 text-2xl font-bold leading-snug text-slate-900;
+}
+
+.article-content :where(p) {
+  @apply mb-6;
+}
+
+.article-content :where(ul),
+.article-content :where(ol) {
+  @apply my-6 pl-6;
+}
+
+.article-content :where(li) {
+  @apply mb-3 leading-[1.8];
+}
+
+.article-content :where(ul li::marker),
+.article-content :where(ol li::marker) {
+  color: rgb(156 163 175);
+}
+
+.article-content :where(figcaption) {
+  @apply mt-3 text-sm leading-6 text-slate-500;
+}
+
+.article-content :where(blockquote) {
+  @apply my-8 border-l-4 border-orange-200 bg-orange-50/40 px-5 py-4 text-slate-700;
+}
+
+.article-content :where(table) {
+  @apply my-8 w-full border-collapse text-left text-base leading-7;
+}
+
+.article-content :where(th) {
+  @apply border border-slate-200 bg-slate-100 px-4 py-3 font-semibold text-slate-900;
+}
+
+.article-content :where(td) {
+  @apply border border-slate-200 px-4 py-3 align-top;
+}
+
+.article-content :where(a) {
+  @apply text-orange-500 underline decoration-2 underline-offset-2 transition-colors duration-200;
+}
+
+.article-content :where(a:hover) {
+  @apply text-orange-600;
+}
+
 /* Noto Sans 自托管于 public/fonts，不请求外网 */
 @font-face {
   font-family: "Noto Sans";

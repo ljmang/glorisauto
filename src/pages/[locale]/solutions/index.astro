@@ -1,0 +1,79 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import SolutionCard from '@/components/SolutionCard.astro';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+import { fetchApi, api } from '@/utils/strapiApi';
+import { resolveCollectionPageCopy } from '@/utils/collectionPageCopy';
+import { fetchSiteSeo } from '@/utils/siteConfig';
+import { isSolutionsEnabled } from '@/utils/featureFlags';
+import type { SolutionAttributes } from '@/types/content';
+
+export async function getStaticPaths() {
+  if (!isSolutionsEnabled()) {
+    return [];
+  }
+
+  return supportedLocales.map((locale) => ({
+    params: { locale },
+  }));
+}
+
+const params = Astro.params as { locale?: string };
+const locale: Locale = getLocale(params.locale);
+
+if (!isSolutionsEnabled()) {
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
+}
+
+const messages = await loadMessages(locale);
+
+const [solutionsRes, siteSeo] = await Promise.all([
+  fetchApi<{ data?: SolutionAttributes[] }>(api.solutions, {
+    locale,
+    populate: { cover: true, seo: true },
+    sort: ['sort:asc', 'publishedAt:desc', 'title:asc'],
+    pagination: { pageSize: 100 },
+  }),
+  fetchSiteSeo(locale),
+]);
+
+const solutions = Array.isArray(solutionsRes?.data) ? solutionsRes.data : [];
+const breadcrumbItems = [
+  { label: t(messages, 'pageTitle.home'), href: '/' },
+  { label: t(messages, 'pageTitle.solutions') },
+];
+const pageCopy = resolveCollectionPageCopy(locale, 'solutions', siteSeo);
+---
+
+<BaseLayout
+  title={pageCopy.seoTitle}
+  description={pageCopy.seoDescription}
+  pageType="collection"
+  breadcrumbs={breadcrumbItems}
+  messages={messages}
+  locale={locale}
+>
+  <div class="container mx-auto px-4 py-8">
+    <Breadcrumb items={breadcrumbItems} locale={locale} />
+
+    <main class="mb-12">
+      <h1 class="text-4xl font-black lg:text-6xl">{pageCopy.heading}</h1>
+      <p class="mt-4 max-w-4xl text-base leading-7 text-gray-600 lg:text-lg lg:leading-8">
+        {pageCopy.intro}
+      </p>
+
+      <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3">
+        {solutions.length > 0 ? (
+          solutions.map((solution) => (
+            <SolutionCard solution={solution} locale={locale} ctaLabel={t(messages, 'common.readMore')} />
+          ))
+        ) : (
+          <p class="text-gray-500">{t(messages, 'solutions.noSolutions')}</p>
+        )}
+      </div>
+    </main>
+  </div>
+</BaseLayout>
