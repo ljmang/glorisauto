@@ -2,7 +2,6 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import BlocksRenderer from '@/components/BlocksRenderer.astro';
-import InsightCard from '@/components/InsightCard.astro';
 import ProductCard from '@/components/ProductCard.astro';
 import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
@@ -31,28 +30,53 @@ const params = Astro.params as { locale?: string };
 const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
 
-const [dealerRes, siteSeo] = await Promise.all([
-  fetchApiWithLocaleFallback<StrapiResponse<BecomeDealerAttributes>>(api.becomeDealer, {
-    locale,
-    populate: {
-      heroMedia: true,
-      seo: {
-        populate: {
-          metaImage: true,
-          ogImage: true,
-          twitterImage: true,
-        },
+function resolveSectionHref(rawHref: string | null | undefined, fallbackHref: string): string {
+  const href = rawHref?.trim();
+  if (!href) return fallbackHref;
+  if (/^(https?:)?\/\//i.test(href)) return href;
+  return toHref(href.startsWith('/') ? href : `/${href}`, locale);
+}
+
+async function fetchBecomeDealerContent() {
+  const basePopulate = {
+    heroMedia: true,
+    seo: {
+      populate: {
+        metaImage: true,
+        ogImage: true,
+        twitterImage: true,
       },
-      introMedia: true,
-      focus: { populate: { cover: true } },
-      supportItems: { populate: { icon: true } },
-      processSteps: { populate: { cover: true } },
-      products: { populate: { cover: true, images: true, category: true } },
-      insights: { populate: { cover: true, insight_category: true } },
     },
-  }),
-  fetchSiteSeo(locale),
-]);
+    introMedia: true,
+    focus: { populate: { cover: true } },
+    supportItems: { populate: { icon: true } },
+    processSteps: { populate: { cover: true } },
+    products: { populate: { cover: true, images: true, category: true } },
+  };
+
+  try {
+    return await fetchApiWithLocaleFallback<StrapiResponse<BecomeDealerAttributes>>(api.becomeDealer, {
+      locale,
+      populate: {
+        ...basePopulate,
+        articles: { populate: { cover: true, insight_category: true } },
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/Invalid key articles/i.test(message)) throw error;
+
+    return fetchApiWithLocaleFallback<StrapiResponse<BecomeDealerAttributes & { insights?: (InsightAttributes & { cover?: unknown })[] }>>(api.becomeDealer, {
+      locale,
+      populate: {
+        ...basePopulate,
+        insights: { populate: { cover: true, insight_category: true } },
+      },
+    });
+  }
+}
+
+const [dealerRes, siteSeo] = await Promise.all([fetchBecomeDealerContent(), fetchSiteSeo(locale)]);
 
 const dealer = dealerRes?.data ?? null;
 const heroMedia = dealer ? parseHeroMedia(dealer.heroMedia) : null;
@@ -61,19 +85,20 @@ const focusItems = dealer?.focus ?? [];
 const supportItems = dealer?.supportItems ?? [];
 const processSteps = dealer?.processSteps ?? [];
 const dealerProducts = (dealer?.products ?? []) as ProductAttributes[];
-const advantageInsights = (dealer?.insights ?? []) as (InsightAttributes & { cover?: unknown })[];
+const advantageInsights = ((dealer?.articles ?? (dealer as (BecomeDealerAttributes & { insights?: (InsightAttributes & { cover?: unknown })[] }) | null)?.insights) ?? []) as (InsightAttributes & { cover?: unknown })[];
 const focusFallbackIcons = [Sparkles, Wrench, TrendingUp];
 const siteContact = getSiteContactInfo(siteSeo);
 const dealerWhatsappLabel = siteContact.whatsappLabel || t(messages, 'dealer.whatsapp');
 const dealerChatLabel = siteContact.chatLabel || t(messages, 'dealer.chatNow');
 const dealerAddressTitle = siteContact.addressTitle || t(messages, 'contactInfo.address');
 const dealerMapLinkLabel = siteContact.mapLinkLabel || t(messages, 'contactInfo.mapLink');
-const productsSectionHref = dealer?.productsLink?.trim() || toHref('/products', locale);
+const productsSectionHref = resolveSectionHref(dealer?.productsLink, toHref('/products', locale));
 const productsSectionLabel = dealer?.productsLinkLabel?.trim() || t(messages, 'common.allProducts');
-const articlesSectionHref = dealer?.articlesLink?.trim() || toHref('/about/insights', locale);
+const articlesSectionHref = resolveSectionHref(dealer?.articlesLink, toHref('/about/insights', locale));
 const articlesSectionLabel = dealer?.articlesLinkLabel?.trim() || t(messages, 'insights.allArticles');
 const articlesSectionTitle =
   dealer?.articlesTitle?.trim() || dealer?.advantagesTitle || t(messages, 'dealer.advantagesTitle');
+const processSectionTitle = dealer?.processTitle?.trim() || 'Cooperation Process';
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -118,61 +143,63 @@ const formApiBase = (() => {
 
     <!-- Hero -->
     {heroMedia && heroMedia.src && (
-      <section class="relative min-h-[400px] lg:min-h-[500px] rounded-lg overflow-hidden mb-12">
+      <section class="relative mb-12 overflow-hidden rounded-xl lg:mb-14">
         <Image
           src={heroMedia.src}
           alt={dealer?.title ?? t(messages, 'footer.about.becomeDealer')}
           width={1920}
           height={600}
-          class="w-full h-full object-cover absolute inset-0"
+          class="absolute inset-0 h-full w-full object-cover"
           format="webp"
           quality={100}
           loading="eager"
         />
-        <div class="absolute inset-0 bg-black/30" />
-        <div class="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
-          <h1 class="text-3xl lg:text-4xl font-bold text-white drop-shadow-lg">
-            {dealer?.title ?? t(messages, 'footer.about.becomeDealer')}
-          </h1>
+        <div class="absolute inset-0 bg-black/35" />
+        <div class="relative flex min-h-[300px] items-center justify-center lg:min-h-[420px]">
+          <div class="max-w-5xl px-6 py-8 text-center lg:px-10 lg:py-12">
+            <h1 class="text-4xl font-black leading-tight text-white drop-shadow-lg lg:text-5xl">
+              {dealer?.title ?? t(messages, 'footer.about.becomeDealer')}
+            </h1>
+          </div>
         </div>
       </section>
     )}
 
-    <!-- 介绍区 -->
+    <!-- 产品图 + 介绍区 -->
     {(dealer?.introContent?.length || introMedia?.src) && (
-      <section class="mb-16 grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
-        <div>
-          {dealer?.introContent?.length ? (
-            <BlocksRenderer blocks={dealer.introContent} class="article-content" />
-          ) : null}
-        </div>
+      <section class="mb-16 lg:mb-20">
         {introMedia?.src && (
-          <div class="flex justify-center">
+          <div class="mb-8 flex justify-center lg:mb-10">
             <Image
               src={introMedia.src}
               alt={introMedia.alt || dealer?.title || t(messages, 'footer.about.becomeDealer')}
               width={introMedia.width ?? 800}
               height={introMedia.height ?? 560}
-              class="max-h-[420px] w-auto max-w-full object-contain"
+              class="max-h-[240px] w-auto max-w-full object-contain lg:max-h-[300px]"
               format="webp"
               quality={100}
             />
           </div>
         )}
+        <div class="mx-auto max-w-[760px] text-center">
+          {dealer?.introContent?.length ? (
+            <BlocksRenderer blocks={dealer.introContent} class="text-left lg:text-center" />
+          ) : null}
+        </div>
       </section>
     )}
 
     <!-- 核心支持区：优先使用 supportItems，未配置时回退旧 focus -->
     {supportItems.length > 0 ? (
-      <section class="mb-16">
-        <h2 class="mb-8 text-center text-2xl font-bold lg:text-3xl">
+      <section class="mb-16 lg:mb-20">
+        <h2 class="mx-auto mb-8 max-w-4xl text-center text-3xl font-black text-slate-950 lg:mb-10 lg:text-4xl">
           {dealer?.supportTitle || t(messages, 'dealer.advantagesTitle')}
         </h2>
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div class="mx-auto grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {supportItems.map((item) => {
             const iconImage = parseImage(item.icon);
             return (
-              <div class="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-gray-100">
+              <div class="rounded-2xl border border-slate-200 bg-white px-6 py-7 text-center shadow-sm">
                 {iconImage?.src ? (
                   <div class="mb-4 flex justify-center">
                     <Image
@@ -190,8 +217,8 @@ const formApiBase = (() => {
                     <Sparkles class="h-7 w-7" aria-hidden="true" />
                   </div>
                 )}
-                {item.title && <h3 class="mb-2 text-lg font-bold">{item.title}</h3>}
-                {item.description && <p class="text-sm leading-6 text-gray-600">{item.description}</p>}
+                {item.title && <h3 class="mb-2 text-lg font-bold text-slate-950">{item.title}</h3>}
+                {item.description && <p class="mx-auto max-w-[280px] text-sm leading-6 text-slate-600">{item.description}</p>}
               </div>
             );
           })}
@@ -199,13 +226,17 @@ const formApiBase = (() => {
       </section>
     ) : (
       focusItems.length > 0 && (
-        <section class="grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8 mb-16">
+        <section class="mb-16 lg:mb-20">
+          <h2 class="mx-auto mb-8 max-w-4xl text-center text-3xl font-black text-slate-950 lg:mb-10 lg:text-4xl">
+            {dealer?.supportTitle || dealer?.advantagesTitle || t(messages, 'dealer.advantagesTitle')}
+          </h2>
+          <div class="mx-auto grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {focusItems.slice(0, 3).map((item, index) => {
             const coverImg = parseImage(item.cover);
             const subtitle = extractTextFromBlocks(item.content, 120);
             const FallbackIcon = focusFallbackIcons[index] ?? Sparkles;
             return (
-              <div class="rounded-xl bg-white p-6 text-center shadow-sm lg:p-12">
+              <div class="rounded-2xl border border-slate-200 bg-white px-6 py-7 text-center shadow-sm">
                 {coverImg?.src ? (
                   <div class="mb-4 flex justify-center">
                     <Image
@@ -219,46 +250,47 @@ const formApiBase = (() => {
                     />
                   </div>
                 ) : (
-                  <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
+                  <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
                     <FallbackIcon class="h-10 w-10 text-orange-500" aria-hidden="true" />
                   </div>
                 )}
-                <h2 class="mb-2 text-xl font-bold">{item.title}</h2>
-                {subtitle && <p class="text-sm leading-relaxed text-gray-600">{subtitle}</p>}
+                <h3 class="mb-2 text-lg font-bold text-slate-950">{item.title}</h3>
+                {subtitle && <p class="mx-auto max-w-[280px] text-sm leading-6 text-slate-600">{subtitle}</p>}
               </div>
             );
           })}
+          </div>
         </section>
       )
     )}
 
     <!-- 合作流程 -->
     {processSteps.length > 0 && (
-      <section class="mb-16">
-        <h2 class="mb-8 text-center text-2xl font-bold lg:text-3xl">
-          {dealer?.processTitle || 'Cooperation Process'}
+      <section class="mx-auto mb-16 max-w-4xl lg:mb-20">
+        <h2 class="mb-8 text-center text-3xl font-black text-slate-950 lg:mb-10 lg:text-4xl">
+          {processSectionTitle}
         </h2>
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
           {processSteps.map((step, index) => {
             const coverImage = parseImage(step.cover);
             const stepText = step.stepLabel?.trim() || `Step ${index + 1}`;
             return (
-              <div class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+              <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 {coverImage?.src && (
                   <Image
                     src={coverImage.src}
                     alt={coverImage.alt || step.title || stepText}
                     width={coverImage.width ?? 960}
                     height={coverImage.height ?? 540}
-                    class="aspect-[16/9] w-full object-cover"
+                    class="aspect-[16/5.8] w-full object-cover"
                     format="webp"
                     quality={100}
                   />
                 )}
-                <div class="p-6">
-                  <p class="text-sm font-semibold uppercase tracking-[0.18em] text-orange-500">{stepText}</p>
-                  {step.title && <h3 class="mt-2 text-xl font-bold">{step.title}</h3>}
-                  {step.description && <p class="mt-3 text-sm leading-6 text-gray-600">{step.description}</p>}
+                <div class="p-5 lg:p-6">
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">{stepText}</p>
+                  {step.title && <h3 class="mt-2 text-base font-bold text-slate-950 lg:text-lg">{step.title}</h3>}
+                  {step.description && <p class="mt-2 text-sm leading-6 text-slate-600">{step.description}</p>}
                 </div>
               </div>
             );
@@ -268,11 +300,12 @@ const formApiBase = (() => {
     )}
 
     <!-- Join Us Now：表单 + 客服信息 -->
-    <section class="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-12 mb-16">
+    <section class="mb-16 lg:mb-20">
+      <h2 class="mb-8 text-center text-4xl font-medium text-slate-950 lg:mb-10">
+        {dealer?.joinUsTitle ?? t(messages, 'dealer.joinUsTitle')}
+      </h2>
+      <div class="grid grid-cols-1 items-start gap-10 lg:grid-cols-5 lg:gap-12">
       <div class="lg:col-span-3">
-        <h2 class="text-2xl font-bold  mb-6">
-          {dealer?.joinUsTitle ?? t(messages, 'dealer.joinUsTitle')}
-        </h2>
         <form
           id="dealer-form"
           class="space-y-4"
@@ -289,7 +322,7 @@ const formApiBase = (() => {
               id="dealer-name"
               name="name"
               required
-              class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 focus:border-orange-500 focus:ring-2 focus:ring-orange-500"
               placeholder={t(messages, 'form.namePlaceholder')}
             />
           </div>
@@ -302,7 +335,7 @@ const formApiBase = (() => {
               id="dealer-email"
               name="email"
               required
-              class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 focus:border-orange-500 focus:ring-2 focus:ring-orange-500"
               placeholder={t(messages, 'form.emailPlaceholder')}
             />
           </div>
@@ -314,7 +347,7 @@ const formApiBase = (() => {
               id="dealer-country"
               name="country"
               required
-              class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white"
+              class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 focus:border-orange-500 focus:ring-2 focus:ring-orange-500"
             >
               <option value="">{t(messages, 'form.countryPlaceholder')}</option>
               {countryOptions.map((opt) => (
@@ -331,7 +364,7 @@ const formApiBase = (() => {
               id="dealer-phone"
               name="phone"
               required
-              class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 focus:border-orange-500 focus:ring-2 focus:ring-orange-500"
               placeholder={t(messages, 'form.phonePlaceholder')}
             />
           </div>
@@ -344,25 +377,26 @@ const formApiBase = (() => {
               name="message"
               required
               rows={5}
-              class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-y"
+              class="w-full resize-y rounded-md border border-slate-300 bg-white px-4 py-3 focus:border-orange-500 focus:ring-2 focus:ring-orange-500"
               placeholder={t(messages, 'form.messagePlaceholder')}
             />
           </div>
           <button
             type="submit"
             id="dealer-submit"
-            class="w-full lg:w-auto px-8 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+            class="w-full rounded-md bg-orange-500 px-8 py-3 font-semibold text-white transition-colors hover:bg-orange-600 disabled:opacity-50 lg:w-auto"
           >
             {t(messages, 'common.submit')}
           </button>
         </form>
       </div>
-      <div class="lg:col-span-2">
-        <h3 class="text-xl font-bold  mb-4">
+      <div class="lg:col-span-2 lg:pt-5">
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 class="mb-4 text-xl font-bold text-slate-950">
           {dealer?.customerServiceTitle ?? t(messages, 'dealer.customerServiceTitle')}
         </h3>
         {siteContact.phone && (
-          <p class="flex items-center gap-2 text-gray-700 mb-2">
+          <p class="mb-2 flex items-center gap-2 text-slate-700">
             <Phone class="w-5 h-5 text-orange-500 shrink-0" />
             <a href={siteContact.phoneHref} class="hover:text-orange-600">
               {siteContact.phone}
@@ -370,7 +404,7 @@ const formApiBase = (() => {
           </p>
         )}
         {siteContact.email && (
-          <p class="flex items-center gap-2 text-gray-700 mb-4">
+          <p class="mb-4 flex items-center gap-2 text-slate-700">
             <Mail class="w-5 h-5 text-orange-500 shrink-0" />
             <a href={`mailto:${siteContact.email}`} class="hover:text-orange-600 break-all">
               {siteContact.email}
@@ -378,13 +412,13 @@ const formApiBase = (() => {
           </p>
         )}
         <!-- WhatsApp 与 Chat Now 两个按钮 -->
-        <div class="flex flex-wrap gap-3 mb-4">
+        <div class="mb-5 flex flex-wrap gap-3">
           {siteContact.whatsappHref && (
             <a
               href={siteContact.whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-green-500 text-green-600 hover:bg-green-50 transition-colors"
+              class="inline-flex items-center gap-2 rounded-md border-2 border-green-500 px-4 py-2.5 text-green-600 transition-colors hover:bg-green-50"
             >
               <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -394,7 +428,7 @@ const formApiBase = (() => {
           )}
           <a
             href="#"
-            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-orange-500 text-orange-600 hover:bg-orange-50 transition-colors"
+            class="inline-flex items-center gap-2 rounded-md border-2 border-orange-500 px-4 py-2.5 text-orange-600 transition-colors hover:bg-orange-50"
             aria-label={dealerChatLabel}
           >
             <MessageCircle class="w-5 h-5 shrink-0" />
@@ -403,8 +437,8 @@ const formApiBase = (() => {
         </div>
         {siteContact.address && (
           <>
-            <p class="text-sm font-medium text-gray-700 mb-1">{dealerAddressTitle}</p>
-            <p class="flex items-start gap-2 text-gray-600 mb-2">
+            <p class="mb-1 text-sm font-medium text-slate-700">{dealerAddressTitle}</p>
+            <p class="mb-2 flex items-start gap-2 text-slate-600">
               <MapPin class="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
               <span>{siteContact.address}</span>
             </p>
@@ -420,19 +454,21 @@ const formApiBase = (() => {
             )}
           </>
         )}
+        </div>
+      </div>
       </div>
     </section>
 
     <!-- 产品区 -->
     {dealerProducts.length > 0 && (
-      <section class="mb-16">
-        <div class="mb-6 flex items-center justify-between gap-4">
-          <h2 class="text-2xl font-bold lg:text-3xl">
+      <section class="mb-16 lg:mb-20">
+        <div class="mb-8 flex items-center justify-between gap-4">
+          <h2 class="text-3xl font-black text-slate-950 lg:text-4xl">
             {dealer?.productsTitle || t(messages, 'common.allProducts')}
           </h2>
           <a
             href={productsSectionHref}
-            class="flex items-center gap-2 text-cyan-600 transition-colors hover:text-orange-600"
+            class="flex items-center gap-2 text-sm font-medium text-orange-500 transition-colors hover:text-orange-600"
           >
             {productsSectionLabel}
             <CircleChevronRight class="h-4 w-4" />
@@ -446,25 +482,65 @@ const formApiBase = (() => {
       </section>
     )}
 
-    <!-- 文章区：继续复用 InsightCard -->
+    <!-- 文章区：使用后台勾选的 dealer insights -->
     {advantageInsights.length > 0 && (
       <section class="mb-12">
         <div class="mb-8 flex items-center justify-between gap-4">
-          <h2 class="text-2xl font-bold lg:text-3xl">
+          <h2 class="text-3xl font-black text-slate-950 lg:text-4xl">
             {articlesSectionTitle}
           </h2>
           <a
             href={articlesSectionHref}
-            class="flex items-center gap-2 text-cyan-600 transition-colors hover:text-orange-600"
+            class="flex items-center gap-2 text-sm font-medium text-orange-500 transition-colors hover:text-orange-600"
           >
             {articlesSectionLabel}
             <CircleChevronRight class="h-4 w-4" />
           </a>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {advantageInsights.map((insight) => (
-            <InsightCard insight={insight} locale={locale} />
-          ))}
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {advantageInsights.map((insight) => {
+            const coverImage = parseImage(insight.cover ?? insight.coverImage ?? null);
+            const category =
+              insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
+                ? insight.insight_category
+                : null;
+            const categorySlug = category?.slug ?? '';
+            const articleHref = insight.slug
+              ? categorySlug
+                ? toHref(`/about/insights/${categorySlug}/${insight.slug}`, locale)
+                : toHref('/about/insights', locale)
+              : toHref('/about/insights', locale);
+            const articleSummary = insight.description || insight.excerpt || '';
+
+            return (
+              <a
+                href={articleHref}
+                class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-transform duration-200 hover:-translate-y-0.5"
+              >
+                {coverImage?.src && (
+                  <Image
+                    src={coverImage.src}
+                    alt={coverImage.alt || insight.title}
+                    width={coverImage.width ?? 960}
+                    height={coverImage.height ?? 640}
+                    class="aspect-[16/10] w-full object-cover"
+                    format="webp"
+                    quality={100}
+                  />
+                )}
+                <div class="p-6">
+                  <h3 class="text-xl font-bold text-slate-950 transition-colors group-hover:text-orange-500">
+                    {insight.title}
+                  </h3>
+                  {articleSummary && (
+                    <p class="mt-3 text-sm leading-6 text-slate-600">
+                      {articleSummary}
+                    </p>
+                  )}
+                </div>
+              </a>
+            );
+          })}
         </div>
       </section>
     )}

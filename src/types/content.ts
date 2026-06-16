@@ -345,7 +345,7 @@ export interface BecomeDealerAttributes {
   articlesLinkLabel?: string;
   articlesLink?: string;
   focus?: BecomeDealerFocusItem[];
-  insights?: (InsightAttributes & { cover?: unknown })[];
+  articles?: (InsightAttributes & { cover?: unknown })[];
   seo?: StrapiSeo | null;
 }
 
