@@ -254,18 +254,18 @@ const breadcrumbItems = [
       <>
         <Breadcrumb items={breadcrumbItems} locale={locale} />
 
-        <section class='mb-12 grid gap-8 lg:grid-cols-2 lg:gap-12'>
+        <section class='mb-16 grid gap-10 lg:grid-cols-2 lg:gap-14'>
           <div class='lg:min-w-0'>
             <ProductGallery media={productGalleryMedia} productName={product.name ?? ''} />
           </div>
           <div>
-            <h1 class='text-3xl font-bold md:text-4xl'>{product.name}</h1>
+            <h1 class='text-4xl font-black leading-tight text-slate-950 lg:text-5xl'>{product.name}</h1>
 
             {informationList.length > 0 && (
-              <div class='mt-6'>
+              <div class='mt-8 space-y-6'>
                 {informationList.map((item) => (
-                  <div class='mb-4'>
-                    {item.title && <h2 class='text-lg font-semibold mb-2'>{item.title}</h2>}
+                  <div class='border-b border-slate-100 pb-5 last:border-b-0 last:pb-0'>
+                    {item.title && <h2 class='mb-3 text-lg font-semibold text-slate-900'>{item.title}</h2>}
                     {item.description && item.description.length > 0 && <BlocksRenderer blocks={item.description} />}
                   </div>
                 ))}
@@ -273,20 +273,18 @@ const breadcrumbItems = [
             )}
 
             {informationList.length === 0 && productDescription && (
-              <div class='prose prose-lg mt-6'>
-                <p>{productDescription}</p>
-              </div>
+              <p class='mt-6 max-w-2xl text-lg leading-8 text-slate-600'>{productDescription}</p>
             )}
 
             {(holeList.length > 0 || optionsList.length > 0) && (
-              <div class='mt-4 space-y-2'>
+              <div class='mt-6 space-y-2 text-base leading-7 text-slate-600'>
                 {holeList.map((h) => <p>{h.name ?? ''}</p>)}
               </div>
             )}
 
             {optionsList.length > 0 && (
               <div class='mt-6'>
-                <p class='font-semibold mb-2'>{t(messages, 'products.gritOptions')}</p>
+                <p class='mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-slate-500'>{t(messages, 'products.gritOptions')}</p>
                 <div class='flex flex-wrap gap-2'>
                   {optionsList.map((opt) => (
                     <span class='rounded border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400'>
@@ -319,13 +317,13 @@ const breadcrumbItems = [
         </section>
 
         {technicalDetailsList.length > 0 && (
-          <section class='mb-12'>
-            <h2 class='text-3xl font-bold mb-4'>{t(messages, 'products.technicalDetails')}</h2>
-            <div class='grid gap-x-8 grid-cols-1 lg:grid-cols-2'>
+          <section class='mb-16 border-t border-slate-200 pt-12'>
+            <h2 class='mb-6 text-3xl font-extrabold text-slate-950'>{t(messages, 'products.technicalDetails')}</h2>
+            <div class='grid grid-cols-1 gap-x-8 lg:grid-cols-2'>
               {technicalDetailsList.map((item) => (
-                <div class='flex iten-center border-b border-gray-500 gap-2'>
-                  {item.title != null && item.title !== '' && <div class='font-semibold bg-gray-200 p-3 w-1/2'>{item.title}</div>}
-                  <div class='p-2'>{item.description ?? ''}</div>
+                <div class='flex items-stretch gap-3 border-b border-slate-200 py-3'>
+                  {item.title != null && item.title !== '' && <div class='w-1/2 rounded-md bg-slate-100 p-3 font-semibold text-slate-900'>{item.title}</div>}
+                  <div class='flex-1 p-3 text-slate-700'>{item.description ?? ''}</div>
                 </div>
               ))}
             </div>
@@ -333,22 +331,32 @@ const breadcrumbItems = [
         )}
 
         {productFeaturesHtml && (
-          <section class='mb-12 max-w-5xl'>
-            <h2 class='text-3xl font-bold mb-4'>{t(messages, 'products.features')}</h2>
+          <section class='mb-16 border-t border-slate-200 pt-12'>
+            <div class='max-w-[820px]'>
+              <p class='mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500'>
+                Feature details
+              </p>
+              <h2 class='mb-6 text-3xl font-extrabold text-slate-950'>{t(messages, 'products.features')}</h2>
+            </div>
             <div
-              class='product-features-content prose prose-lg max-w-none text-gray-700 prose-headings:font-bold prose-a:text-cyan-600 prose-a:no-underline hover:prose-a:text-orange-600'
+              class='product-features-content article-content prose prose-lg max-w-none'
               set:html={productFeaturesHtmlWithScrollableTables}
             />
           </section>
         )}
 
         {downloadFilesList.length > 0 && (
-          <section class='mb-12'>
+          <section class='mb-16 border-t border-slate-200 pt-12'>
             <div class='mb-4 flex items-center justify-between gap-4'>
-              <h2 class='text-3xl font-bold'>{t(messages, 'products.downloads')}</h2>
+              <div>
+                <p class='mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500'>
+                  Technical resources
+                </p>
+                <h2 class='text-3xl font-extrabold text-slate-950'>{t(messages, 'products.downloads')}</h2>
+              </div>
               <a
                 href={toHref('/support/download', locale)}
-                class='flex shrink-0 items-center gap-2 text-lg text-cyan-600 transition-colors hover:text-orange-600'
+                class='flex shrink-0 items-center gap-2 text-lg font-medium text-orange-500 transition-colors hover:text-orange-600'
               >
                 {t(messages, 'common.viewAll')}
                 <CircleChevronRight class='h-4 w-4' />
@@ -363,18 +371,23 @@ const breadcrumbItems = [
         )}
 
         {relatedInsightItems.length > 0 && (
-          <section class='mb-12'>
+          <section class='mb-16 border-t border-slate-200 pt-12'>
             <div class='mb-6 flex items-center justify-between gap-4'>
-              <h2 class='text-3xl font-bold'>{t(messages, 'products.relatedInsights')}</h2>
+              <div>
+                <p class='mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500'>
+                  Continue reading
+                </p>
+                <h2 class='text-3xl font-extrabold text-slate-950'>{t(messages, 'products.relatedInsights')}</h2>
+              </div>
               <a
                 href={toHref('/about/insights', locale)}
-                class='flex shrink-0 items-center gap-2 text-lg text-cyan-600 transition-colors hover:text-orange-600'
+                class='flex shrink-0 items-center gap-2 text-lg font-medium text-orange-500 transition-colors hover:text-orange-600'
               >
                 {t(messages, 'common.viewAll')}
                 <CircleChevronRight class='h-4 w-4' />
               </a>
             </div>
-            <div class='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+            <div class='grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3'>
               {relatedInsightItems.map((insight) => (
                 <InsightCard insight={insight} locale={locale} />
               ))}
@@ -383,12 +396,17 @@ const breadcrumbItems = [
         )}
 
         {faqItems.length > 0 && (
-          <section class='mb-12 max-w-5xl'>
+          <section class='mb-16 max-w-[820px] border-t border-slate-200 pt-12'>
             <div class='mb-4 flex items-center justify-between gap-4'>
-              <h2 class='text-3xl font-bold'>{t(messages, 'products.faq')}</h2>
+              <div>
+                <p class='mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500'>
+                  Common questions
+                </p>
+                <h2 class='text-3xl font-extrabold text-slate-950'>{t(messages, 'products.faq')}</h2>
+              </div>
               <a
                 href={toHref('/help', locale)}
-                class='flex shrink-0 items-center gap-2 text-lg text-cyan-600 transition-colors hover:text-orange-600'
+                class='flex shrink-0 items-center gap-2 text-lg font-medium text-orange-500 transition-colors hover:text-orange-600'
               >
                 {t(messages, 'common.viewAll')}
                 <CircleChevronRight class='h-4 w-4' />
@@ -396,17 +414,17 @@ const breadcrumbItems = [
             </div>
             <div class='space-y-4'>
               {faqItems.map((faq, idx) => (
-                <details class='rounded-lg border border-gray-200 bg-white' open={idx === 0 ? true : undefined}>
+                <details class='rounded-xl border border-slate-200 bg-white shadow-sm' open={idx === 0 ? true : undefined}>
                   <summary class='cursor-pointer px-4 py-3 text-lg font-semibold text-gray-900'>
                     {faq.title || `${t(messages, 'products.faq')} ${idx + 1}`}
                   </summary>
-                  <div class='px-4 pb-4 text-gray-700'>
+                  <div class='px-4 pb-4 text-slate-700'>
                     {faq.contentHtml && (
-                      <div class='prose max-w-none text-gray-700' set:html={faq.contentHtml} />
+                      <div class='article-content prose prose-lg max-w-none' set:html={faq.contentHtml} />
                     )}
                     {faq.href && (
                       <div class='mt-4'>
-                        <a href={faq.href} class='flex items-center gap-2 font-medium text-cyan-600 hover:text-orange-600'>
+                        <a href={faq.href} class='flex items-center gap-2 font-medium text-orange-500 transition-colors hover:text-orange-600'>
                           {t(messages, 'common.readMore')}
                           <CircleChevronRight class='w-4 h-4' />
                         </a>

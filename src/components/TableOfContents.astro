@@ -53,9 +53,15 @@ if (currentGroup) {
 ---
 
 {groupedItems.length > 0 && (
-  <aside class="hidden lg:block lg:w-64 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
-    <nav class="bg-gray-50 rounded-lg p-4 border border-gray-200" aria-label={t(messages, 'insights.tableOfContents')}>
-      <h2 class="text-lg font-bold mb-4">
+  <aside class="hidden lg:block lg:w-72 lg:sticky lg:top-28 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+    <nav
+      class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      aria-label={t(messages, 'insights.tableOfContents')}
+    >
+      <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
+        In this article
+      </p>
+      <h2 class="mb-4 text-lg font-bold text-slate-950">
         {t(messages, 'insights.tableOfContents')}
       </h2>
       <ul class="space-y-2">
@@ -63,17 +69,17 @@ if (currentGroup) {
           <li>
             <a
               href={`#${group.h2.id}`}
-              class="block text-sm font-semibold hover:text-orange-500 transition-colors py-1 scroll-smooth"
+              class="block scroll-smooth py-1 text-sm font-semibold leading-6 text-slate-800 transition-colors hover:text-orange-500"
             >
               {group.h2.text}
             </a>
             {group.h3s.length > 0 && (
-              <ul class="text-xs mt-1 space-y-1">
+              <ul class="mt-1 space-y-1 border-l border-slate-200 pl-3 text-xs">
                 {group.h3s.map((h3) => (
                   <li>
                     <a
                       href={`#${h3.id}`}
-                      class="block text-gray-500 hover:text-orange-500 transition-colors py-1 scroll-smooth"
+                      class="block scroll-smooth py-1 leading-5 text-slate-500 transition-colors hover:text-orange-500"
                     >
                       {h3.text}
                     </a>

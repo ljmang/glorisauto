@@ -3,7 +3,7 @@
  * 帮助中心文章详情页：文章内容 + 相关产品和文章
  */
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { type Locale, getLocale } from '@/i18n/config';
+import { type Locale, getLocale, localeDateTag } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApi, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
@@ -314,6 +314,13 @@ const breadcrumbItems = [
   { label: article.title },
 ];
 const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')}`;
+const publishedDate = article.publishedAt
+  ? new Date(article.publishedAt).toLocaleDateString(localeDateTag[locale], {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  : '';
 ---
 
 <BaseLayout
@@ -366,14 +373,28 @@ const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')
     </div>
 
     <!-- 文章内容 -->
-    <article class="max-w-4xl">
-      <!-- 文章标题 -->
-      <h2 class="text-4xl lg:text-5xl font-black mb-6">{article.title}</h2>
+    <article class="max-w-[820px]">
+      <header class="mb-10 border-b border-slate-200 pb-8">
+        <div class="mb-4 flex flex-wrap items-center gap-3">
+          <span class="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-orange-600">
+            {categoryName}
+          </span>
+          {publishedDate && (
+            <span class="text-sm font-medium text-slate-500">{publishedDate}</span>
+          )}
+        </div>
+        <h2 class="mb-4 text-4xl font-black leading-tight text-slate-950 lg:text-5xl">{article.title}</h2>
+        {article.description && (
+          <p class="max-w-[760px] text-xl leading-8 text-slate-600">
+            {article.description}
+          </p>
+        )}
+      </header>
 
       <!-- 文章正文 -->
       {articleMarkdownHtml && (
         <div
-          class="article-content prose prose-lg max-w-none mb-12 prose-a:text-cyan-600 prose-a:underline prose-a:transition-colors hover:prose-a:text-orange-500"
+          class="article-content prose prose-lg mb-16 max-w-none"
           set:html={articleMarkdownHtml}
         />
       )}
@@ -383,9 +404,12 @@ const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')
 
     <!-- 相关产品 -->
     {relatedProducts.length > 0 && (
-      <section class="mt-16 mb-12">
-        <h2 class="text-3xl font-bold mb-6">{t(messages, 'helpCenter.relatedProducts')}</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section class="mt-20 border-t border-slate-200 pt-12">
+        <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
+          Product references
+        </p>
+        <h2 class="mb-6 text-3xl font-extrabold text-slate-950">{t(messages, 'helpCenter.relatedProducts')}</h2>
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {relatedProducts.map((product) => (
             <ProductCard product={product} locale={locale} />
           ))}
@@ -395,9 +419,12 @@ const pageTitle = `${article.title} - ${t(messages, 'footer.support.helpCenter')
 
     <!-- 相关文章 -->
     {relatedArticles.length > 0 && (
-      <section class="mt-12 mb-12">
-        <h2 class="text-3xl font-bold mb-6">{t(messages, 'helpCenter.relatedArticles')}</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section class="mt-20 border-t border-slate-200 pt-12">
+        <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
+          Continue reading
+        </p>
+        <h2 class="mb-6 text-3xl font-extrabold text-slate-950">{t(messages, 'helpCenter.relatedArticles')}</h2>
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {relatedArticles.map((insight) => {
             // 相关文章的链接：如果是 help-center 关联的，应该链接到 help center 文章
             // 否则链接到 insights 详情页（包含分类 slug）
