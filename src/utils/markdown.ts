@@ -29,6 +29,12 @@ function sanitizeRenderedImageAlts(html: string, fallbackAlt?: string): string {
   });
 }
 
+function wrapRenderedTables(html: string): string {
+  return html
+    .replace(/<table\b/gi, '<div class="article-table-scroll"><table')
+    .replace(/<\/table>/gi, '</table></div>');
+}
+
 /** 将 markdown 转为 HTML，使用与 Astro 一致的 remark/rehype 管道 */
 export async function markdownToHtml(
   markdown: string | null | undefined,
@@ -50,7 +56,7 @@ export async function markdownToHtml(
     .use(rehypeStringify)
     .process(markdown);
 
-  return sanitizeRenderedImageAlts(String(result), fallbackImageAlt);
+  return wrapRenderedTables(sanitizeRenderedImageAlts(String(result), fallbackImageAlt));
 }
 
 export interface TOCItem {
@@ -62,20 +68,16 @@ export interface TOCItem {
 /** 从渲染后的 HTML 中提取 h2/h3 作为目录 */
 export function extractTOCFromHtml(html: string): TOCItem[] {
   const tocItems: TOCItem[] = [];
-  const h2Regex = /<h2[^>]*id="([^"]+)"[^>]*>(.*?)<\/h2>/gi;
-  const h3Regex = /<h3[^>]*id="([^"]+)"[^>]*>(.*?)<\/h3>/gi;
+  const headingRegex = /<h([23])[^>]*id="([^"]+)"[^>]*>(.*?)<\/h\1>/gis;
 
   let match;
-  while ((match = h2Regex.exec(html)) !== null) {
-    const id = match[1];
-    const text = match[2].replace(/<[^>]+>/g, '').trim();
-    if (id && text) tocItems.push({ id, text, level: 2 });
+  while ((match = headingRegex.exec(html)) !== null) {
+    const level = Number(match[1]) as 2 | 3;
+    const id = match[2];
+    const text = match[3].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    if (id && text) tocItems.push({ id, text, level });
   }
-  while ((match = h3Regex.exec(html)) !== null) {
-    const id = match[1];
-    const text = match[2].replace(/<[^>]+>/g, '').trim();
-    if (id && text) tocItems.push({ id, text, level: 3 });
-  }
+
   return tocItems;
 }
 

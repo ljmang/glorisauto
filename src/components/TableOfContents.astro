@@ -53,10 +53,14 @@ if (currentGroup) {
 ---
 
 {groupedItems.length > 0 && (
-  <aside class="hidden lg:block lg:w-72 lg:sticky lg:top-28 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+  <aside
+    class="hidden lg:block lg:w-72 lg:sticky lg:top-28 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto"
+    data-toc-root
+  >
     <nav
       class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       aria-label={t(messages, 'insights.tableOfContents')}
+      data-toc
     >
       <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
         In this article
@@ -69,6 +73,10 @@ if (currentGroup) {
           <li>
             <a
               href={`#${group.h2.id}`}
+              data-toc-link
+              data-target-id={group.h2.id}
+              data-level="2"
+              data-active="false"
               class="block scroll-smooth py-1 text-sm font-semibold leading-6 text-slate-800 transition-colors hover:text-orange-500"
             >
               {group.h2.text}
@@ -79,6 +87,10 @@ if (currentGroup) {
                   <li>
                     <a
                       href={`#${h3.id}`}
+                      data-toc-link
+                      data-target-id={h3.id}
+                      data-level="3"
+                      data-active="false"
                       class="block scroll-smooth py-1 leading-5 text-slate-500 transition-colors hover:text-orange-500"
                     >
                       {h3.text}
@@ -93,3 +105,124 @@ if (currentGroup) {
     </nav>
   </aside>
 )}
+
+<script is:inline>
+  (() => {
+    const initTocHighlight = () => {
+      const tocRoot = document.querySelector('[data-toc-root]');
+      if (!(tocRoot instanceof HTMLElement) || tocRoot.dataset.tocInitialized === 'true') return;
+      tocRoot.dataset.tocInitialized = 'true';
+
+      const toc = tocRoot.querySelector('[data-toc]');
+      if (!(toc instanceof HTMLElement)) return;
+
+      const links = Array.from(toc.querySelectorAll('[data-toc-link]')).filter((node) =>
+        node instanceof HTMLAnchorElement
+      );
+      if (links.length === 0) return;
+
+      const headingTargets = links
+        .map((link) => {
+          const targetId = link.dataset.targetId ?? '';
+          const element = targetId ? document.getElementById(targetId) : null;
+          return element ? { id: targetId, element } : null;
+        })
+        .filter(Boolean);
+
+      if (headingTargets.length === 0) return;
+
+      const TOP_OFFSET = 160;
+
+      const setActiveLink = (activeId) => {
+        links.forEach((link) => {
+          const isActive = link.dataset.targetId === activeId;
+          link.dataset.active = isActive ? 'true' : 'false';
+          if (isActive) {
+            link.setAttribute('aria-current', 'true');
+          } else {
+            link.removeAttribute('aria-current');
+          }
+        });
+      };
+
+      const resolveActiveId = () => {
+        const currentScroll = window.scrollY + TOP_OFFSET;
+        let activeId = headingTargets[0]?.id ?? '';
+
+        for (const target of headingTargets) {
+          const targetTop = target.element.getBoundingClientRect().top + window.scrollY;
+          if (targetTop <= currentScroll) {
+            activeId = target.id;
+          } else {
+            break;
+          }
+        }
+
+        return activeId;
+      };
+
+      let ticking = false;
+      const updateActiveFromScroll = () => {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(() => {
+          setActiveLink(resolveActiveId());
+          ticking = false;
+        });
+      };
+
+      toc.addEventListener('click', (event) => {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        const link = target.closest('[data-toc-link]');
+        if (!(link instanceof HTMLAnchorElement)) return;
+        const targetId = link.dataset.targetId ?? '';
+        if (targetId) setActiveLink(targetId);
+      });
+
+      window.addEventListener('scroll', updateActiveFromScroll, { passive: true });
+      window.addEventListener('resize', updateActiveFromScroll);
+      window.addEventListener('hashchange', () => {
+        const hashId = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+        if (hashId) {
+          setActiveLink(hashId);
+        } else {
+          updateActiveFromScroll();
+        }
+      });
+
+      const initialHashId = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+      setActiveLink(initialHashId || resolveActiveId());
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initTocHighlight, { once: true });
+    } else {
+      initTocHighlight();
+    }
+  })();
+</script>
+
+<style>
+  [data-toc-link] {
+    position: relative;
+    border-radius: 0.5rem;
+    padding-left: 0.875rem;
+    margin-left: -0.875rem;
+  }
+
+  [data-toc-link][data-active='true'] {
+    color: rgb(249 115 22);
+  }
+
+  [data-toc-link][data-active='true']::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.3rem;
+    bottom: 0.3rem;
+    width: 3px;
+    border-radius: 9999px;
+    background: rgb(249 115 22);
+  }
+</style>

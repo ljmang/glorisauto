@@ -17,68 +17,22 @@ const html = renderBlocks(blocks);
 ---
 
 {html && (
-  <div class={`blocks-content ${className}`} set:html={html} />
+  <div class={`blocks-content article-content prose prose-lg max-w-none ${className}`} set:html={html} />
 )}
 
 <style>
   @reference "../styles/global.css";
 
-  .blocks-content {
-    @apply prose prose-lg max-w-none;
-  }
-  
-  .blocks-content :global(h1),
-  .blocks-content :global(h2),
-  .blocks-content :global(h3),
-  .blocks-content :global(h4),
-  .blocks-content :global(h5),
-  .blocks-content :global(h6) {
-    @apply font-bold mt-6 mb-4;
-  }
-  
-  .blocks-content :global(p) {
-    @apply mb-4 text-gray-700;
-  }
-  
-  .blocks-content :global(ul),
-  .blocks-content :global(ol) {
-    @apply mb-4 ml-6;
-  }
-  
-  .blocks-content :global(li) {
-    @apply mb-2;
-  }
-  
-  .blocks-content :global(blockquote) {
-    @apply border-l-4 border-gray-300 pl-4 italic my-4;
-  }
-  
   .blocks-content :global(pre) {
-    @apply bg-gray-100 p-4 rounded overflow-x-auto my-4;
+    @apply my-6 overflow-x-auto rounded-xl bg-slate-950 px-5 py-4 text-sm leading-7 text-slate-100;
   }
-  
+
   .blocks-content :global(code) {
-    @apply bg-gray-100 px-1 py-0.5 rounded text-sm;
+    @apply rounded bg-slate-100 px-1.5 py-0.5 text-[0.9em] text-slate-900;
   }
-  
+
   .blocks-content :global(pre code) {
-    @apply bg-transparent p-0;
-  }
-  
-  .blocks-content :global(figure) {
-    @apply my-6 max-w-full;
-  }
-  
-  .blocks-content :global(figure img) {
-    @apply block w-auto max-w-full h-auto rounded;
-  }
-  
-  .blocks-content :global(figcaption) {
-    @apply text-sm text-gray-500 mt-2 text-center;
-  }
-  
-  .blocks-content :global(a) {
-    @apply text-orange-500 hover:text-orange-600 underline decoration-2 underline-offset-2 transition-colors duration-200;
+    @apply bg-transparent p-0 text-inherit;
   }
 
   :global(html[dir="rtl"]) .blocks-content :global(ul),

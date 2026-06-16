@@ -24,10 +24,12 @@
 
 .article-content :where(h2) {
   @apply mt-14 mb-5 text-3xl font-extrabold leading-tight text-slate-950 lg:text-4xl;
+  scroll-margin-top: 7rem;
 }
 
 .article-content :where(h3) {
   @apply mt-10 mb-4 text-2xl font-bold leading-snug text-slate-900;
+  scroll-margin-top: 7rem;
 }
 
 .article-content :where(p) {
@@ -56,8 +58,18 @@
   @apply my-8 border-l-4 border-orange-200 bg-orange-50/40 px-5 py-4 text-slate-700;
 }
 
+.article-content :where(.article-table-scroll) {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 .article-content :where(table) {
-  @apply my-8 w-full border-collapse text-left text-base leading-7;
+  @apply my-8 border-collapse text-left text-base leading-7;
+  width: max-content;
+  min-width: 100%;
 }
 
 .article-content :where(th) {

@@ -119,9 +119,6 @@ const holeList = ((product as { hole?: { name?: string }[] } | null)?.hole ?? []
   .filter((item) => item.name);
 const productFeaturesMarkdown = sanitizeMarkdown((product as { productFeatures?: string } | null)?.productFeatures ?? '');
 const productFeaturesHtml = await markdownToHtml(productFeaturesMarkdown, product?.name);
-const productFeaturesHtmlWithScrollableTables = productFeaturesHtml
-  .replace(/<table>/g, '<div class="product-features-table-scroll"><table>')
-  .replace(/<\/table>/g, '</table></div>');
 const productDescription = sanitizeInlineText(product?.description ?? '');
 
 type DownloadFileEntry = {
@@ -340,7 +337,7 @@ const breadcrumbItems = [
             </div>
             <div
               class='product-features-content article-content prose prose-lg max-w-none'
-              set:html={productFeaturesHtmlWithScrollableTables}
+              set:html={productFeaturesHtml}
             />
           </section>
         )}
@@ -482,20 +479,3 @@ const breadcrumbItems = [
     });
   })();
 </script>
-
-<style>
-  .product-features-content :global(.product-features-table-scroll) {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .product-features-content :global(.product-features-table-scroll table) {
-    width: max-content;
-    min-width: 100%;
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-</style>

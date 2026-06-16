@@ -2,6 +2,7 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import BlocksRenderer from '@/components/BlocksRenderer.astro';
+import InsightCard from '@/components/InsightCard.astro';
 import ProductCard from '@/components/ProductCard.astro';
 import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
@@ -199,7 +200,7 @@ const formApiBase = (() => {
           {supportItems.map((item) => {
             const iconImage = parseImage(item.icon);
             return (
-              <div class="rounded-2xl border border-slate-200 bg-white px-6 py-7 text-center shadow-sm">
+              <div class="rounded-2xl bg-white px-6 py-7 text-center">
                 {iconImage?.src ? (
                   <div class="mb-4 flex justify-center">
                     <Image
@@ -236,7 +237,7 @@ const formApiBase = (() => {
             const subtitle = extractTextFromBlocks(item.content, 120);
             const FallbackIcon = focusFallbackIcons[index] ?? Sparkles;
             return (
-              <div class="rounded-2xl border border-slate-200 bg-white px-6 py-7 text-center shadow-sm">
+              <div class="rounded-2xl bg-white px-6 py-7 text-center">
                 {coverImg?.src ? (
                   <div class="mb-4 flex justify-center">
                     <Image
@@ -275,7 +276,7 @@ const formApiBase = (() => {
             const coverImage = parseImage(step.cover);
             const stepText = step.stepLabel?.trim() || `Step ${index + 1}`;
             return (
-              <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div class="overflow-hidden rounded-2xl bg-white">
                 {coverImage?.src && (
                   <Image
                     src={coverImage.src}
@@ -384,14 +385,14 @@ const formApiBase = (() => {
           <button
             type="submit"
             id="dealer-submit"
-            class="w-full rounded-md bg-orange-500 px-8 py-3 font-semibold text-white transition-colors hover:bg-orange-600 disabled:opacity-50 lg:w-auto"
+            class="w-full rounded-md bg-orange-500 px-8 py-3 font-semibold text-white transition-colors hover:bg-orange-600 disabled:opacity-50"
           >
             {t(messages, 'common.submit')}
           </button>
         </form>
       </div>
       <div class="lg:col-span-2 lg:pt-5">
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="rounded-2xl bg-white p-6">
         <h3 class="mb-4 text-xl font-bold text-slate-950">
           {dealer?.customerServiceTitle ?? t(messages, 'dealer.customerServiceTitle')}
         </h3>
@@ -497,50 +498,10 @@ const formApiBase = (() => {
             <CircleChevronRight class="h-4 w-4" />
           </a>
         </div>
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {advantageInsights.map((insight) => {
-            const coverImage = parseImage(insight.cover ?? insight.coverImage ?? null);
-            const category =
-              insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
-                ? insight.insight_category
-                : null;
-            const categorySlug = category?.slug ?? '';
-            const articleHref = insight.slug
-              ? categorySlug
-                ? toHref(`/about/insights/${categorySlug}/${insight.slug}`, locale)
-                : toHref('/about/insights', locale)
-              : toHref('/about/insights', locale);
-            const articleSummary = insight.description || insight.excerpt || '';
-
-            return (
-              <a
-                href={articleHref}
-                class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-transform duration-200 hover:-translate-y-0.5"
-              >
-                {coverImage?.src && (
-                  <Image
-                    src={coverImage.src}
-                    alt={coverImage.alt || insight.title}
-                    width={coverImage.width ?? 960}
-                    height={coverImage.height ?? 640}
-                    class="aspect-[16/10] w-full object-cover"
-                    format="webp"
-                    quality={100}
-                  />
-                )}
-                <div class="p-6">
-                  <h3 class="text-xl font-bold text-slate-950 transition-colors group-hover:text-orange-500">
-                    {insight.title}
-                  </h3>
-                  {articleSummary && (
-                    <p class="mt-3 text-sm leading-6 text-slate-600">
-                      {articleSummary}
-                    </p>
-                  )}
-                </div>
-              </a>
-            );
-          })}
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {advantageInsights.map((insight) => (
+            <InsightCard insight={insight} locale={locale} />
+          ))}
         </div>
       </section>
     )}
