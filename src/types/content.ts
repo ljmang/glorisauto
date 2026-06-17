@@ -323,7 +323,7 @@ export interface BecomeDealerProcessStep {
 export interface BecomeDealerAttributes {
   title?: string;
   heroMedia?: StrapiMedia | StrapiMedia[] | null;
-  introContent?: BlockNode[];
+  introContent?: BlockNode[] | string;
   introMedia?: StrapiMedia | StrapiMedia[] | null;
   supportTitle?: string;
   supportItems?: BecomeDealerSupportItem[];

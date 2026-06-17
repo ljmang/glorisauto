@@ -10,6 +10,7 @@ import { fetchApiWithLocaleFallback, api, parseHeroMedia, parseImage, getStrapiU
 import { toHref } from '@/utils/navigationData';
 import { fetchSiteSeo } from '@/utils/siteConfig';
 import { getSiteContactInfo } from '@/utils/siteContact';
+import { renderDealerIntroHtml } from '@/utils/dealerIntroContent';
 import type { BecomeDealerAttributes, InsightAttributes, ProductAttributes } from '@/types/content';
 import type { StrapiResponse } from '@/types';
 import { Image } from 'astro:assets';
@@ -100,6 +101,7 @@ const articlesSectionLabel = dealer?.articlesLinkLabel?.trim() || t(messages, 'i
 const articlesSectionTitle =
   dealer?.articlesTitle?.trim() || dealer?.advantagesTitle || t(messages, 'dealer.advantagesTitle');
 const processSectionTitle = dealer?.processTitle?.trim() || 'Cooperation Process';
+const dealerIntroHtml = await renderDealerIntroHtml(dealer?.introContent, dealer?.title);
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -182,9 +184,14 @@ const formApiBase = (() => {
             />
           </div>
         )}
-        <div class="mx-auto max-w-[760px] text-center">
-          {dealer?.introContent?.length ? (
-            <BlocksRenderer blocks={dealer.introContent} class="text-left lg:text-center" />
+        <div class="dealer-intro-richtext mx-auto max-w-[760px] text-center">
+          {dealerIntroHtml ? (
+            <div
+              class="dealer-intro-content article-content prose prose-lg max-w-none text-left lg:text-center"
+              set:html={dealerIntroHtml}
+            />
+          ) : Array.isArray(dealer?.introContent) && dealer.introContent.length > 0 ? (
+            <BlocksRenderer blocks={dealer.introContent} class="dealer-intro-blocks text-left lg:text-center" />
           ) : null}
         </div>
       </section>
@@ -507,6 +514,53 @@ const formApiBase = (() => {
     )}
   </div>
 </BaseLayout>
+
+<style>
+  @reference "../../../styles/global.css";
+
+  .dealer-intro-richtext :global(ul),
+  .dealer-intro-richtext :global(ol) {
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 1.75rem;
+    margin-bottom: 1.75rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    text-align: left;
+  }
+
+  .dealer-intro-richtext :global(li) {
+    margin-bottom: 0.9rem;
+    line-height: 1.7;
+    text-align: left;
+  }
+
+  .dealer-intro-richtext :global(li:last-child) {
+    margin-bottom: 0;
+  }
+
+  .dealer-intro-richtext :global(ul li::marker) {
+    color: rgb(125 211 252);
+  }
+
+  .dealer-intro-richtext :global(ol li::marker) {
+    color: rgb(56 189 248);
+  }
+
+  .dealer-intro-content :global(.dealer-intro-cta-row) {
+    @apply mt-8;
+  }
+
+  .dealer-intro-content :global(.dealer-intro-cta),
+  .dealer-intro-content :global(.dealer-intro-inline-cta) {
+    @apply inline-flex items-center rounded-full bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 ring-1 ring-sky-100;
+  }
+
+  .dealer-intro-content :global(.dealer-intro-inline-cta) {
+    @apply mx-1 align-middle;
+  }
+</style>
 
 <script define:vars={{ locale, formTexts }}>
   (function () {
