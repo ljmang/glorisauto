@@ -16,9 +16,11 @@ interface Props {
   product: ProductAttributes;
   locale: string;
   ctaLabel?: string;
+  headingTag?: 'h2' | 'h3';
 }
 
-const { product, locale, ctaLabel } = Astro.props;
+const { product, locale, ctaLabel, headingTag = 'h3' } = Astro.props;
+const HeadingTag = headingTag;
 
 // 产品卡片优先使用独立封面图，未设置时回退到图片列表第一张
 const productImage = parseImage(product.cover ?? product.images);
@@ -67,9 +69,9 @@ const noImageLabel = noImageLabelByLocale[locale] || noImageLabelByLocale.en;
 
   <!-- 标题和描述 -->
   <div class="space-y-2 text-center">
-    <h3 class="text-xl font-bold group-hover:text-orange-500 transition-colors">
+    <HeadingTag class="text-xl font-bold group-hover:text-orange-500 transition-colors">
       {product.name}
-    </h3>
+    </HeadingTag>
     {productDescription ? (
       <p class="text-gray-700 leading-relaxed line-clamp-3">
         {productDescription}
