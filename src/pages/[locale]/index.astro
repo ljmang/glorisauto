@@ -10,7 +10,6 @@ import {
 	parseImage,
 } from "@/utils/strapiApi";
 import { toHref } from "@/utils/navigationData";
-import { getFreeSampleHref } from "@/utils/freeSampleLink";
 import { CircleChevronRight } from "lucide-svelte";
 import type { HomeAttributes, StrapiResponse, NewsItem } from "@/types";
 import type { ProductAttributes, InsightAttributes } from "@/types/content";
@@ -133,8 +132,8 @@ const heroMediaProp = parseHeroMedia(data.heroMedia);
 const heroDefaultBackground = parseImage(data.heroDefaultBackground);
 const heroTitle = data.heroTitle ?? t(messages, "home.heroTitle");
 const heroCtaHref = toHref(data.heroButtonLink ?? "/", locale);
-const heroSampleCta = t(messages, "home.freeSampleCta");
-const heroSampleCtaHref = getFreeSampleHref(locale);
+const heroSampleCta = t(messages, "dealer.actionCta");
+const heroSampleCtaHref = toHref("/about/dealer", locale);
 const aboutGlorisCover = parseImage(data.aboutGlorisCover);
 const showDownloadFiles =
 	Boolean(data.downloadFilesTitle) &&

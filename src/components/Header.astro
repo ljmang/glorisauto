@@ -2,7 +2,6 @@
 import { t, type Messages } from "@/i18n";
 import { type Locale } from "@/i18n/config";
 import { toHref, type NavItem } from "@/utils/navigationData";
-import { getFreeSampleHref } from "@/utils/freeSampleLink";
 import type { SiteSeoAttributes } from "@/types/content";
 import LanguageSwitcher from "@/components/LanguageSwitcher.astro";
 import Navigation from "@/components/Navigation.svelte";
@@ -10,7 +9,7 @@ import MobileNavigation from "@/components/MobileNavigation.svelte";
 import SearchBox from "@/components/SearchBox.svelte";
 import { generateSearchIndex } from "@/utils/searchIndex";
 import { getSiteContactInfo } from "@/utils/siteContact";
-import { PhoneCall, Mail, Search, Gift } from "lucide-svelte";
+import { PhoneCall, Mail, Search } from "lucide-svelte";
 
 interface Props {
   messages: Messages;
@@ -26,14 +25,14 @@ const searchIndex = await generateSearchIndex(locale);
 const siteContact = getSiteContactInfo(siteSeo);
 const homeHref = toHref('/', locale);
 const searchHref = toHref('/search', locale);
-const freeSampleHref = getFreeSampleHref(locale);
-const freeSampleLabel = t(messages, 'home.freeSampleCta');
+const dealerHref = toHref('/about/dealer', locale);
+const dealerCtaLabel = t(messages, 'dealer.headerCta');
 ---
 
-<header class="bg-white sticky top-0 z-40 shadow-sm">
+<header data-site-header class="bg-white sticky top-0 z-40 shadow-sm">
   <!-- connect us: hidden on mobile, shown in mobile nav popup -->
   <div
-    class="hidden md:flex container mx-auto px-4 gap-4 items-center justify-end text-sm relative"
+    class="hidden md:flex container mx-auto px-4 gap-4 items-center justify-end py-1 text-sm relative"
   >
     <!-- phone -->
     <div class="flex items-center gap-2">
@@ -57,19 +56,19 @@ const freeSampleLabel = t(messages, 'home.freeSampleCta');
     </div>
   </div>
   <!-- main navigation -->
-  <nav class="container mx-auto px-4 flex items-center justify-between gap-4 relative">
+  <nav class="container mx-auto px-4 py-2 flex items-center justify-between gap-4 relative">
     <!-- 左侧：logo + 桌面导航 -->
     <div class="flex items-center gap-4 min-w-0">
       <a href={homeHref} class="shrink-0">
         <img
           src="https://assets.glorisauto.com/uploads/logo_89e1563b6e.webp"
           alt="GLORIS"
-          class="h-12 object-contain mb-4 mt-2 md:mt-0"
+          class="h-10 md:h-11 object-contain mb-4 mt-2 md:mt-0"
         />
       </a>
       <Navigation client:load locale={locale} currentPath={currentPath} navData={navData} />
     </div>
-    <!-- 右侧：窄屏搜索图标 + 桌面搜索框 + CTA + 汉堡 -->
+    <!-- 右侧：窄屏搜索图标 + 桌面 CTA + 搜索框 + 汉堡 -->
     <div class="flex items-center gap-1 shrink-0 justify-end">
       <a
         href={searchHref}
@@ -77,6 +76,18 @@ const freeSampleLabel = t(messages, 'home.freeSampleCta');
         aria-label="Search"
       >
         <Search class="w-6 h-6" />
+      </a>
+      <a
+        href={dealerHref}
+        class="hidden xl:inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-full bg-orange-500 px-6 h-12 text-base font-bold text-white shadow-sm transition-colors hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+      >
+        <img
+          src="/images/icon-distributor.svg"
+          alt=""
+          aria-hidden="true"
+          class="h-5 w-5 shrink-0 object-contain"
+        />
+        {dealerCtaLabel}
       </a>
       <div class="hidden xl:block">
         <SearchBox
@@ -86,13 +97,6 @@ const freeSampleLabel = t(messages, 'home.freeSampleCta');
           messages={messages}
         />
       </div>
-      <a
-        href={freeSampleHref}
-        class="hidden xl:inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 lg:px-5"
-      >
-        <Gift class="h-4 w-4 shrink-0" />
-        {freeSampleLabel}
-      </a>
       <MobileNavigation
         client:load
         currentPath={currentPath}

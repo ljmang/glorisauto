@@ -16,6 +16,7 @@ import type {
   ImageNode,
 } from '@/types/blocks';
 import { parseImage, sanitizeMediaAltText } from './strapiApi';
+import { toHref } from './navigationData';
 
 /** 渲染文本节点 */
 function renderTextNode(node: TextNode): string {
@@ -31,13 +32,13 @@ function renderTextNode(node: TextNode): string {
 }
 
 /** 递归渲染子节点 */
-function renderChildren(children: BlockNode[] | undefined): string {
+function renderChildren(children: BlockNode[] | undefined, locale?: string): string {
   if (!children || children.length === 0) return '';
-  return children.map((child) => renderBlockNode(child)).join('');
+  return children.map((child) => renderBlockNode(child, locale)).join('');
 }
 
 /** 渲染单个 Block 节点 */
-export function renderBlockNode(node: BlockNode): string {
+export function renderBlockNode(node: BlockNode, locale?: string): string {
   if (!node || !node.type) return '';
 
   switch (node.type) {
@@ -47,45 +48,45 @@ export function renderBlockNode(node: BlockNode): string {
     case 'heading': {
       const heading = node as HeadingNode;
       const level = heading.level || 1;
-      const content = renderChildren(heading.children);
+      const content = renderChildren(heading.children, locale);
       return `<h${level}>${content}</h${level}>`;
     }
 
     case 'paragraph': {
       const paragraph = node as ParagraphNode;
-      const content = renderChildren(paragraph.children);
+      const content = renderChildren(paragraph.children, locale);
       return `<p>${content}</p>`;
     }
 
     case 'list': {
       const list = node as ListNode;
-      const content = renderChildren(list.children);
+      const content = renderChildren(list.children, locale);
       const tag = list.format === 'ordered' ? 'ol' : 'ul';
       return `<${tag}>${content}</${tag}>`;
     }
 
     case 'list-item': {
       const item = node as ListItemNode;
-      const content = renderChildren(item.children);
+      const content = renderChildren(item.children, locale);
       return `<li>${content}</li>`;
     }
 
     case 'link': {
       const link = node as LinkNode;
-      const content = renderChildren(link.children);
+      const content = renderChildren(link.children, locale);
       const target = link.newTab ? ' target="_blank" rel="noopener noreferrer"' : '';
-      return `<a href="${link.url}"${target}>${content}</a>`;
+      return `<a href="${toHref(link.url, locale || 'en')}"${target}>${content}</a>`;
     }
 
     case 'quote': {
       const quote = node as QuoteNode;
-      const content = renderChildren(quote.children);
+      const content = renderChildren(quote.children, locale);
       return `<blockquote>${content}</blockquote>`;
     }
 
     case 'code': {
       const code = node as CodeNode;
-      const content = renderChildren(code.children);
+      const content = renderChildren(code.children, locale);
       const language = code.language ? ` class="language-${code.language}"` : '';
       return `<pre><code${language}>${content}</code></pre>`;
     }
@@ -105,19 +106,19 @@ export function renderBlockNode(node: BlockNode): string {
 
     default:
       // 未知类型，尝试渲染子节点
-      return renderChildren((node as { children?: BlockNode[] }).children);
+      return renderChildren((node as { children?: BlockNode[] }).children, locale);
   }
 }
 
 /** 渲染整个 Blocks 数组为 HTML */
-export function renderBlocks(blocks: BlockNode[] | null | undefined): string {
+export function renderBlocks(blocks: BlockNode[] | null | undefined, locale?: string): string {
   if (!blocks || !Array.isArray(blocks)) return '';
-  return blocks.map((block) => renderBlockNode(block)).join('');
+  return blocks.map((block) => renderBlockNode(block, locale)).join('');
 }
 
 /** 渲染 Blocks 并返回安全的 HTML（可用于 set:html） */
-export function renderBlocksSafe(blocks: BlockNode[] | null | undefined): string {
-  return renderBlocks(blocks);
+export function renderBlocksSafe(blocks: BlockNode[] | null | undefined, locale?: string): string {
+  return renderBlocks(blocks, locale);
 }
 
 /** 从 Blocks 中提取纯文本摘要（用于卡片预览） */

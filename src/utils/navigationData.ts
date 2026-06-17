@@ -152,7 +152,7 @@ export function toHref(url: string | undefined, locale: string): string {
   if (!url) return '#';
 
   const cleaned = url.replace(/\u00a0/g, '').trim();
-  if (cleaned.startsWith('http') || cleaned.startsWith('//') || cleaned.startsWith('#')) {
+  if (/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(cleaned)) {
     return cleaned;
   }
 

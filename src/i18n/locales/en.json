@@ -161,8 +161,8 @@
     "freeSampleCta": "Get Free Samples"
   },
   "articleSampleCta": {
-    "title": "Need samples for testing?",
-    "description": "Tell us your application and target market, and our team will recommend suitable Gloris products and sample options."
+    "title": "Want to become a Gloris distributor in your market?",
+    "description": "Tell us about your region, channel resources, and target product lines. Our team will contact you with suitable products, pricing, and partnership support."
   },
   "error404": {
     "title": "Page Not Found",
@@ -187,6 +187,9 @@
     }
   },
   "dealer": {
+    "headerCta": "Become Our Distributor",
+    "sectionTag": "Distributor Program",
+    "actionCta": "Become Our Distributor",
     "joinUsTitle": "Join Us Now",
     "customerServiceTitle": "Customer Service",
     "whatsapp": "WhatsApp",

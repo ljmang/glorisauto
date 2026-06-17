@@ -7,6 +7,7 @@
   export let navData: NavItem[] = [];
 
   let openIndex: number = -1;
+  let dropdownTop = 88;
 
   function isActive(href: string): boolean {
     const a = currentPath.replace(/\/$/, '') || '/';
@@ -28,6 +29,13 @@
     openIndex = -1;
   }
 
+  function updateDropdownTop() {
+    if (typeof document === 'undefined') return;
+    const header = document.querySelector<HTMLElement>('[data-site-header]');
+    if (!header) return;
+    dropdownTop = Math.round(header.getBoundingClientRect().bottom);
+  }
+
   // 点击外部关闭
   function handleClickOutside(e: MouseEvent) {
     const target = e.target as HTMLElement;
@@ -40,10 +48,19 @@
     if (typeof document !== 'undefined') {
       document.addEventListener('click', handleClickOutside);
     }
+    updateDropdownTop();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', updateDropdownTop);
+      window.addEventListener('scroll', updateDropdownTop, { passive: true });
+    }
   });
   onDestroy(() => {
     if (typeof document !== 'undefined') {
       document.removeEventListener('click', handleClickOutside);
+    }
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', updateDropdownTop);
+      window.removeEventListener('scroll', updateDropdownTop);
     }
   });
 </script>
@@ -67,12 +84,13 @@
         {#if openIndex === i}
         <!-- 二级导航 -->
           <div
-            class="fixed inset-x-0 top-[100px] z-50 w-screen bg-gray-100/95 shadow-lg py-6 px-8 backdrop-blur-sm"
+            class="fixed inset-x-0 z-50 w-screen bg-gray-100/95 shadow-lg py-4 px-8 backdrop-blur-sm"
+            style={`top: ${dropdownTop}px;`}
             role="dialog"
             aria-label={item.label}
             transition:fly={{ duration: 400 }}
           >
-            <div class="container px-4 py-10 2xl:py-20 mx-auto">
+            <div class="container px-4 py-8 2xl:py-14 mx-auto">
               <div class="flex flex-wrap gap-x-16 gap-y-8">
               <!-- 三级导航 -->
               {#each item.columns as col}

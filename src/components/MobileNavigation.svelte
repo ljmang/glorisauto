@@ -2,8 +2,7 @@
   import { fade } from 'svelte/transition';
   import { toHref, type NavItem } from '@/utils/navigationData';
   import { supportedLocales, localeDisplayConfig, type Locale } from '@/i18n/config';
-  import { getFreeSampleHref } from '@/utils/freeSampleLink';
-  import { PhoneCall, Mail, Menu, X, Plus, Minus, Gift } from 'lucide-svelte';
+  import { PhoneCall, Mail, Menu, X, Plus, Minus } from 'lucide-svelte';
 
   let {
     currentPath = '',
@@ -72,7 +71,7 @@
   const isRtl = $derived(locale === 'ar');
   const contactPhoneHref = $derived(`tel:${contactPhone.replace(/[^\d+]/g, '')}`);
   const homeHref = $derived(toHref('/', locale));
-  const freeSampleHref = $derived(getFreeSampleHref(locale));
+  const dealerHref = $derived(toHref('/about/dealer', locale));
 </script>
 <!-- 手机版汉堡菜单按钮（搜索入口在 Header 里，与汉堡并排） -->
 <button
@@ -150,12 +149,17 @@
         {/if}
       </div>
       <a
-        href={freeSampleHref}
+        href={dealerHref}
         onclick={close}
         class="inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-5 py-3 text-base font-bold text-white shadow-sm transition-colors no-underline hover:bg-orange-600"
       >
-        <Gift class="h-5 w-5 shrink-0" />
-        {t('home.freeSampleCta')}
+        <img
+          src="/images/icon-distributor.svg"
+          alt=""
+          aria-hidden="true"
+          class="h-5 w-5 shrink-0 object-contain"
+        />
+        {t('dealer.headerCta')}
       </a>
     </div>
 

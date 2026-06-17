@@ -161,8 +161,8 @@
     "freeSampleCta": "获取免费样品"
   },
   "articleSampleCta": {
-    "title": "需要样品测试吗？",
-    "description": "告诉我们你的应用场景和目标市场，我们会推荐合适的 Gloris 产品与样品方案。"
+    "title": "想成为 Gloris 在您所在市场的代理商？",
+    "description": "告诉我们您的所在地区、渠道资源和目标产品线，我们会尽快与您联系，并提供适合当地市场的产品、价格与合作支持方案。"
   },
   "error404": {
     "title": "页面未找到",
@@ -187,6 +187,9 @@
     }
   },
   "dealer": {
+    "headerCta": "招募代理商",
+    "sectionTag": "招募代理商",
+    "actionCta": "成为代理商",
     "joinUsTitle": "立即加入我们",
     "customerServiceTitle": "客户服务",
     "whatsapp": "WhatsApp",

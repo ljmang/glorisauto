@@ -503,7 +503,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
           <h2 class="text-3xl font-black text-slate-950">
             {solution.overviewTitle || t(messages, 'solutions.overviewTitle')}
           </h2>
-          <BlocksRenderer blocks={solution.overview} class="mt-6" />
+          <BlocksRenderer blocks={solution.overview} locale={locale} class="mt-6" />
         </section>
       )}
 
@@ -544,7 +544,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
                 </p>
                 {step.title && <h3 class="mt-2 text-xl font-bold text-slate-950">{step.title}</h3>}
                 {step.description && step.description.length > 0 && (
-                  <BlocksRenderer blocks={step.description} class="mt-4" />
+                  <BlocksRenderer blocks={step.description} locale={locale} class="mt-4" />
                 )}
               </div>
             ))}

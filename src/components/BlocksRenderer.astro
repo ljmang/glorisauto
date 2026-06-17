@@ -10,18 +10,85 @@ import { renderBlocks } from '@/utils/blocks';
 interface Props {
   blocks: BlockNode[] | null | undefined;
   class?: string;
+  locale?: string;
+  variant?: 'default' | 'dealer';
 }
 
-const { blocks, class: className = '' } = Astro.props;
-const html = renderBlocks(blocks);
+const { blocks, class: className = '', locale, variant = 'default' } = Astro.props;
+const html = renderBlocks(blocks, locale);
+const variantClass = variant === 'dealer' ? 'blocks-content--dealer' : '';
 ---
 
 {html && (
-  <div class={`blocks-content article-content prose prose-lg max-w-none ${className}`} set:html={html} />
+  <div class={`blocks-content article-content prose prose-lg max-w-none ${variantClass} ${className}`} set:html={html} />
 )}
 
 <style>
   @reference "../styles/global.css";
+
+  .blocks-content {
+    @apply text-[18px] leading-[1.8] text-slate-700;
+  }
+
+  .blocks-content :global(p) {
+    @apply mb-6;
+  }
+
+  .blocks-content :global(h2) {
+    @apply mt-14 mb-5 text-3xl font-extrabold leading-tight text-slate-950 lg:text-4xl;
+    scroll-margin-top: 7rem;
+  }
+
+  .blocks-content :global(h3) {
+    @apply mt-10 mb-4 text-2xl font-bold leading-snug text-slate-900;
+    scroll-margin-top: 7rem;
+  }
+
+  .blocks-content :global(ul),
+  .blocks-content :global(ol) {
+    @apply my-6 pl-6;
+  }
+
+  .blocks-content :global(li) {
+    @apply mb-3 leading-[1.8];
+    text-align: left;
+  }
+
+  .blocks-content :global(li:last-child) {
+    @apply mb-0;
+  }
+
+  .blocks-content :global(ul li::marker) {
+    color: rgb(125 211 252);
+  }
+
+  .blocks-content :global(ol li::marker) {
+    color: rgb(56 189 248);
+  }
+
+  .blocks-content--dealer :global(ul),
+  .blocks-content--dealer :global(ol) {
+    width: fit-content;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .blocks-content :global(a) {
+    @apply text-orange-500 underline decoration-2 underline-offset-2 transition-all duration-200;
+  }
+
+  .blocks-content :global(a:hover) {
+    @apply text-orange-600 decoration-orange-300;
+  }
+
+  .blocks-content :global(p > a:only-child) {
+    @apply inline-flex items-center rounded-full bg-sky-50 px-4 py-2 no-underline text-sm font-semibold text-sky-700 ring-1 ring-sky-100;
+  }
+
+  .blocks-content :global(p > a:only-child:hover) {
+    @apply -translate-y-0.5 bg-sky-100 text-sky-800 ring-sky-200 shadow-sm;
+  }
 
   .blocks-content :global(pre) {
     @apply my-6 overflow-x-auto rounded-xl bg-slate-950 px-5 py-4 text-sm leading-7 text-slate-100;

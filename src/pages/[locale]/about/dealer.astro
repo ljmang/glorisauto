@@ -101,7 +101,7 @@ const articlesSectionLabel = dealer?.articlesLinkLabel?.trim() || t(messages, 'i
 const articlesSectionTitle =
   dealer?.articlesTitle?.trim() || dealer?.advantagesTitle || t(messages, 'dealer.advantagesTitle');
 const processSectionTitle = dealer?.processTitle?.trim() || 'Cooperation Process';
-const dealerIntroHtml = await renderDealerIntroHtml(dealer?.introContent, dealer?.title);
+const dealerIntroHtml = await renderDealerIntroHtml(dealer?.introContent, dealer?.title, locale);
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -191,7 +191,7 @@ const formApiBase = (() => {
               set:html={dealerIntroHtml}
             />
           ) : Array.isArray(dealer?.introContent) && dealer.introContent.length > 0 ? (
-            <BlocksRenderer blocks={dealer.introContent} class="dealer-intro-blocks text-left lg:text-center" />
+            <BlocksRenderer blocks={dealer.introContent} locale={locale} variant="dealer" class="dealer-intro-blocks text-left lg:text-center" />
           ) : null}
         </div>
       </section>
@@ -550,6 +550,27 @@ const formApiBase = (() => {
 
   .dealer-intro-content :global(.dealer-intro-cta-row) {
     @apply mt-8;
+  }
+
+  .dealer-intro-content :global(a) {
+    @apply transition-all duration-200;
+  }
+
+  .dealer-intro-content :global(a:hover) {
+    @apply text-orange-600 decoration-orange-300;
+  }
+
+  .dealer-intro-content :global(p > a:only-child) {
+    @apply inline-flex items-center rounded-full bg-sky-50 px-4 py-2 no-underline text-sky-700 ring-1 ring-sky-100;
+  }
+
+  .dealer-intro-content :global(p > a:only-child:hover) {
+    @apply -translate-y-0.5 bg-sky-100 text-sky-800 ring-sky-200 shadow-sm;
+  }
+
+  .dealer-intro-content :global(a > .dealer-intro-cta),
+  .dealer-intro-content :global(a > .dealer-intro-inline-cta) {
+    @apply bg-transparent px-0 py-0 mx-0 text-inherit ring-0 shadow-none no-underline;
   }
 
   .dealer-intro-content :global(.dealer-intro-cta),

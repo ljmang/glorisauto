@@ -4,6 +4,7 @@
  */
 
 import { sanitizeMediaAltText } from './strapiApi';
+import { toHref } from './navigationData';
 
 function escapeHtmlAttribute(value: string): string {
   return value
@@ -35,10 +36,20 @@ function wrapRenderedTables(html: string): string {
     .replace(/<\/table>/gi, '</table></div>');
 }
 
+function localizeRenderedLinks(html: string, locale?: string): string {
+  if (!locale) return html;
+
+  return html.replace(/<a\b([^>]*?)\shref=(["'])(.*?)\2([^>]*)>/gi, (_match, before: string, quote: string, href: string, after: string) => {
+    const localizedHref = toHref(href, locale);
+    return `<a${before} href=${quote}${escapeHtmlAttribute(localizedHref)}${quote}${after}>`;
+  });
+}
+
 /** 将 markdown 转为 HTML，使用与 Astro 一致的 remark/rehype 管道 */
 export async function markdownToHtml(
   markdown: string | null | undefined,
-  fallbackImageAlt?: string
+  fallbackImageAlt?: string,
+  locale?: string
 ): Promise<string> {
   if (!markdown) return '';
   const { unified } = await import('unified');
@@ -56,7 +67,10 @@ export async function markdownToHtml(
     .use(rehypeStringify)
     .process(markdown);
 
-  return wrapRenderedTables(sanitizeRenderedImageAlts(String(result), fallbackImageAlt));
+  return localizeRenderedLinks(
+    wrapRenderedTables(sanitizeRenderedImageAlts(String(result), fallbackImageAlt)),
+    locale
+  );
 }
 
 export interface TOCItem {
@@ -84,9 +98,10 @@ export function extractTOCFromHtml(html: string): TOCItem[] {
 /** 渲染 markdown 并返回 HTML + 目录（供 insights [slug].astro 使用） */
 export async function renderMarkdownWithTOC(
   markdown: string | null | undefined,
-  fallbackImageAlt?: string
+  fallbackImageAlt?: string,
+  locale?: string
 ): Promise<{ html: string; toc: TOCItem[] }> {
-  const html = await markdownToHtml(markdown, fallbackImageAlt);
+  const html = await markdownToHtml(markdown, fallbackImageAlt, locale);
   const toc = extractTOCFromHtml(html);
   return { html, toc };
 }

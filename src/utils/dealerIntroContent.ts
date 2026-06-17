@@ -153,7 +153,8 @@ function decorateDealerIntroHtml(html: string): string {
 
 export async function renderDealerIntroHtml(
   introContent: BlockNode[] | string | null | undefined,
-  fallbackImageAlt?: string
+  fallbackImageAlt?: string,
+  locale?: string
 ): Promise<string> {
   const markdownSource = typeof introContent === 'string'
     ? sanitizeMarkdown(introContent)
@@ -163,6 +164,6 @@ export async function renderDealerIntroHtml(
 
   if (!markdownSource) return '';
 
-  const html = await markdownToHtml(markdownSource, fallbackImageAlt);
+  const html = await markdownToHtml(markdownSource, fallbackImageAlt, locale);
   return decorateDealerIntroHtml(html);
 }

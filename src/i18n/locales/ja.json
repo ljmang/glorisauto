@@ -161,8 +161,8 @@
     "freeSampleCta": "無料サンプルを入手"
   },
   "articleSampleCta": {
-    "title": "テスト用サンプルが必要ですか？",
-    "description": "用途と対象市場をお知らせください。Gloris チームが適切な製品とサンプル案をご提案します。"
+    "title": "あなたの市場で Gloris の販売代理店になりませんか？",
+    "description": "地域、市場チャネル、注力したい製品ラインをお知らせください。最適な製品、価格、協業サポートをご案内します。"
   },
   "error404": {
     "title": "ページが見つかりません",
@@ -187,6 +187,9 @@
     }
   },
   "dealer": {
+    "headerCta": "販売代理店を募集",
+    "sectionTag": "販売代理店募集",
+    "actionCta": "販売代理店になる",
     "joinUsTitle": "今すぐパートナーに参加",
     "customerServiceTitle": "カスタマーサービス",
     "whatsapp": "WhatsApp",

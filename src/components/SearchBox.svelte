@@ -115,12 +115,12 @@
       onkeydown={handleKeydown}
       onfocus={() => { isOpen = query.length > 0; }}
       placeholder={t('search.placeholder')}
-      class={`w-full md:w-48 lg:w-64 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-        isRtl ? 'px-4 pr-10 text-right' : 'px-4 pl-10'
+      class={`h-12 w-full md:w-48 lg:w-64 xl:w-[260px] border border-gray-300 rounded-full bg-white text-base text-slate-700 focus:ring-2 focus:ring-orange-400 focus:border-orange-300 ${
+        isRtl ? 'px-4 pr-11 text-right' : 'px-4 pl-11'
       }`}
     />
-    <span class={`absolute top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none ${isRtl ? 'right-3' : 'left-3'}`}>
-      <Search size={20} />
+    <span class={`absolute top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none ${isRtl ? 'right-3.5' : 'left-3.5'}`}>
+      <Search size={22} />
     </span>
   </div>
 
