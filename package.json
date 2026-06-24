@@ -7,6 +7,8 @@
     "build": "astro build",
     "build:ssr": "astro build",
     "build:pages": "BUILD_TARGET=pages astro build",
+    "deploy:pages": "npm run build:pages && wrangler pages deploy dist --project-name glorisauto --branch master --commit-dirty=true",
+    "deploy:pages:preview": "npm run build:pages && wrangler pages deploy dist --project-name glorisauto --branch preview --commit-dirty=true",
     "preview": "astro preview",
     "preview:ssr": "astro preview",
     "astro": "astro",

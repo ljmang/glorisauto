@@ -1,65 +1,128 @@
-# Astro Starter Kit: Minimal
+# GLORISAUTO Frontend
 
-```sh
-npm create astro@latest -- --template minimal
+GLORISAUTO 官网前端，基于 Astro 5、Svelte 5 和 Tailwind CSS 4 构建。
+
+这个项目支持两种运行方式：
+
+- 默认本地开发 / SSR 预览
+- 通过 `BUILD_TARGET=pages` 构建为 Cloudflare Pages 静态站
+
+## 常用命令
+
+在项目目录执行：
+
+```bash
+cd /Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+安装依赖：
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```bash
+npm install
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+本地开发：
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+```bash
+npm run dev
+```
 
-Any static assets, like images, can be placed in the `public/` directory.
+SSR 构建与预览：
 
-## 🧞 Commands
+```bash
+npm run build
+npm run preview
+```
 
-All commands are run from the root of the project, from a terminal:
+Cloudflare Pages 静态构建：
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run dev:cloudflare`  | 构建后使用 Wrangler 本地模拟 Cloudflare Pages 环境 |
-| `npm run preview:cloudflare` | 同上，用于预览构建结果在 CF 环境下的表现        |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+```bash
+npm run build:pages
+```
 
-## ☁️ Cloudflare 开发环境
+本地模拟 Cloudflare Pages：
 
-项目支持在本地用 [Wrangler](https://developers.cloudflare.com/workers/wrangler/) 模拟 Cloudflare Pages 环境：
+```bash
+npm run preview:pages
+```
 
-1. 安装依赖后执行：`npm run dev:cloudflare` 或 `npm run preview:cloudflare`（会先执行 `astro build`，再以 `wrangler pages dev dist` 提供静态站点）。
-2. 环境变量：构建阶段使用 `.env` 中的 `PUBLIC_STRAPI_URL`；若需在 Wrangler 中覆盖，可复制 `.dev.vars.example` 为 `.dev.vars` 并填写。
-3. 部署到 Cloudflare Pages 时，在 Dashboard → 项目 → Settings → Environment variables 中配置同名变量即可。
+## Wrangler 直接部署
 
-### 静态站发布到 Cloudflare 后，表单能否提交到后端？
+项目已经内置 `wrangler.toml`，可以不依赖 GitHub 自动构建，直接用 Wrangler 把当前本地产物发布到 Cloudflare Pages。
 
-**可以。** 表单提交是**用户浏览器**直接发请求，和“静态/动态”无关，只要前端把请求发到后端即可。
+生产部署：
 
-- **做法一：前端直接请求后端**  
-  表单用 `fetch(PUBLIC_STRAPI_URL + '/api/xxx', { method: 'POST', ... })` 或 `form action="https://你的后端/api/xxx"` 提交到 Strapi（或现有后端）。  
-  - 要求：后端**必须公网可访问**，且要在 **Strapi 里配置 CORS**，允许你的 Cloudflare 页面域名（如 `https://xxx.pages.dev`、`https://www.glorisauto.com`），否则浏览器会拦截跨域 POST。
-- **做法二：经 Cloudflare Pages Function 中转**  
-  表单先提交到同源接口（如 `/api/contact`），由 Cloudflare 的 Serverless Function 再请求 Strapi。这样浏览器只访问同源，**不需要** Strapi 对前端域名开 CORS；Strapi 只要能被 Cloudflare 的节点访问即可。
+```bash
+npm run deploy:pages
+```
 
-当前项目里的联系表单（如 `support/contact`）若尚未接提交逻辑，可按上面两种方式之一接好后端接口；部署到 Cloudflare 静态页后，表单即可正常提交到后端。
+预览部署：
 
-## 👀 Want to learn more?
+```bash
+npm run deploy:pages:preview
+```
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+这两个命令都会先执行：
+
+```bash
+npm run build:pages
+```
+
+然后把 `dist/` 发布到 Cloudflare Pages 项目：`glorisauto`。
+
+### 等价的手动命令
+
+生产：
+
+```bash
+npm run build:pages
+npx wrangler pages deploy dist --project-name glorisauto --branch master --commit-dirty=true
+```
+
+预览：
+
+```bash
+npm run build:pages
+npx wrangler pages deploy dist --project-name glorisauto --branch preview --commit-dirty=true
+```
+
+## 为什么建议用 Wrangler 直发
+
+对这个项目来说，Wrangler 直发有几个实际好处：
+
+- 可以确保你本地刚刚构建出的 `dist/` 被原样部署
+- 更容易排查“线上 HTML 更新了，但 `_astro` 静态资源不完整”这类问题
+- 不必等 GitHub webhook 和 Pages 后台队列
+- 对内容驱动站点更可控，尤其适合需要快速同步 Strapi 新内容时使用
+
+## 环境变量
+
+本地示例文件：
+
+```bash
+.env.example
+```
+
+本地实际文件：
+
+```bash
+.env
+```
+
+Cloudflare Pages / Wrangler 相关变量见：
+
+- [wrangler.toml](/Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto/wrangler.toml)
+
+当前生产构建依赖的公开变量包括：
+
+- `PUBLIC_STRAPI_URL`
+- `STRAPI_BUILD_URL`
+- `STRAPI_FETCH_RETRIES`
+
+如果后续把构建完全切到 Cloudflare 侧，记得保证这些变量在 Cloudflare 项目里也同步配置。
+
+## 备注
+
+- 这个项目会根据 `BUILD_TARGET=pages` 或 `CF_PAGES` 自动切换到静态输出模式
+- 远程图片域名 `assets.glorisauto.com` 已在 Astro 图片配置中允许
+- 若线上文章封面或 `_astro` 图片资源异常，优先重新执行一次 `npm run deploy:pages`

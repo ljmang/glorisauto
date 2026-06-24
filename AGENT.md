@@ -76,7 +76,18 @@ npm run build
 npm run preview
 npm run build:pages
 npm run preview:pages
+npm run deploy:pages
+npm run deploy:pages:preview
 ```
+
+前台通过 Wrangler 直接部署 Cloudflare Pages：
+
+- 当前项目已经包含 `wrangler.toml`，Cloudflare Pages 项目名为 `glorisauto`
+- 推荐生产部署命令：`npm run deploy:pages`
+- 推荐预览部署命令：`npm run deploy:pages:preview`
+- `deploy:pages` 实际执行：先 `npm run build:pages`，再 `wrangler pages deploy dist --project-name glorisauto --branch master --commit-dirty=true`
+- 这种方式适合在 GitHub 自动部署不稳定、需要强制同步本地产物、或排查 `_astro` 静态资源缺失时使用
+- 如果线上页面内容已更新但封面图或 `_astro` 优化图缺失，优先重新执行一遍 `npm run deploy:pages`
 
 前台环境变量：
 
