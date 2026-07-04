@@ -3,15 +3,19 @@
  * 产品多媒体切换：主媒体 + 缩略图，支持图片 / 视频切换
  */
 import type { ParsedMediaItem } from '@/utils/strapiApi';
+import { resolveLocalizedImageAltText } from '@/utils/strapiApi';
+import type { Locale } from '@/i18n/config';
 
 interface Props {
   media: ParsedMediaItem[];
   productName: string;
+  locale: Locale;
 }
 
-const { media, productName } = Astro.props;
+const { media, productName, locale } = Astro.props;
 const list = Array.isArray(media) && media.length > 0 ? media : [];
 const first = list[0];
+const firstAlt = first ? resolveLocalizedImageAltText(locale, null, first.alt, productName) : productName;
 ---
 
 <div class="product-gallery" data-product-gallery-root>
@@ -22,7 +26,7 @@ const first = list[0];
           data-product-gallery-main
           src={first.src}
           poster={first.poster}
-          aria-label={first.alt || productName}
+          aria-label={firstAlt}
           width={first.width ?? 600}
           height={first.height ?? 600}
           class="h-full w-full object-contain"
@@ -37,7 +41,7 @@ const first = list[0];
         <img
           data-product-gallery-main
           src={first.src}
-          alt={first.alt || productName}
+          alt={firstAlt}
           width={first.width ?? 600}
           height={first.height ?? 600}
           class="h-full w-full object-contain"
@@ -57,7 +61,7 @@ const first = list[0];
           data-product-thumb
           data-type={item.type}
           data-src={item.src}
-          data-alt={item.alt || productName}
+          data-alt={resolveLocalizedImageAltText(locale, null, item.alt, productName)}
           data-poster={item.poster ?? ''}
           data-width={item.width ? String(item.width) : ''}
           data-height={item.height ? String(item.height) : ''}

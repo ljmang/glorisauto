@@ -5,8 +5,9 @@
  * 样式：正方形图片、标题、描述，无背景色，可点击跳转
  */
 
+import type { Locale } from '@/i18n/config';
 import type { ProductAttributes } from '@/types/content';
-import { parseImage } from '@/utils/strapiApi';
+import { parseImage, resolveLocalizedImageAltText } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { sanitizeInlineText } from '@/utils/contentSanitizers';
 import { Image } from 'astro:assets';
@@ -14,7 +15,7 @@ import { CircleChevronRight } from 'lucide-svelte';
 
 interface Props {
   product: ProductAttributes;
-  locale: string;
+  locale: Locale;
   ctaLabel?: string;
   headingTag?: 'h2' | 'h3';
 }
@@ -24,6 +25,7 @@ const HeadingTag = headingTag;
 
 // 产品卡片优先使用独立封面图，未设置时回退到图片列表第一张
 const productImage = parseImage(product.cover ?? product.images);
+const productImageAlt = resolveLocalizedImageAltText(locale, null, productImage?.alt, product.name);
 // 产品详情页链接：/products/{category}/{slug}（与 [category]/[slug].astro 一致）
 const categorySlug =
   product.category && typeof product.category === 'object' && 'slug' in product.category
@@ -52,7 +54,7 @@ const noImageLabel = noImageLabelByLocale[locale] || noImageLabelByLocale.en;
     <div class="relative w-full aspect-square overflow-hidden mb-4 flex items-center justify-center">
       <Image
         src={productImage.src}
-        alt={productImage.alt || product.name}
+        alt={productImageAlt}
         width={productImage.width}
         height={productImage.height}
         class="w-2/3 h-2/3 object-cover transition-transform duration-300 group-hover:scale-105"

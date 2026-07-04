@@ -4,7 +4,7 @@ import Breadcrumb from '@/components/Breadcrumb.astro';
 import InsightCard from '@/components/InsightCard.astro';
 import { supportedLocales, type Locale, getLocale, isRtlLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
-import { fetchApiWithLocaleFallback, api, parseImage } from '@/utils/strapiApi';
+import { fetchApiWithLocaleFallback, api, parseImage, resolveImageAltText, resolveLocalizedImageAltText } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { fetchSiteSeo } from '@/utils/siteConfig';
 import { getSiteContactInfo } from '@/utils/siteContact';
@@ -138,7 +138,7 @@ const breadcrumbItems = [
         <section class="relative container mx-auto px-4 min-h-[600px]">
           <Image
             src={heroMedia.src}
-            alt={heroMedia.alt || aboutUs.title || t(messages, 'pageTitle.about')}
+            alt={resolveLocalizedImageAltText(locale, null, heroMedia.alt, aboutUs.title || t(messages, 'pageTitle.about'))}
             width={heroMedia.width || 2720}
             height={heroMedia.height || 1120}
             class="w-full h-full object-cover absolute inset-0"
@@ -180,6 +180,7 @@ const breadcrumbItems = [
           <section class="mb-16 lg:mb-20 space-y-16 lg:space-y-20">
             {featuredArticles.map((article, index) => {
               const coverImage = parseImage(article.cover || (article as { coverImage?: unknown }).coverImage);
+              const coverAlt = resolveImageAltText(article.coverAlt, coverImage?.alt, article.title);
               const isEven = index % 2 === 0;
               const category = article.insight_category && typeof article.insight_category === 'object' && 'slug' in article.insight_category
                 ? article.insight_category
@@ -196,7 +197,7 @@ const breadcrumbItems = [
                     <div class={isEven ? 'order-1' : 'order-2'}>
                       <Image
                         src={coverImage.src}
-                        alt={coverImage.alt || article.title}
+                        alt={coverAlt}
                         width={coverImage.width}
                         height={coverImage.height}
                         class="w-full h-auto object-cover"

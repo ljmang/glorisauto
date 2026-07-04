@@ -6,7 +6,7 @@ import InsightCard from '@/components/InsightCard.astro';
 import ProductCard from '@/components/ProductCard.astro';
 import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
-import { fetchApiWithLocaleFallback, api, parseHeroMedia, parseImage, getStrapiUrl } from '@/utils/strapiApi';
+import { fetchApiWithLocaleFallback, api, parseHeroMedia, parseImage, getStrapiUrl, resolveLocalizedImageAltText } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { fetchSiteSeo } from '@/utils/siteConfig';
 import { getSiteContactInfo } from '@/utils/siteContact';
@@ -102,6 +102,12 @@ const articlesSectionTitle =
   dealer?.articlesTitle?.trim() || dealer?.advantagesTitle || t(messages, 'dealer.advantagesTitle');
 const processSectionTitle = dealer?.processTitle?.trim() || 'Cooperation Process';
 const dealerIntroHtml = await renderDealerIntroHtml(dealer?.introContent, dealer?.title, locale);
+const introMediaAlt = resolveLocalizedImageAltText(
+  locale,
+  null,
+  introMedia?.alt,
+  dealer?.title || t(messages, 'footer.about.becomeDealer')
+);
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -173,9 +179,9 @@ const formApiBase = (() => {
       <section class="mb-16 lg:mb-20">
         {introMedia?.src && (
           <div class="mb-8 flex justify-center lg:mb-10">
-            <Image
+              <Image
               src={introMedia.src}
-              alt={introMedia.alt || dealer?.title || t(messages, 'footer.about.becomeDealer')}
+              alt={introMediaAlt}
               width={introMedia.width ?? 800}
               height={introMedia.height ?? 560}
               class="max-h-[240px] w-auto max-w-full object-contain lg:max-h-[300px]"
@@ -206,13 +212,14 @@ const formApiBase = (() => {
         <div class="mx-auto grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {supportItems.map((item) => {
             const iconImage = parseImage(item.icon);
+            const iconAlt = resolveLocalizedImageAltText(locale, null, iconImage?.alt, item.title || '');
             return (
               <div class="rounded-2xl bg-white px-6 py-7 text-center">
                 {iconImage?.src ? (
                   <div class="mb-4 flex justify-center">
                     <Image
                       src={iconImage.src}
-                      alt={iconImage.alt || item.title || ''}
+                      alt={iconAlt}
                       width={iconImage.width ?? 96}
                       height={iconImage.height ?? 96}
                       class="h-14 w-14 object-contain"
@@ -241,6 +248,7 @@ const formApiBase = (() => {
           <div class="mx-auto grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {focusItems.slice(0, 3).map((item, index) => {
             const coverImg = parseImage(item.cover);
+            const coverAlt = resolveLocalizedImageAltText(locale, null, coverImg?.alt, item.title || '');
             const subtitle = extractTextFromBlocks(item.content, 120);
             const FallbackIcon = focusFallbackIcons[index] ?? Sparkles;
             return (
@@ -249,7 +257,7 @@ const formApiBase = (() => {
                   <div class="mb-4 flex justify-center">
                     <Image
                       src={coverImg.src}
-                      alt={coverImg.alt || item.title || ''}
+                      alt={coverAlt}
                       width={coverImg.width ?? 256}
                       height={coverImg.height ?? 256}
                       class="h-20 w-20 object-contain"
@@ -282,12 +290,18 @@ const formApiBase = (() => {
           {processSteps.map((step, index) => {
             const coverImage = parseImage(step.cover);
             const stepText = step.stepLabel?.trim() || `Step ${index + 1}`;
+            const stepImageAlt = resolveLocalizedImageAltText(
+              locale,
+              null,
+              coverImage?.alt,
+              step.title || stepText
+            );
             return (
               <div class="overflow-hidden rounded-2xl bg-white">
                 {coverImage?.src && (
                   <Image
                     src={coverImage.src}
-                    alt={coverImage.alt || step.title || stepText}
+                    alt={stepImageAlt}
                     width={coverImage.width ?? 960}
                     height={coverImage.height ?? 540}
                     class="aspect-[16/5.8] w-full object-cover"

@@ -8,6 +8,7 @@ import {
 	api,
 	parseHeroMedia,
 	parseImage,
+	resolveLocalizedImageAltText,
 } from "@/utils/strapiApi";
 import { toHref } from "@/utils/navigationData";
 import { CircleChevronRight } from "lucide-svelte";
@@ -200,9 +201,12 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 						<Image
 							src={aboutGlorisCover.src}
 							alt={
-								aboutGlorisCover.alt ||
-								data.aboutGlorisTitle ||
-								"Company Image"
+								resolveLocalizedImageAltText(
+									locale,
+									null,
+									aboutGlorisCover.alt,
+									data.aboutGlorisTitle || "Company Image",
+								)
 							}
 							width={aboutGlorisCover.width}
 							height={aboutGlorisCover.height}

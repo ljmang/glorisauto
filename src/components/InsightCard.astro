@@ -6,7 +6,7 @@
  */
 
 import type { InsightAttributes, InsightCategoryAttributes } from '@/types/content';
-import { parseImage } from '@/utils/strapiApi';
+import { parseImage, resolveImageAltText } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { Image } from 'astro:assets';
 
@@ -21,6 +21,7 @@ const { insight, locale, href: hrefOverride } = Astro.props;
 
 // 解析封面图片（实际数据字段是 cover，不是 coverImage）
 const coverImage = parseImage(insight.cover || (insight as { coverImage?: unknown }).coverImage);
+const coverAlt = resolveImageAltText(insight.coverAlt, coverImage?.alt, insight.title);
 // 链接：优先使用传入的 href，否则构建包含分类的文章详情页链接
 const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
   ? (insight.insight_category as InsightCategoryAttributes)
@@ -48,7 +49,7 @@ const noCoverLabel = noCoverLabelByLocale[locale] || noCoverLabelByLocale.en;
     <div class="relative w-full aspect-video overflow-hidden">
       <Image
         src={coverImage.src}
-        alt={coverImage.alt || insight.title}
+        alt={coverAlt}
         width={coverImage.width}
         height={coverImage.height}
         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"

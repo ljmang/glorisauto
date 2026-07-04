@@ -4,7 +4,7 @@
  * - fetchApi、fetchApiWithLocaleFallback、getStrapiUrl、getMediaUrl
  */
 
-import { defaultLocale } from '@/i18n/config';
+import { defaultLocale, type Locale } from '@/i18n/config';
 import { getMediaUrl as getMediaUrlBase } from './strapi';
 import { fetchApi as fetchApiBase, type FetchApiOptions } from './strapi';
 
@@ -73,6 +73,55 @@ export function sanitizeMediaAltText(value: unknown): string {
   if (!trimmed || MEDIA_FILENAME_PATTERN.test(trimmed)) return '';
 
   return trimmed;
+}
+
+export function resolveImageAltText(
+  overrideAlt: unknown,
+  mediaAlt: unknown,
+  fallbackAlt: unknown = ''
+): string {
+  const fallback = typeof fallbackAlt === 'string' ? fallbackAlt.trim() : '';
+  return sanitizeMediaAltText(overrideAlt) || sanitizeMediaAltText(mediaAlt) || fallback;
+}
+
+const LOCALE_SCRIPT_PATTERNS: Partial<Record<Locale, RegExp>> = {
+  'zh-cn': /\p{Script=Han}/u,
+  ja: /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u,
+  ar: /\p{Script=Arabic}/u,
+};
+
+const LATIN_TEXT_PATTERN = /\p{Script=Latin}/u;
+
+function hasLocaleScript(locale: Locale, value: string): boolean {
+  const pattern = LOCALE_SCRIPT_PATTERNS[locale];
+  return pattern ? pattern.test(value) : false;
+}
+
+function shouldPreferLocalizedFallback(locale: Locale, mediaAlt: string, fallbackAlt: string): boolean {
+  if (locale === defaultLocale) return false;
+  if (!fallbackAlt || !mediaAlt || mediaAlt === fallbackAlt) return false;
+  if (!hasLocaleScript(locale, fallbackAlt)) return false;
+  if (hasLocaleScript(locale, mediaAlt)) return false;
+  return LATIN_TEXT_PATTERN.test(mediaAlt);
+}
+
+export function resolveLocalizedImageAltText(
+  locale: Locale,
+  overrideAlt: unknown,
+  mediaAlt: unknown,
+  fallbackAlt: unknown = ''
+): string {
+  const override = sanitizeMediaAltText(overrideAlt);
+  if (override) return override;
+
+  const media = sanitizeMediaAltText(mediaAlt);
+  const fallback = typeof fallbackAlt === 'string' ? fallbackAlt.trim() : '';
+
+  if (shouldPreferLocalizedFallback(locale, media, fallback)) {
+    return fallback;
+  }
+
+  return media || fallback;
 }
 
 function getMediaAltText(record: Record<string, unknown>): string {

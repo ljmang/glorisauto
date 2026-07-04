@@ -1,7 +1,7 @@
 ---
 import type { Locale } from '@/i18n/config';
 import type { SolutionAttributes } from '@/types/content';
-import { parseImage } from '@/utils/strapiApi';
+import { parseImage, resolveLocalizedImageAltText } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { Image } from 'astro:assets';
 
@@ -14,6 +14,7 @@ interface Props {
 const { solution, locale, ctaLabel } = Astro.props;
 const cover = parseImage(solution.cover);
 const href = toHref(`/solutions/${solution.slug}`, locale);
+const coverAlt = resolveLocalizedImageAltText(locale, null, cover?.alt, solution.title);
 const audience = Array.isArray(solution.targetAudience)
   ? solution.targetAudience.map((item) => item?.name?.trim()).filter(Boolean)
   : [];
@@ -22,9 +23,9 @@ const audience = Array.isArray(solution.targetAudience)
 <a href={href} class="group block overflow-hidden border border-gray-200 bg-white transition-colors hover:border-orange-300">
   <div class="aspect-[16/9] overflow-hidden bg-gray-100">
     {cover?.src && cover.width && cover.height ? (
-      <Image
+        <Image
         src={cover.src}
-        alt={cover.alt || solution.title}
+        alt={coverAlt}
         width={cover.width}
         height={cover.height}
         class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
@@ -35,7 +36,7 @@ const audience = Array.isArray(solution.targetAudience)
     ) : cover?.src ? (
       <img
         src={cover.src}
-        alt={cover.alt || solution.title}
+        alt={coverAlt}
         class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
         loading="lazy"
       />

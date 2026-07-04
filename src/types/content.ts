@@ -147,6 +147,8 @@ export interface InsightAttributes {
   excerpt?: string;
   description?: string;
   content?: string;
+  coverAlt?: string | null;
+  coverCaption?: string | null;
   coverImage?: StrapiMedia | null;
   cover?: StrapiMedia | StrapiMedia[] | null;
   category?: unknown;

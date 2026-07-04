@@ -7,7 +7,7 @@ import InsightCard from '@/components/InsightCard.astro';
 import ArticleSampleCta from '@/components/ArticleSampleCta.astro';
 import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
-import { fetchApiWithLocaleFallback, api, parseImage } from '@/utils/strapiApi';
+import { fetchApiWithLocaleFallback, api, parseImage, resolveLocalizedImageAltText } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { isSolutionsEnabled } from '@/utils/featureFlags';
 import type {
@@ -87,6 +87,7 @@ if (!solution) {
 }
 
 const cover = parseImage(solution.cover);
+const coverAlt = resolveLocalizedImageAltText(locale, null, cover?.alt, solution.title);
 const audience = Array.isArray(solution.targetAudience)
   ? solution.targetAudience
       .map((item) => ({
@@ -208,7 +209,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
             {cover.width && cover.height ? (
               <Image
                 src={cover.src}
-                alt={cover.alt || solution.title}
+                alt={coverAlt}
                 width={cover.width}
                 height={cover.height}
                 class="h-full w-full object-cover"
@@ -216,7 +217,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
                 quality={90}
               />
             ) : (
-              <img src={cover.src} alt={cover.alt || solution.title} class="h-full w-full object-cover" />
+              <img src={cover.src} alt={coverAlt} class="h-full w-full object-cover" />
             )}
           </div>
         )}
@@ -449,7 +450,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
                     item.image.width && item.image.height ? (
                       <Image
                         src={item.image.src}
-                        alt={item.image.alt || item.name}
+                        alt={resolveLocalizedImageAltText(locale, null, item.image.alt, item.name)}
                         width={item.image.width}
                         height={item.image.height}
                         class="aspect-video w-full object-cover"
@@ -459,7 +460,7 @@ const pageTitle = `${solution.title} - ${t(messages, 'pageTitle.solutions')}`;
                     ) : (
                       <img
                         src={item.image.src}
-                        alt={item.image.alt || item.name}
+                        alt={resolveLocalizedImageAltText(locale, null, item.image.alt, item.name)}
                         class="aspect-video w-full object-cover"
                       />
                     )
