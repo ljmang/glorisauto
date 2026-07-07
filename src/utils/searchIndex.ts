@@ -395,6 +395,7 @@ async function buildSearchIndex(locale: string): Promise<SearchItem[]> {
       content: buildContent([
         product.shortDescription,
         product.description,
+        product.industryPainPoints,
         product.productFeatures,
         category.name,
       ]),

@@ -68,8 +68,6 @@
 
 .article-content :where(table) {
   @apply my-8 border-collapse text-left text-base leading-7;
-  width: max-content;
-  min-width: 100%;
 }
 
 .article-content :where(th) {

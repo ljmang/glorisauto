@@ -116,7 +116,9 @@ const optionsList = ((product as { options?: { name?: string }[] } | null)?.opti
 const holeList = ((product as { hole?: { name?: string }[] } | null)?.hole ?? [])
   .map((item) => ({ name: sanitizeInlineText(item?.name ?? '') }))
   .filter((item) => item.name);
-const productFeaturesMarkdown = sanitizeMarkdown((product as { productFeatures?: string } | null)?.productFeatures ?? '');
+const industryPainPointsMarkdown = sanitizeMarkdown(product?.industryPainPoints ?? '');
+const industryPainPointsHtml = await markdownToHtml(industryPainPointsMarkdown, product?.name);
+const productFeaturesMarkdown = sanitizeMarkdown(product?.productFeatures ?? '');
 const productFeaturesHtml = await markdownToHtml(productFeaturesMarkdown, product?.name);
 const productDescription = sanitizeInlineText(product?.description ?? '');
 
@@ -331,11 +333,23 @@ const breadcrumbItems = [
           </section>
         )}
 
+        {industryPainPointsHtml && (
+          <section class='mb-16 border-t border-slate-200 pt-12'>
+            <div class='max-w-[820px]'>
+              <p class='mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500'>
+                {t(messages, 'products.industryPainPointsEyebrow')}
+              </p>
+              <h2 class='mb-6 text-3xl font-extrabold text-slate-950'>{t(messages, 'products.industryPainPoints')}</h2>
+            </div>
+            <div class='product-features-content article-content prose prose-lg max-w-none' set:html={industryPainPointsHtml} />
+          </section>
+        )}
+
         {productFeaturesHtml && (
           <section class='mb-16 border-t border-slate-200 pt-12'>
             <div class='max-w-[820px]'>
               <p class='mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500'>
-                Feature details
+                {t(messages, 'products.featuresEyebrow')}
               </p>
               <h2 class='mb-6 text-3xl font-extrabold text-slate-950'>{t(messages, 'products.features')}</h2>
             </div>
@@ -351,7 +365,7 @@ const breadcrumbItems = [
             <div class='mb-4 flex items-center justify-between gap-4'>
               <div>
                 <p class='mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500'>
-                  Technical resources
+                  {t(messages, 'products.downloadsEyebrow')}
                 </p>
                 <h2 class='text-3xl font-extrabold text-slate-950'>{t(messages, 'products.downloads')}</h2>
               </div>
@@ -376,7 +390,7 @@ const breadcrumbItems = [
             <div class='mb-6 flex items-center justify-between gap-4'>
               <div>
                 <p class='mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500'>
-                  Continue reading
+                  {t(messages, 'products.relatedInsightsEyebrow')}
                 </p>
                 <h2 class='text-3xl font-extrabold text-slate-950'>{t(messages, 'products.relatedInsights')}</h2>
               </div>
@@ -401,7 +415,7 @@ const breadcrumbItems = [
             <div class='mb-4 flex items-center justify-between gap-4'>
               <div>
                 <p class='mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500'>
-                  Common questions
+                  {t(messages, 'products.faqEyebrow')}
                 </p>
                 <h2 class='text-3xl font-extrabold text-slate-950'>{t(messages, 'products.faq')}</h2>
               </div>

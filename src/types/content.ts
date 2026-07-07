@@ -98,6 +98,7 @@ export interface ProductAttributes {
   slug: string;
   cover?: StrapiMedia | null;
   description?: string;
+  industryPainPoints?: string;
   productFeatures?: string;
   shortDescription?: string;
   images?: StrapiMedia | StrapiMedia[];
