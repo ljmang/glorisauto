@@ -264,7 +264,9 @@ const breadcrumbItems = [
                 {informationList.map((item) => (
                   <div class='border-b border-slate-100 pb-5 last:border-b-0 last:pb-0'>
                     {item.title && <h2 class='mb-3 text-lg font-semibold text-slate-900'>{item.title}</h2>}
-                    {item.description && item.description.length > 0 && <BlocksRenderer blocks={item.description} locale={locale} />}
+                    {item.description && item.description.length > 0 && (
+                      <BlocksRenderer blocks={item.description} locale={locale} class='product-summary-content' />
+                    )}
                   </div>
                 ))}
               </div>
@@ -457,6 +459,33 @@ const breadcrumbItems = [
     )}
   </div>
 </BaseLayout>
+
+<style>
+  @reference "../../../../styles/global.css";
+
+  .product-summary-content :global(h2) {
+    @apply mt-8 mb-4 text-3xl font-extrabold leading-tight text-slate-950;
+    scroll-margin-top: 7rem;
+  }
+
+  .product-summary-content :global(h3) {
+    @apply mt-8 mb-3 text-2xl font-bold leading-snug text-slate-900;
+    scroll-margin-top: 7rem;
+  }
+
+  .product-summary-content :global(p) {
+    @apply mb-4;
+  }
+
+  .product-summary-content :global(ul),
+  .product-summary-content :global(ol) {
+    @apply my-4 pl-6;
+  }
+
+  .product-summary-content :global(li) {
+    @apply mb-2 leading-[1.7];
+  }
+</style>
 
 <script is:inline>
   (function () {
