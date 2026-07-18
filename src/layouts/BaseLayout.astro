@@ -1,6 +1,7 @@
 ---
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
+import BackToTop from '@/components/BackToTop.astro';
 import { type Messages, type Locale } from '@/i18n';
 import { localeLanguageTag, localeOgTag, isRtlLocale, defaultLocale } from '@/i18n/config';
 import type { SeoPageAttributes, SiteSeoAttributes } from '@/types/content';
@@ -226,6 +227,7 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
       <slot />
     </main>
     <Footer messages={messages} locale={locale} navData={navData} />
+    <BackToTop />
     <script is:inline>
       var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
       (function () {
