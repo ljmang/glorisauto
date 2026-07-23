@@ -10,7 +10,6 @@ import type { ProductAttributes } from '@/types/content';
 import { parseImage, resolveLocalizedImageAltText } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { sanitizeInlineText } from '@/utils/contentSanitizers';
-import { Image } from 'astro:assets';
 import { CircleChevronRight } from 'lucide-svelte';
 
 interface Props {
@@ -52,15 +51,14 @@ const noImageLabel = noImageLabelByLocale[locale] || noImageLabelByLocale.en;
   <!-- 正方形图片 -->
   {productImage && productImage.src && productImage.width && productImage.height ? (
     <div class="relative w-full aspect-square overflow-hidden mb-4 flex items-center justify-center">
-      <Image
+      <img
         src={productImage.src}
         alt={productImageAlt}
         width={productImage.width}
         height={productImage.height}
         class="w-2/3 h-2/3 object-cover transition-transform duration-300 group-hover:scale-105"
-        format="webp"
-        quality={100}
         loading="lazy"
+        decoding="async"
       />
     </div>
   ) : (

@@ -26,6 +26,11 @@ export default defineConfig({
     },
   },
   image: {
+    // Images are hosted on the production R2 custom domain. Keep those URLs
+    // remote during a Pages build instead of downloading every asset locally.
+    service: {
+      entrypoint: './src/image-service.js',
+    },
     domains: ['assets.glorisauto.com'],
     remotePatterns: [
       {

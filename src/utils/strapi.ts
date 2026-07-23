@@ -123,7 +123,11 @@ export function getStrapiUrl(): string {
 export function getMediaUrl(url: string | null | undefined): string {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  const base = 'https://assets.glorisauto.com';
+  const configuredBase = import.meta.env.PUBLIC_STRAPI_URL;
+  const base =
+    typeof configuredBase === 'string' && configuredBase.length > 0
+      ? configuredBase.replace(/\/$/, '')
+      : 'https://admin.glorisauto.com';
   return url.startsWith('/') ? `${base}${url}` : `${base}/${url}`;
 }
 
