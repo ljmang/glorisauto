@@ -91,6 +91,11 @@ const latestInsightsRes =
 				api.insights,
 				{
 					locale,
+					filters: {
+						insight_category: {
+							slug: { $ne: "news" },
+						},
+					},
 					populate: {
 						cover: true,
 						insight_category: true,
@@ -104,10 +109,20 @@ const latestInsightsRes =
 const latestInsights = Array.isArray(latestInsightsRes?.data)
 	? latestInsightsRes.data.filter((insight) => Boolean(insight?.slug))
 	: [];
+
+const getCategorySlug = (insight: InsightAttributes): string => {
+	const category = insight?.insight_category;
+	return category && typeof category === "object" && "slug" in category
+		? String((category as { slug?: string }).slug ?? "")
+		: "";
+};
+const isNonNewsInsight = (insight: InsightAttributes) =>
+	Boolean(insight?.slug) && getCategorySlug(insight) !== "news";
+
 const displayInsights =
 	homeInsightsMode === "latest"
-		? latestInsights
-		: manualInsights.slice(0, homeInsightsCount);
+		? latestInsights.filter(isNonNewsInsight)
+		: manualInsights.filter(isNonNewsInsight).slice(0, homeInsightsCount);
 const showInsights = Boolean(data.insightsTitle) && displayInsights.length > 0;
 const aboutGlorisLinkLabel =
 	data.aboutGlorisLinkLabel?.trim() || t(messages, "common.readMore");
