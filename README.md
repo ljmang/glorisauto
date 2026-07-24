@@ -18,32 +18,32 @@ cd /Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto
 安装依赖：
 
 ```bash
-npm install
+pnpm install
 ```
 
 本地开发：
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 SSR 构建与预览：
 
 ```bash
-npm run build
-npm run preview
+pnpm run build
+pnpm run preview
 ```
 
 Cloudflare Pages 静态构建：
 
 ```bash
-npm run build:pages
+pnpm run build:pages
 ```
 
 本地模拟 Cloudflare Pages：
 
 ```bash
-npm run preview:pages
+pnpm run preview:pages
 ```
 
 ## Wrangler 直接部署
@@ -53,19 +53,19 @@ npm run preview:pages
 生产部署：
 
 ```bash
-npm run deploy:pages
+pnpm run deploy:pages
 ```
 
 预览部署：
 
 ```bash
-npm run deploy:pages:preview
+pnpm run deploy:pages:preview
 ```
 
 这两个命令都会先执行：
 
 ```bash
-npm run build:pages
+pnpm run build:pages
 ```
 
 然后把 `dist/` 发布到 Cloudflare Pages 项目：`glorisauto`。
@@ -75,15 +75,15 @@ npm run build:pages
 生产：
 
 ```bash
-npm run build:pages
-npx wrangler pages deploy dist --project-name glorisauto --branch master --commit-dirty=true
+pnpm run build:pages
+pnpm exec wrangler pages deploy dist --project-name glorisauto --branch master --commit-dirty=true
 ```
 
 预览：
 
 ```bash
-npm run build:pages
-npx wrangler pages deploy dist --project-name glorisauto --branch preview --commit-dirty=true
+pnpm run build:pages
+pnpm exec wrangler pages deploy dist --project-name glorisauto --branch preview --commit-dirty=true
 ```
 
 ## 为什么建议用 Wrangler 直发
@@ -125,4 +125,4 @@ Cloudflare Pages / Wrangler 相关变量见：
 
 - 这个项目会根据 `BUILD_TARGET=pages` 或 `CF_PAGES` 自动切换到静态输出模式
 - 远程图片域名 `assets.glorisauto.com` 已在 Astro 图片配置中允许
-- 若线上文章封面或 `_astro` 图片资源异常，优先重新执行一次 `npm run deploy:pages`
+- 若线上文章封面或 `_astro` 图片资源异常，优先重新执行一次 `pnpm run deploy:pages`

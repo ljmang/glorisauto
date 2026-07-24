@@ -70,24 +70,24 @@
 
 ```bash
 cd /Users/matthew/Downloads/00.CODE/glasuritauto.com/glorisauto
-npm install
-npm run dev
-npm run build
-npm run preview
-npm run build:pages
-npm run preview:pages
-npm run deploy:pages
-npm run deploy:pages:preview
+pnpm install
+pnpm run dev
+pnpm run build
+pnpm run preview
+pnpm run build:pages
+pnpm run preview:pages
+pnpm run deploy:pages
+pnpm run deploy:pages:preview
 ```
 
 前台通过 Wrangler 直接部署 Cloudflare Pages：
 
 - 当前项目已经包含 `wrangler.toml`，Cloudflare Pages 项目名为 `glorisauto`
-- 推荐生产部署命令：`npm run deploy:pages`
-- 推荐预览部署命令：`npm run deploy:pages:preview`
-- `deploy:pages` 实际执行：先 `npm run build:pages`，再 `wrangler pages deploy dist --project-name glorisauto --branch master --commit-dirty=true`
+- 推荐生产部署命令：`pnpm run deploy:pages`
+- 推荐预览部署命令：`pnpm run deploy:pages:preview`
+- `deploy:pages` 实际执行：先 `pnpm run build:pages`，再 `pnpm exec wrangler pages deploy dist --project-name glorisauto --branch master --commit-dirty=true`
 - 这种方式适合在 GitHub 自动部署不稳定、需要强制同步本地产物、或排查 `_astro` 静态资源缺失时使用
-- 如果线上页面内容已更新但封面图或 `_astro` 优化图缺失，优先重新执行一遍 `npm run deploy:pages`
+- 如果线上页面内容已更新但封面图或 `_astro` 优化图缺失，优先重新执行一遍 `pnpm run deploy:pages`
 
 前台环境变量：
 
@@ -375,10 +375,10 @@ pm2 logs glorisauto --lines 100
 
 ```bash
 cd /srv/glorisauto.com/www
-npm run build
-npm run build:ssr
-npm run preview
-npm run test:strapi
+pnpm run build
+pnpm run build:ssr
+pnpm run preview
+pnpm run test:strapi
 ```
 
 后台命令：
@@ -413,8 +413,8 @@ git status --short --branch
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
 git fetch origin
 git pull --ff-only origin "$current_branch"
-npm install
-npm run build
+pnpm install
+pnpm run build
 pm2 restart glorisauto-www
 pm2 logs glorisauto-www --lines 100
 curl -sI -H "Host: glorisauto.com" http://127.0.0.1/en/
@@ -424,7 +424,7 @@ curl -sI -H "Host: glorisauto.com" http://127.0.0.1/en/
 
 - 前台 PM2 进程名是 `glorisauto-www`，端口是 `4321`。
 - 构建产物由 Astro SSR 使用，PM2 启动入口是 `./dist/server/entry.mjs`。
-- `npm install` 只在依赖变化或不确定依赖是否完整时执行；若只是普通代码更新，可根据情况跳过。
+- `pnpm install` 只在依赖变化或不确定依赖是否完整时执行；若只是普通代码更新，可根据情况跳过。
 - `git pull --ff-only` 可以避免在线上产生意外 merge commit。
 - Nginx 对前台 SSR 有缓存，成功响应通常缓存约 30 秒；更新后短时间看到旧内容时，先加 `?nocache=1` 或等待缓存过期再判断。
 - 如需绕过缓存验证，可使用带 `Cache-Control: no-cache` 的请求，或访问带 `nocache` 参数的页面。

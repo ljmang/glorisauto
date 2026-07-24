@@ -134,6 +134,6 @@
    - `src/utils/strapi.ts`：`getStrapiUrl()`、`fetchApi(path, options)`、`getMediaUrl(url)`，供页面/构建时调用。
 
 3. **数据获取测试**  
-   - 运行：`npm run test:strapi`  
+   - 运行：`pnpm run test:strapi`
    - 脚本会请求：`home`、`top-brands`、`products`、`categories`、`insights`、`help-centers`（均为 `locale=en`），并打印成功/失败与条数。  
    - 若某接口返回 403，需在 Strapi 后台 **Settings → Users & Permissions → Roles → Public** 中为该 API 勾选 **find**（及需要的 **findOne**）。
