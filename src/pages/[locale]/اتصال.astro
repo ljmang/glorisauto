@@ -1,0 +1,14 @@
+---
+import { type Locale, getLocale, supportedLocales } from '@/i18n/config';
+import { toHref } from '@/utils/navigationData';
+
+export async function getStaticPaths() {
+  return supportedLocales.map((locale) => ({
+    params: { locale },
+  }));
+}
+
+const params = Astro.params as { locale?: string };
+const locale: Locale = getLocale(params.locale);
+return Astro.redirect(toHref('/support/customer-service', locale), 301);
+---

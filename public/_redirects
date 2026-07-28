@@ -15,10 +15,59 @@
 /en/top-brands/* /en/products/ 301
 /zh-cn/top-brands /zh-cn/products/ 301
 /zh-cn/top-brands/* /zh-cn/products/ 301
+/ja/top-brands /ja/products/ 301
+/ja/top-brands/* /ja/products/ 301
+/ar/top-brands /ar/products/ 301
+/ar/top-brands/* /ar/products/ 301
 
 # Legacy localized product paths.
 /en/products/tpu-ppf/tpu-paint-protection-film /en/products/paint-protection-film/tpu-paint-protection-film/ 301
 /en/products/tpu-ppf/tpu-paint-protection-film/ /en/products/paint-protection-film/tpu-paint-protection-film/ 301
+/zh-cn/products/tpu-ppf /zh-cn/products/paint-protection-film/ 301
+/zh-cn/products/tpu-ppf/ /zh-cn/products/paint-protection-film/ 301
+/ja/products/tpu-ppf /ja/products/paint-protection-film/ 301
+/ja/products/tpu-ppf/ /ja/products/paint-protection-film/ 301
+/ar/products/tpu-ppf /ar/products/paint-protection-film/ 301
+/ar/products/tpu-ppf/ /ar/products/paint-protection-film/ 301
+
+# Legacy contact and factory paths.
+/contact /en/support/customer-service/ 301
+/contact/ /en/support/customer-service/ 301
+/en/contact /en/support/customer-service/ 301
+/en/contact/ /en/support/customer-service/ 301
+/zh-cn/contact /zh-cn/support/customer-service/ 301
+/zh-cn/contact/ /zh-cn/support/customer-service/ 301
+/ja/contact /ja/support/customer-service/ 301
+/ja/contact/ /ja/support/customer-service/ 301
+/ar/اتصال /ar/support/customer-service/ 301
+/ar/اتصال/ /ar/support/customer-service/ 301
+
+/en/support/contact /en/support/customer-service/ 301
+/en/support/contact/ /en/support/customer-service/ 301
+/zh-cn/support/contact /zh-cn/support/customer-service/ 301
+/zh-cn/support/contact/ /zh-cn/support/customer-service/ 301
+/ja/support/contact /ja/support/customer-service/ 301
+/ja/support/contact/ /ja/support/customer-service/ 301
+/ar/support/contact /ar/support/customer-service/ 301
+/ar/support/contact/ /ar/support/customer-service/ 301
+
+/en/about/factory /en/about/insights/production-base/ 301
+/en/about/factory/ /en/about/insights/production-base/ 301
+/zh-cn/about/factory /zh-cn/about/insights/production-base/ 301
+/zh-cn/about/factory/ /zh-cn/about/insights/production-base/ 301
+/ja/about/factory /ja/about/insights/production-base/ 301
+/ja/about/factory/ /ja/about/insights/production-base/ 301
+/ar/about/factory /ar/about/insights/production-base/ 301
+/ar/about/factory/ /ar/about/insights/production-base/ 301
+
+/en/about/insights/news/our-factory /en/about/insights/production-base/ 301
+/en/about/insights/news/our-factory/ /en/about/insights/production-base/ 301
+/zh-cn/about/insights/news/our-factory /zh-cn/about/insights/production-base/ 301
+/zh-cn/about/insights/news/our-factory/ /zh-cn/about/insights/production-base/ 301
+/ja/about/insights/news/our-factory /ja/about/insights/production-base/ 301
+/ja/about/insights/news/our-factory/ /ja/about/insights/production-base/ 301
+/ar/about/insights/news/our-factory /ar/about/insights/production-base/ 301
+/ar/about/insights/news/our-factory/ /ar/about/insights/production-base/ 301
 
 # Legacy insights shortcuts.
 /insights /en/about/insights/ 301

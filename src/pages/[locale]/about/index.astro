@@ -95,7 +95,7 @@ const latestInsightsTitle = aboutUs?.latestInsightsTitle?.trim() || t(messages, 
 const latestInsightsLinkLabel =
   aboutUs?.latestInsightsLinkLabel?.trim() || t(messages, 'common.viewAll');
 const latestInsightsLinkHref = toHref(aboutUs?.latestInsightsLink?.trim() || '/about/insights', locale);
-const messageButtonHref = toHref(aboutUs?.messageButtonLink?.trim() || '/contact', locale);
+const messageButtonHref = toHref(aboutUs?.messageButtonLink?.trim() || '/support/customer-service', locale);
 const siteContact = getSiteContactInfo(siteSeo);
 const phoneTitle = aboutUs?.phoneTitle?.trim() || t(messages, 'form.phone');
 const addressTitle = siteContact.addressTitle || t(messages, 'contactInfo.address');

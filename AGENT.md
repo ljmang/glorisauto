@@ -193,15 +193,16 @@ Hi ljmang! You've successfully authenticated, but GitHub does not provide shell 
 SSH 登录：
 
 ```bash
-ssh root@8.138.154.183
+ssh glorisauto-prod
 ```
 
 连接信息：
 
-- HostName：`8.138.154.183`
+- Host：`glorisauto-prod`
+- HostName：`166.88.33.48`
 - User：`root`
 - Port：`22`
-- SSH 观察到的服务器主机名：`iZ7xvhegjvgwfb55z9fhpiZ`
+- IdentityFile：`/Users/matthew/Downloads/key/MagicDesign.pem`
 
 生产项目根目录：
 
@@ -407,7 +408,7 @@ npm run sync:page-defaults
 前台网站部署：
 
 ```bash
-ssh root@8.138.154.183
+ssh glorisauto-prod
 cd /srv/glorisauto.com/www
 git status --short --branch
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
@@ -432,7 +433,7 @@ curl -sI -H "Host: glorisauto.com" http://127.0.0.1/en/
 后台 / Strapi 部署：
 
 ```bash
-ssh root@8.138.154.183
+ssh glorisauto-prod
 cd /srv/glorisauto.com/admin
 git status --short --branch
 git fetch origin
