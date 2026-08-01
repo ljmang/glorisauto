@@ -267,13 +267,28 @@ const formApiBase = (() => {
     const messageType = form.getAttribute('data-type') || '联系我们';
     const base = form.getAttribute('data-api-base') || '';
     const inquiryTypeEl = form.querySelector('[name="inquiryType"]');
-    const requestedType = new URLSearchParams(window.location.search).get('type');
+    const messageEl = form.querySelector('[name="message"]');
+    const searchParams = new URLSearchParams(window.location.search);
+    const requestedType = searchParams.get('type');
+    const requestedProduct = searchParams.get('product');
+
     if (requestedType && inquiryTypeEl) {
       const hasOption = Array.from(inquiryTypeEl.options).some((option) => option.value === requestedType);
       if (hasOption) inquiryTypeEl.value = requestedType;
     }
 
-    if (window.location.hash === '#contact-form' || requestedType === 'free-sample') {
+    if (requestedProduct && messageEl && !messageEl.value) {
+      const prefixMap = {
+        'zh-cn': '咨询产品：',
+        'ja': 'お問い合わせ製品：',
+        'ar': 'المنتج المستفسر عنه: ',
+        'en': 'Inquire Product: ',
+      };
+      const prefix = prefixMap[locale] || prefixMap['en'];
+      messageEl.value = `${prefix}${requestedProduct}\n\n`;
+    }
+
+    if (window.location.hash === '#contact-form' || requestedType) {
       window.requestAnimationFrame(() => {
         form.scrollIntoView({ behavior: 'smooth', block: 'start' });
         inquiryTypeEl?.focus?.({ preventScroll: true });

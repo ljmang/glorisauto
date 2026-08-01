@@ -309,14 +309,13 @@ const breadcrumbItems = [
                 />
                 {t(messages, 'dealer.actionCta')}
               </a> 
-              <button
-                type="button"
-                data-open-live-chat
+              <a
+                href={`${toHref('/support/customer-service', locale)}?type=buy-products&product=${encodeURIComponent(product?.name ?? '')}#contact-form`}
                 class='inline-flex items-center justify-center gap-2 rounded-md border border-orange-400 bg-white px-6 py-3 font-medium text-orange-500 transition-colors hover:bg-gray-100'
               >
                 <MessageCircle class="h-5 w-5 shrink-0" />
-                {t(messages, 'products.leaveMessage')}
-              </button>
+                {t(messages, 'products.inquire')}
+              </a>
             </div>
           </div>
         </section>
