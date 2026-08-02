@@ -20,6 +20,7 @@ interface Props {
 
 const { messages, locale, navData = [], siteSeo = null } = Astro.props;
 const currentPath = Astro.url.pathname;
+const isHelpPage = currentPath.split('/').includes('help');
 const searchIndex = await generateSearchIndex(locale);
 
 const siteContact = getSiteContactInfo(siteSeo);
@@ -72,7 +73,7 @@ const dealerCtaLabel = t(messages, 'dealer.headerCta');
     <div class="flex items-center gap-1 shrink-0 justify-end">
       <a
         href={searchHref}
-        class="xl:hidden p-2 text-gray-700 hover:text-orange-500 transition-colors"
+        class={`${isHelpPage ? '' : 'xl:hidden'} p-2 text-gray-700 hover:text-orange-500 transition-colors`}
         aria-label="Search"
       >
         <Search class="w-6 h-6" />
@@ -89,7 +90,7 @@ const dealerCtaLabel = t(messages, 'dealer.headerCta');
         />
         {dealerCtaLabel}
       </a>
-      <div class="hidden xl:block">
+      <div class={isHelpPage ? 'hidden' : 'hidden xl:block'}>
         <SearchBox
           client:load
           searchIndex={searchIndex}

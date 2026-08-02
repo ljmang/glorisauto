@@ -8,13 +8,16 @@ import { loadMessages, t } from '@/i18n';
 import { fetchApi, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { getHelpArticleStaticPaths } from '@/utils/helpStaticPaths';
-import { markdownToHtml } from '@/utils/markdown';
+import { estimateReadingMinutes } from '@/utils/helpContent';
+import { renderMarkdownWithTOC } from '@/utils/markdown';
 import { buildHelpSearchItems } from '@/utils/helpSearch';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ProductCard from '@/components/ProductCard.astro';
 import InsightCard from '@/components/InsightCard.astro';
 import ArticleSampleCta from '@/components/ArticleSampleCta.astro';
+import HelpFeedback from '@/components/HelpFeedback.svelte';
 import HelpSearch from '@/components/HelpSearch.svelte';
+import TableOfContents from '@/components/TableOfContents.astro';
 import type { HelpCategoryAttributes, HelpCenterAttributes, ProductAttributes, InsightAttributes } from '@/types/content';
 
 type RelatedProductLink = {
@@ -233,7 +236,12 @@ const articleMarkdown = article.contentMarkdown?.trim() ?? '';
 const markdownProductLinks = extractRelatedProductLinks(articleMarkdown);
 const markdownArticleLinks = extractRelatedArticleLinks(articleMarkdown);
 const articleBodyMarkdown = stripRelatedResourceLinkLists(articleMarkdown);
-const articleMarkdownHtml = articleBodyMarkdown ? await markdownToHtml(articleBodyMarkdown, article.title) : '';
+const articleMarkdownResult = articleBodyMarkdown
+  ? await renderMarkdownWithTOC(articleBodyMarkdown, article.title, locale)
+  : { html: '', toc: [] };
+const articleMarkdownHtml = articleMarkdownResult.html;
+const articleToc = articleMarkdownResult.toc;
+const readingMinutes = article.estimatedMinutes ?? estimateReadingMinutes(articleBodyMarkdown);
 
 // 3. 相关产品和文章
 const articleProducts = (article as { related_products?: ProductAttributes[] })?.related_products ?? [];
@@ -321,6 +329,14 @@ const publishedDate = article.publishedAt
       day: 'numeric',
     })
   : '';
+const reviewedDate = article.lastReviewedAt ?? article.updatedAt;
+const reviewedDateLabel = reviewedDate
+  ? new Date(reviewedDate).toLocaleDateString(localeDateTag[locale], {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  : '';
 ---
 
 <BaseLayout
@@ -372,16 +388,22 @@ const publishedDate = article.publishedAt
       </div>
     </div>
 
-    <!-- 文章内容 -->
-    <article class="max-w-[820px]">
-      <header class="mb-10 border-b border-slate-200 pb-8">
+    <!-- 文章内容 + 目录 -->
+    <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start lg:gap-10">
+      <article class="min-w-0 max-w-[820px]">
+        <header class="mb-10 border-b border-slate-200 pb-8">
         <div class="mb-4 flex flex-wrap items-center gap-3">
           <span class="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-orange-600">
             {categoryName}
           </span>
-          {publishedDate && (
-            <span class="text-sm font-medium text-slate-500">{publishedDate}</span>
+          {(reviewedDateLabel || publishedDate) && (
+            <span class="text-sm font-medium text-slate-500">
+              {t(messages, 'helpCenter.updated')} {reviewedDateLabel || publishedDate}
+            </span>
           )}
+          <span class="text-sm font-medium text-slate-500">
+            {t(messages, 'helpCenter.readingTime', { minutes: String(readingMinutes) })}
+          </span>
         </div>
         <h2 class="mb-4 text-4xl font-black leading-tight text-slate-950 lg:text-5xl">{article.title}</h2>
         {article.description && (
@@ -389,18 +411,36 @@ const publishedDate = article.publishedAt
             {article.description}
           </p>
         )}
-      </header>
+        </header>
 
-      <!-- 文章正文 -->
-      {articleMarkdownHtml && (
-        <div
-          class="article-content prose prose-lg mb-16 max-w-none"
-          set:html={articleMarkdownHtml}
+        {article.quickAnswer && (
+          <aside class="mb-10 rounded-2xl border-l-4 border-orange-500 bg-orange-50 px-5 py-4 sm:px-6" aria-label={t(messages, 'helpCenter.quickAnswer')}>
+            <p class="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-orange-600">
+              {t(messages, 'helpCenter.quickAnswer')}
+            </p>
+            <p class="text-base leading-7 text-slate-800">{article.quickAnswer}</p>
+          </aside>
+        )}
+
+        <!-- 文章正文 -->
+        {articleMarkdownHtml && (
+          <div
+            class="article-content prose prose-lg mb-16 max-w-none"
+            set:html={articleMarkdownHtml}
+          />
+        )}
+
+        <HelpFeedback
+          client:load
+          messages={messages}
+          articleSlug={article.slug}
+          contactHref={toHref('/support/customer-service?type=free-sample', locale)}
         />
-      )}
+        <ArticleSampleCta locale={locale} messages={messages} />
+      </article>
 
-      <ArticleSampleCta locale={locale} messages={messages} />
-    </article>
+      <TableOfContents items={articleToc} locale={locale} messages={messages} />
+    </div>
 
     <!-- 相关产品 -->
     {relatedProducts.length > 0 && (

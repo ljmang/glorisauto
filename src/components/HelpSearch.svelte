@@ -44,10 +44,11 @@
     if (typeof window === 'undefined') return;
     fuse = new Fuse(items, {
       keys: [
-        { name: 'title', weight: 0.45 },
-        { name: 'description', weight: 0.25 },
+        { name: 'title', weight: 0.38 },
+        { name: 'description', weight: 0.22 },
         { name: 'content', weight: 0.2 },
-        { name: 'categoryName', weight: 0.1 },
+        { name: 'keywords', weight: 0.15 },
+        { name: 'categoryName', weight: 0.05 },
       ],
       threshold: 0.35,
       includeScore: true,
@@ -79,6 +80,16 @@
 
   function navigateTo(item: HelpSearchItem | undefined) {
     if (!item || typeof window === 'undefined') return;
+
+    const analyticsWindow = window as Window & {
+      dataLayer?: Array<Record<string, unknown>>;
+    };
+    analyticsWindow.dataLayer?.push({
+      event: 'help_search_select',
+      query: query.trim(),
+      result_title: item.title,
+      result_path: item.href,
+    });
     window.location.href = item.href;
   }
 
@@ -114,9 +125,10 @@
   });
 </script>
 
-<div class="relative max-w-2xl">
+<div class="relative max-w-3xl">
   <div class="relative">
     <input
+      id="help-center-search"
       type="search"
       value={query}
       oninput={handleInput}
@@ -127,6 +139,10 @@
       onblur={handleBlur}
       placeholder={t('search.placeholder')}
       aria-label={t('search.placeholder')}
+      aria-autocomplete="list"
+      aria-controls="help-search-results"
+      aria-activedescendant={selectedIndex >= 0 ? `help-search-result-${selectedIndex}` : undefined}
+      role="combobox"
       aria-expanded={isOpen}
       class={`w-full rounded-lg border border-gray-300 bg-white px-4 py-3 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orange-500 ${
         isRtl ? 'pr-12 text-right' : 'pl-12'
@@ -144,14 +160,19 @@
 
   {#if isOpen && hasQuery}
     <div
+      id="help-search-results"
+      role="listbox"
       class="absolute left-0 right-0 top-full z-40 mt-2 max-h-96 overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 shadow-xl"
     >
       {#if results.length > 0}
         {#each results as result, index}
           {@const item = result.item}
           <a
+            id={`help-search-result-${index}`}
             href={item.href}
             onmousedown={(event) => event.preventDefault()}
+            role="option"
+            aria-selected={index === selectedIndex}
             class={`block rounded-lg border px-4 py-3 no-underline transition-colors ${
               index === selectedIndex
                 ? 'border-orange-200 bg-orange-50'

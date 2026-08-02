@@ -216,7 +216,20 @@
     "relatedProducts": "منتجات ذات صلة",
     "relatedArticles": "مقالات ذات صلة",
     "relatedFaq": "أسئلة شائعة ذات صلة",
-    "noArticles": "لم يتم العثور على مقالات في هذه الفئة."
+    "noArticles": "لم يتم العثور على مقالات في هذه الفئة.",
+    "browseByNeedTitle": "تصفح حسب الحاجة",
+    "browseByNeedDescription": "اختر نوع المساعدة التي تحتاجها، ثم انتقل من الإجابة السريعة إلى المنتج أو الإجراء المناسب.",
+    "articleCount": "{count} مقالات",
+    "viewAllArticles": "عرض جميع المقالات",
+    "inThisArticle": "في هذا المقال",
+    "quickAnswer": "إجابة سريعة",
+    "updated": "آخر تحديث",
+    "readingTime": "قراءة خلال {minutes} دقائق",
+    "feedbackTitle": "هل كان هذا المقال مفيدًا؟",
+    "feedbackYes": "نعم",
+    "feedbackNo": "ليس بعد",
+    "feedbackThanks": "شكرًا على ملاحظاتك.",
+    "feedbackContact": "أخبرنا بما كان ناقصًا"
   },
   "insights": {
     "allArticles": "جميع المقالات",

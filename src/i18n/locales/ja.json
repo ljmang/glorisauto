@@ -216,7 +216,20 @@
     "relatedProducts": "関連製品",
     "relatedArticles": "関連記事",
     "relatedFaq": "関連FAQ",
-    "noArticles": "このカテゴリには記事がありません。"
+    "noArticles": "このカテゴリには記事がありません。",
+    "browseByNeedTitle": "目的から探す",
+    "browseByNeedDescription": "まず目的を選び、クイックアンサーから適切な製品や作業手順へ進めます。",
+    "articleCount": "{count} 件の記事",
+    "viewAllArticles": "すべての記事を見る",
+    "inThisArticle": "この記事の目次",
+    "quickAnswer": "クイックアンサー",
+    "updated": "更新日",
+    "readingTime": "約 {minutes} 分で読めます",
+    "feedbackTitle": "この記事は役に立ちましたか？",
+    "feedbackYes": "役に立った",
+    "feedbackNo": "まだ不十分",
+    "feedbackThanks": "フィードバックありがとうございます。",
+    "feedbackContact": "不足している情報を知らせる"
   },
   "insights": {
     "allArticles": "すべての記事",

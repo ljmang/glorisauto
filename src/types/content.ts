@@ -412,9 +412,17 @@ export interface HelpCenterAttributes {
   title: string;
   slug: string;
   description?: string;
+  quickAnswer?: string;
   contentMarkdown?: string | null;
   sort?: number;
   recommend?: boolean;
+  audience?: 'distributor' | 'technician' | 'installer' | 'vehicle-owner' | string;
+  productFamily?: 'abrasives' | 'polishing' | 'window-film' | 'paint-protection-film' | 'body-repair' | 'general' | string;
+  intent?: 'selection' | 'application' | 'troubleshooting' | 'maintenance' | string;
+  keywords?: string;
+  difficulty?: 'basic' | 'intermediate' | 'advanced' | string;
+  estimatedMinutes?: number;
+  lastReviewedAt?: string;
   publishedAt?: string;
   updatedAt?: string;
   help_category?: HelpCategoryAttributes | null;

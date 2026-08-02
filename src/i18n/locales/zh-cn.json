@@ -216,7 +216,20 @@
     "relatedProducts": "相关产品",
     "relatedArticles": "相关文章",
     "relatedFaq": "相关常见问题",
-    "noArticles": "该分类下暂无文章。"
+    "noArticles": "该分类下暂无文章。",
+    "browseByNeedTitle": "按需求查找",
+    "browseByNeedDescription": "先选择你要解决的问题，再从快速答案进入对应产品或操作流程。",
+    "articleCount": "{count} 篇文章",
+    "viewAllArticles": "查看全部文章",
+    "inThisArticle": "本文目录",
+    "quickAnswer": "快速答案",
+    "updated": "更新于",
+    "readingTime": "约 {minutes} 分钟阅读",
+    "feedbackTitle": "这篇文章对你有帮助吗？",
+    "feedbackYes": "有帮助",
+    "feedbackNo": "还没有",
+    "feedbackThanks": "感谢你的反馈。",
+    "feedbackContact": "告诉我们还缺少什么"
   },
   "insights": {
     "allArticles": "全部文章",

@@ -216,7 +216,20 @@
     "relatedProducts": "Related products",
     "relatedArticles": "Related articles",
     "relatedFaq": "Related FAQ",
-    "noArticles": "No articles found in this category."
+    "noArticles": "No articles found in this category.",
+    "browseByNeedTitle": "Browse by need",
+    "browseByNeedDescription": "Choose the kind of help you need, then move from a quick answer to the right product or process.",
+    "articleCount": "{count} articles",
+    "viewAllArticles": "View all articles",
+    "inThisArticle": "In this article",
+    "quickAnswer": "Quick answer",
+    "updated": "Updated",
+    "readingTime": "{minutes} min read",
+    "feedbackTitle": "Was this article helpful?",
+    "feedbackYes": "Yes",
+    "feedbackNo": "Not yet",
+    "feedbackThanks": "Thanks for your feedback.",
+    "feedbackContact": "Tell us what was missing"
   },
   "insights": {
     "allArticles": "All articles",
