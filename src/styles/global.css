@@ -64,6 +64,14 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.article-content :where(.article-youtube-embed) {
+  @apply my-10 aspect-video w-full max-w-4xl overflow-hidden rounded-xl bg-slate-100;
+}
+
+.article-content :where(.article-youtube-embed iframe) {
+  @apply block h-full w-full border-0;
+}
+
 .article-content :where(table) {
   @apply my-8 border-collapse text-left text-base leading-7;
   width: auto;

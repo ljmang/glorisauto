@@ -5,6 +5,10 @@
 
 import { sanitizeMediaAltText } from './strapiApi';
 import { toHref } from './navigationData';
+import {
+  injectYoutubeEmbeds,
+  prepareYoutubeShortcodes,
+} from './youtubeEmbed';
 
 function escapeHtmlAttribute(value: string): string {
   return value
@@ -52,6 +56,7 @@ export async function markdownToHtml(
   locale?: string
 ): Promise<string> {
   if (!markdown) return '';
+  const preparedMarkdown = prepareYoutubeShortcodes(markdown);
   const { unified } = await import('unified');
   const { default: remarkParse } = await import('remark-parse');
   const { default: remarkRehype } = await import('remark-rehype');
@@ -65,10 +70,12 @@ export async function markdownToHtml(
     .use(remarkRehype, { allowDangerousHtml: false })
     .use(rehypeSlug)
     .use(rehypeStringify)
-    .process(markdown);
+    .process(preparedMarkdown.markdown);
+
+  const html = injectYoutubeEmbeds(String(result), preparedMarkdown.embeds);
 
   return localizeRenderedLinks(
-    wrapRenderedTables(sanitizeRenderedImageAlts(String(result), fallbackImageAlt)),
+    wrapRenderedTables(sanitizeRenderedImageAlts(html, fallbackImageAlt)),
     locale
   );
 }

@@ -6,6 +6,7 @@ import {
 } from './strapiApi';
 import { sanitizeInlineText } from './contentSanitizers';
 import { toHref } from './navigationData';
+import { stripYoutubeShortcodes } from './youtubeEmbed';
 import type {
   CategoryAttributes,
   DownloadFileAttributes,
@@ -175,7 +176,7 @@ const searchIndexCache = new Map<string, Promise<SearchItem[]>>();
 function stripMarkdown(value?: string | null): string {
   if (!value) return '';
 
-  return value
+  return stripYoutubeShortcodes(value)
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1 ')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')

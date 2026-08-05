@@ -1,9 +1,11 @@
 /** Shared helpers for making help articles easier to scan and discover. */
 
+import { stripYoutubeShortcodes } from './youtubeEmbed';
+
 export function stripMarkdown(value?: string | null): string {
   if (!value) return '';
 
-  return value
+  return stripYoutubeShortcodes(value)
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1 ')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
