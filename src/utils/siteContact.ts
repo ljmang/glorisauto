@@ -1,7 +1,7 @@
 import type { SiteSeoAttributes } from '@/types/content';
 
 export const DEFAULT_CONTACT_PHONE = '+86 19128973352';
-export const DEFAULT_CONTACT_EMAIL = 'Sales@glorisauto.com';
+export const DEFAULT_CONTACT_EMAIL = 'sales@glorisauto.com';
 
 const DEFAULT_MAP_EMBED_URL = 'https://maps.google.com/maps?q=23.1291,113.2644&z=12&output=embed';
 const DEFAULT_MAP_LINK_URL = 'https://www.google.com/maps?q=23.1291,113.2644';

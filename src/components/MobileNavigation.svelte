@@ -10,7 +10,7 @@
     messages = {},
     navData = [],
     contactPhone = '+86 19128973352',
-    contactEmail = 'Sales@glorisauto.com',
+    contactEmail = 'sales@glorisauto.com',
   }: {
     currentPath?: string;
     locale?: string;
