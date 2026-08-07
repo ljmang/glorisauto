@@ -7,11 +7,13 @@ import Breadcrumb from '@/components/Breadcrumb.astro';
 import InsightFeaturedCard from '@/components/InsightFeaturedCard.astro';
 import InsightGridCard from '@/components/InsightGridCard.astro';
 import InsightPagination from '@/components/InsightPagination.astro';
+import InsightSearch from '@/components/InsightSearch.svelte';
 import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import type { InsightAttributes, InsightCategoryAttributes } from '@/types/content';
+import { buildInsightSearchItems } from '@/utils/insightSearch';
 
 export async function getStaticPaths() {
   const paths: { params: { locale: string; category: string } }[] = [];
@@ -64,6 +66,7 @@ const insights = (Array.isArray(insightsRes?.data) ? insightsRes.data : [])
     const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
     return dateB - dateA;
   });
+const insightSearchItems = buildInsightSearchItems(insights, locale);
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -99,26 +102,9 @@ const currentPage = Number.isFinite(requestedPage) && requestedPage > 0
           <p class="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-orange-600">{t(messages, 'footer.about.insights')}</p>
           <h1 class="max-w-xl text-5xl font-black tracking-tight text-slate-950 lg:text-6xl">{categoryName}</h1>
           <p class="mt-6 max-w-xl text-lg leading-8 text-slate-600 lg:text-xl lg:leading-9">{categoryIntro}</p>
-          <form action={toHref('/search', locale)} method="get" class="relative mt-8 max-w-xl">
-            <label for={`insights-category-search-${locale}`} class="sr-only">{t(messages, 'insights.searchArticles')}</label>
-            <input
-              id={`insights-category-search-${locale}`}
-              name="q"
-              type="search"
-              placeholder={t(messages, 'insights.searchArticles')}
-              class="h-14 w-full rounded-xl border border-slate-200 bg-white px-5 pr-14 text-base text-slate-900 outline-none transition focus:border-orange-400"
-            />
-            <button
-              type="submit"
-              aria-label={t(messages, 'insights.searchArticles')}
-              class="absolute right-2 top-2 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900 text-white transition hover:bg-orange-600"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true" class="h-5 w-5 fill-none stroke-current stroke-2">
-                <circle cx="11" cy="11" r="6" />
-                <path d="m16 16 4 4" />
-              </svg>
-            </button>
-          </form>
+          <div class="mt-8">
+            <InsightSearch client:load items={insightSearchItems} locale={locale} messages={messages} />
+          </div>
         </div>
 
         {featuredInsight && <InsightFeaturedCard insight={featuredInsight} locale={locale} messages={messages} />}
