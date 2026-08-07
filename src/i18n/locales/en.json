@@ -234,6 +234,14 @@
   "insights": {
     "allArticles": "All articles",
     "noCover": "No cover",
-    "tableOfContents": "Table of Contents"
+    "tableOfContents": "Table of Contents",
+    "latestArticle": "Latest article",
+    "browseByCategory": "Browse by category",
+    "searchArticles": "Search articles",
+    "categoryIntro": "Explore practical articles, application notes, and field perspectives from the Gloris team.",
+    "pagination": "Insights pagination",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "page": "Page"
   }
 }

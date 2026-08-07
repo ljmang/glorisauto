@@ -1,7 +1,9 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
-import InsightListItem from '@/components/InsightListItem.astro';
+import InsightFeaturedCard from '@/components/InsightFeaturedCard.astro';
+import InsightGridCard from '@/components/InsightGridCard.astro';
+import InsightPagination from '@/components/InsightPagination.astro';
 import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
@@ -54,6 +56,13 @@ const breadcrumbItems = [
 const pageTitle = t(messages, 'footer.about.insights');
 const allArticlesLabel = t(messages, 'insights.allArticles');
 const pageCopy = resolveCollectionPageCopy(locale, 'insights', siteSeo);
+const [featuredInsight, ...remainingInsights] = insights;
+const pageSize = 12;
+const pageCount = Math.ceil(remainingInsights.length / pageSize);
+const requestedPage = Number.parseInt(Astro.url.searchParams.get('page') || '1', 10);
+const currentPage = Number.isFinite(requestedPage) && requestedPage > 0
+  ? Math.min(pageCount || 1, requestedPage)
+  : 1;
 ---
 
 <BaseLayout
@@ -64,52 +73,90 @@ const pageCopy = resolveCollectionPageCopy(locale, 'insights', siteSeo);
   messages={messages}
   locale={locale}
 >
-  <div class="container mx-auto px-4 py-8">
+  <div class="mx-auto max-w-[1320px] px-4 py-8 lg:py-12">
     <Breadcrumb items={breadcrumbItems} locale={locale} />
 
-    <div class="flex flex-col md:flex-row gap-4 md:gap-8">
-      <!-- 左侧：分类导航 -->
-      <aside class="md:w-56 shrink-0 font-bold md:sticky md:top-60 md:self-start hidden md:block">
-        <nav class="space-y-1" aria-label={t(messages, 'insights.allArticles')}>
+    <main class="mb-16">
+      <section class="grid items-stretch gap-8 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-12">
+        <div class="flex flex-col justify-center py-2 lg:py-8">
+          <p class="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-orange-600">{pageTitle}</p>
+          <h1 class="max-w-xl text-5xl font-black tracking-tight text-slate-950 lg:text-6xl">{pageCopy.heading}</h1>
+          <p class="mt-6 max-w-xl text-lg leading-8 text-slate-600 lg:text-xl lg:leading-9">
+            {pageCopy.intro}
+          </p>
+          <form action={toHref('/search', locale)} method="get" class="relative mt-8 max-w-xl">
+            <label for={`insights-search-${locale}`} class="sr-only">{t(messages, 'insights.searchArticles')}</label>
+            <input
+              id={`insights-search-${locale}`}
+              name="q"
+              type="search"
+              placeholder={t(messages, 'insights.searchArticles')}
+              class="h-14 w-full rounded-xl border border-slate-200 bg-white px-5 pr-14 text-base text-slate-900 outline-none transition focus:border-orange-400"
+            />
+            <button
+              type="submit"
+              aria-label={t(messages, 'insights.searchArticles')}
+              class="absolute right-2 top-2 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900 text-white transition hover:bg-orange-600"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" class="h-5 w-5 fill-none stroke-current stroke-2">
+                <circle cx="11" cy="11" r="6" />
+                <path d="m16 16 4 4" />
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        {featuredInsight && <InsightFeaturedCard insight={featuredInsight} locale={locale} messages={messages} />}
+      </section>
+
+      <section class="mt-10 flex flex-col gap-5 border border-slate-200 bg-white p-5 lg:flex-row lg:items-center lg:p-6">
+        <p class="shrink-0 text-base font-bold text-slate-900 lg:w-48">{t(messages, 'insights.browseByCategory')}</p>
+        <nav aria-label={t(messages, 'insights.browseByCategory')} class="flex min-w-0 gap-2 overflow-x-auto pb-1">
           <a
             href={toHref('/about/insights', locale)}
-            class="block p-2 hover:bg-gray-100 hover:text-orange-500 transition-colors text-orange-500"
+            class="shrink-0 rounded-md border border-orange-500 bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
           >
             {allArticlesLabel}
           </a>
           {categories.map((cat) => (
             <a
               href={toHref(`/about/insights/${cat.slug}`, locale)}
-              class="block p-2 hover:bg-gray-100 hover:text-orange-500 transition-colors"
+              class="shrink-0 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-orange-400 hover:text-orange-600"
             >
               {cat.name}
             </a>
           ))}
         </nav>
-      </aside>
+      </section>
 
-      <!-- 右侧：文章列表 -->
-      <main class="flex-1 min-w-0 mb-12">
-        <h1 class="text-4xl lg:text-5xl font-black mb-4">{pageCopy.heading}</h1>
-        <p class="max-w-4xl text-base leading-7 text-gray-600 mb-8 lg:text-lg lg:leading-8">
-          {pageCopy.intro}
-        </p>
-        <div class="space-y-6">
-          {insights.length > 0 ? (
-            insights.map((insight) => <InsightListItem insight={insight} locale={locale} messages={messages} />)
-          ) : (
-            <p class="text-gray-500 py-12">{t(messages, 'search.noResults')}</p>
-          )}
+      <section class="mt-12" aria-labelledby={`insights-list-${locale}`} data-insights-pagination-root>
+        <div class="mb-6 flex items-end justify-between gap-4">
+          <h2 id={`insights-list-${locale}`} class="text-3xl font-black tracking-tight text-slate-950 lg:text-4xl">
+            {allArticlesLabel}
+          </h2>
+          {insights.length > 0 && <span class="text-sm font-medium text-slate-500">{insights.length} {pageTitle}</span>}
         </div>
 
-        {insights.length > 0 && (
-          <nav aria-label="Pagination" class="mt-12 flex justify-center items-center gap-2">
-            <button type="button" class="px-3 py-2 text-gray-600 hover:text-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" disabled>&lt;</button>
-            <a href={toHref('/about/insights', locale)} class="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700 transition-colors">1</a>
-            <button type="button" class="px-3 py-2 text-gray-600 hover:text-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" disabled>&gt;</button>
-          </nav>
-        )}
-      </main>
+        {remainingInsights.length > 0 ? (
+          <div>
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {remainingInsights.map((insight, index) => (
+              <div data-insight-item data-page={Math.floor(index / pageSize) + 1} style={Math.floor(index / pageSize) + 1 === currentPage ? undefined : 'display: none;'}>
+                <InsightGridCard insight={insight} locale={locale} messages={messages} />
+              </div>
+            ))}
+            </div>
+            <InsightPagination
+              currentPage={currentPage}
+              pageCount={pageCount}
+              baseId={`insights-list-${locale}`}
+              messages={messages}
+            />
+          </div>
+        ) : !featuredInsight ? (
+          <p class="border border-dashed border-slate-300 py-16 text-center text-slate-500">{t(messages, 'search.noResults')}</p>
+        ) : null}
+      </section>
     </div>
   </div>
 </BaseLayout>

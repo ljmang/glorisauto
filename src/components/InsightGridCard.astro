@@ -1,0 +1,75 @@
+---
+import type { InsightAttributes, InsightCategoryAttributes } from '@/types/content';
+import type { Messages } from '@/i18n';
+import { type Locale, localeDateTag } from '@/i18n/config';
+import { t } from '@/i18n';
+import { parseImage, resolveImageAltText } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import { Image } from 'astro:assets';
+
+interface Props {
+  insight: InsightAttributes;
+  locale: Locale;
+  messages: Messages;
+}
+
+const { insight, locale, messages } = Astro.props;
+const coverImage = parseImage(insight.cover || (insight as { coverImage?: unknown }).coverImage);
+const coverAlt = resolveImageAltText(insight.coverAlt, coverImage?.alt, insight.title);
+const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
+  ? (insight.insight_category as InsightCategoryAttributes)
+  : null;
+const href = category?.slug && insight.slug
+  ? toHref(`/about/insights/${category.slug}/${insight.slug}`, locale)
+  : toHref(`/about/insights/${insight.slug}`, locale);
+const publishedDate = insight.publishedAt
+  ? new Date(insight.publishedAt).toLocaleDateString(localeDateTag[locale], {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  : '';
+---
+
+<a
+  href={href}
+  class="group flex h-full flex-col overflow-hidden border border-slate-200 bg-white transition-colors duration-300 hover:border-orange-200"
+>
+  <div class="relative aspect-[16/9] overflow-hidden bg-slate-100">
+    {coverImage?.src ? (
+      <Image
+        src={coverImage.src}
+        alt={coverAlt}
+        width={coverImage.width || 1200}
+        height={coverImage.height || 675}
+        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        format="webp"
+        quality={88}
+        loading="lazy"
+      />
+    ) : (
+      <div class="flex h-full items-center justify-center text-sm text-slate-500">
+        {t(messages, 'insights.noCover')}
+      </div>
+    )}
+  </div>
+
+  <div class="flex flex-1 flex-col p-5 lg:p-6">
+    <div class="mb-3 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
+      {category?.name && <span>{category.name}</span>}
+      {category?.name && publishedDate && <span aria-hidden="true">·</span>}
+      {publishedDate && <time datetime={insight.publishedAt}>{publishedDate}</time>}
+    </div>
+    <h2 class="text-2xl font-extrabold leading-tight text-slate-950 transition-colors group-hover:text-orange-600">
+      {insight.title}
+    </h2>
+    {(insight.description || insight.excerpt) && (
+      <p class="mt-4 line-clamp-3 text-base leading-7 text-slate-600">
+        {insight.description || insight.excerpt}
+      </p>
+    )}
+    <span class="mt-auto pt-6 text-sm font-bold text-orange-600">
+      {t(messages, 'common.readMore')} <span aria-hidden="true">→</span>
+    </span>
+  </div>
+</a>

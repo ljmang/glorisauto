@@ -1,0 +1,72 @@
+---
+import type { InsightAttributes, InsightCategoryAttributes } from '@/types/content';
+import type { Messages } from '@/i18n';
+import { type Locale, localeDateTag } from '@/i18n/config';
+import { t } from '@/i18n';
+import { parseImage, resolveImageAltText } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import { Image } from 'astro:assets';
+
+interface Props {
+  insight: InsightAttributes;
+  locale: Locale;
+  messages: Messages;
+}
+
+const { insight, locale, messages } = Astro.props;
+const coverImage = parseImage(insight.cover || (insight as { coverImage?: unknown }).coverImage);
+const coverAlt = resolveImageAltText(insight.coverAlt, coverImage?.alt, insight.title);
+const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category
+  ? (insight.insight_category as InsightCategoryAttributes)
+  : null;
+const href = category?.slug && insight.slug
+  ? toHref(`/about/insights/${category.slug}/${insight.slug}`, locale)
+  : toHref(`/about/insights/${insight.slug}`, locale);
+const publishedDate = insight.publishedAt
+  ? new Date(insight.publishedAt).toLocaleDateString(localeDateTag[locale], {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  : '';
+---
+
+<a
+  href={href}
+  class="group relative block min-h-[360px] overflow-hidden bg-slate-900 transition-colors duration-300"
+>
+  {coverImage?.src ? (
+    <Image
+      src={coverImage.src}
+      alt={coverAlt}
+      width={coverImage.width || 1200}
+      height={coverImage.height || 675}
+      class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+      format="webp"
+      quality={90}
+    />
+  ) : (
+    <div class="absolute inset-0 bg-slate-800" />
+  )}
+  <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-slate-950/10" />
+
+  <div class="relative flex min-h-[360px] flex-col justify-end p-7 text-white lg:p-9">
+    <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-orange-300">
+      {t(messages, 'insights.latestArticle')}
+    </p>
+    <h2 class="max-w-2xl text-3xl font-black leading-tight lg:text-4xl">
+      {insight.title}
+    </h2>
+    {(insight.description || insight.excerpt) && (
+      <p class="mt-4 line-clamp-2 max-w-2xl text-base leading-7 text-slate-200">
+        {insight.description || insight.excerpt}
+      </p>
+    )}
+    <div class="mt-6 flex flex-wrap items-center gap-3 text-sm font-medium text-slate-200">
+      {category?.name && <span>{category.name}</span>}
+      {category?.name && publishedDate && <span aria-hidden="true">·</span>}
+      {publishedDate && <time datetime={insight.publishedAt}>{publishedDate}</time>}
+      <span class="font-bold text-orange-300">{t(messages, 'common.readMore')} <span aria-hidden="true">→</span></span>
+    </div>
+  </div>
+</a>

@@ -1,0 +1,126 @@
+---
+import type { Messages } from '@/i18n';
+import { t } from '@/i18n';
+
+interface Props {
+  currentPage: number;
+  pageCount: number;
+  baseId: string;
+  messages: Messages;
+}
+
+const { currentPage, pageCount, baseId, messages } = Astro.props;
+const pageHref = (page: number) => `?page=${page}#${baseId}`;
+const previousLabel = t(messages, 'insights.previousPage');
+const nextLabel = t(messages, 'insights.nextPage');
+const pageLabel = t(messages, 'insights.page');
+---
+
+{pageCount > 1 && (
+  <nav
+    class="mt-10 flex items-center justify-center gap-2"
+    aria-label={t(messages, 'insights.pagination')}
+    data-insights-pagination
+    data-page-count={pageCount}
+  >
+    <a
+      href={pageHref(Math.max(1, currentPage - 1))}
+      data-page={Math.max(1, currentPage - 1)}
+      data-direction="previous"
+      aria-label={previousLabel}
+      aria-disabled={currentPage === 1 ? 'true' : undefined}
+      class={`border border-slate-200 px-3 py-2 text-sm font-semibold transition ${currentPage === 1 ? 'pointer-events-none opacity-40' : 'text-slate-700 hover:border-orange-400 hover:text-orange-600'}`}
+    >
+      ←
+    </a>
+
+    {Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => (
+      <a
+        href={pageHref(page)}
+        data-page={page}
+        aria-label={`${pageLabel} ${page}`}
+        aria-current={page === currentPage ? 'page' : undefined}
+        class={`min-w-10 border px-3 py-2 text-center text-sm font-semibold transition ${page === currentPage ? 'border-orange-500 bg-orange-500 text-white' : 'border-slate-200 text-slate-700 hover:border-orange-400 hover:text-orange-600'}`}
+      >
+        {page}
+      </a>
+    ))}
+
+    <a
+      href={pageHref(Math.min(pageCount, currentPage + 1))}
+      data-page={Math.min(pageCount, currentPage + 1)}
+      data-direction="next"
+      aria-label={nextLabel}
+      aria-disabled={currentPage === pageCount ? 'true' : undefined}
+      class={`border border-slate-200 px-3 py-2 text-sm font-semibold transition ${currentPage === pageCount ? 'pointer-events-none opacity-40' : 'text-slate-700 hover:border-orange-400 hover:text-orange-600'}`}
+    >
+      →
+    </a>
+  </nav>
+)}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-insights-pagination]').forEach((pagination) => {
+    const root = pagination.closest<HTMLElement>('[data-insights-pagination-root]');
+    if (!root) return;
+
+    const items = Array.from(root.querySelectorAll<HTMLElement>('[data-insight-item]'));
+    const pageLinks = Array.from(pagination.querySelectorAll<HTMLAnchorElement>('[data-page]'));
+    const pageCount = Number(pagination.dataset.pageCount || 1);
+    const getPageFromUrl = () => {
+      const value = Number(new URL(window.location.href).searchParams.get('page') || 1);
+      return Number.isFinite(value) && value > 0 ? Math.min(pageCount, Math.floor(value)) : 1;
+    };
+
+    const updatePage = (page: number, updateUrl = false) => {
+      const nextPage = Math.max(1, Math.min(pageCount, Math.floor(page)));
+      items.forEach((item) => {
+        item.style.display = Number(item.dataset.page) === nextPage ? '' : 'none';
+      });
+      pageLinks.forEach((link) => {
+        const isCurrent = Number(link.dataset.page) === nextPage && !link.dataset.direction;
+        if (isCurrent) link.setAttribute('aria-current', 'page');
+        else link.removeAttribute('aria-current');
+        if (!link.dataset.direction) {
+          link.classList.toggle('border-orange-500', isCurrent);
+          link.classList.toggle('bg-orange-500', isCurrent);
+          link.classList.toggle('text-white', isCurrent);
+          link.classList.toggle('border-slate-200', !isCurrent);
+          link.classList.toggle('text-slate-700', !isCurrent);
+          link.classList.toggle('hover:border-orange-400', !isCurrent);
+          link.classList.toggle('hover:text-orange-600', !isCurrent);
+        }
+        if (link.dataset.direction === 'previous') {
+          const disabled = nextPage === 1;
+          link.setAttribute('aria-disabled', String(disabled));
+          link.classList.toggle('pointer-events-none', disabled);
+          link.classList.toggle('opacity-40', disabled);
+        }
+        if (link.dataset.direction === 'next') {
+          const disabled = nextPage === pageCount;
+          link.setAttribute('aria-disabled', String(disabled));
+          link.classList.toggle('pointer-events-none', disabled);
+          link.classList.toggle('opacity-40', disabled);
+        }
+      });
+      if (updateUrl) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('page', String(nextPage));
+        url.hash = root.querySelector('[aria-labelledby]')?.id || '';
+        window.history.pushState({}, '', url);
+        root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+
+    pagination.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      const link = target.closest<HTMLAnchorElement>('a[data-page]');
+      if (!link || link.getAttribute('aria-disabled') === 'true') return;
+      event.preventDefault();
+      updatePage(Number(link.dataset.page || 1), true);
+    });
+
+    window.addEventListener('popstate', () => updatePage(getPageFromUrl()));
+    updatePage(getPageFromUrl());
+  });
+</script>

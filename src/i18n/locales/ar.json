@@ -234,6 +234,14 @@
   "insights": {
     "allArticles": "جميع المقالات",
     "noCover": "لا توجد صورة غلاف",
-    "tableOfContents": "جدول المحتويات"
+    "tableOfContents": "جدول المحتويات",
+    "latestArticle": "أحدث مقال",
+    "browseByCategory": "تصفح حسب الفئة",
+    "searchArticles": "ابحث في المقالات",
+    "categoryIntro": "استكشف المقالات العملية ودراسات التطبيقات ووجهات النظر الميدانية التي أعدها فريق Gloris.",
+    "pagination": "ترقيم صفحات المقالات",
+    "previousPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية",
+    "page": "صفحة"
   }
 }

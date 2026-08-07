@@ -234,6 +234,14 @@
   "insights": {
     "allArticles": "全部文章",
     "noCover": "暂无封面",
-    "tableOfContents": "目录"
+    "tableOfContents": "目录",
+    "latestArticle": "最新文章",
+    "browseByCategory": "按分类浏览",
+    "searchArticles": "搜索文章",
+    "categoryIntro": "查看 Gloris 团队整理的实用文章、应用案例和一线行业观点。",
+    "pagination": "洞察文章分页",
+    "previousPage": "上一页",
+    "nextPage": "下一页",
+    "page": "第"
   }
 }

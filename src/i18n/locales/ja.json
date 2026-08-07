@@ -234,6 +234,14 @@
   "insights": {
     "allArticles": "すべての記事",
     "noCover": "カバー画像なし",
-    "tableOfContents": "目次"
+    "tableOfContents": "目次",
+    "latestArticle": "最新記事",
+    "browseByCategory": "カテゴリーから探す",
+    "searchArticles": "記事を検索",
+    "categoryIntro": "Gloris チームがまとめた実践記事、アプリケーション事例、現場の視点をご覧ください。",
+    "pagination": "Insights のページネーション",
+    "previousPage": "前のページ",
+    "nextPage": "次のページ",
+    "page": "ページ"
   }
 }
