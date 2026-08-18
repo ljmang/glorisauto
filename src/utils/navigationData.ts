@@ -1,3 +1,4 @@
+import { supportedLocales } from '@/i18n/config';
 import { isSolutionsEnabled } from './featureFlags';
 
 /**
@@ -36,6 +37,11 @@ type ComponentNavNode = {
 };
 
 const TEMPORARILY_HIDDEN_PATHS = new Set(['/top-brands']);
+const LEGACY_LOCALE_ALIASES = ['zh', 'cn'];
+const LOCALE_PREFIX_PATTERN = new RegExp(
+  `^/(?:${[...supportedLocales, ...LEGACY_LOCALE_ALIASES].join('|')})(?=/|$)`,
+  'i'
+);
 
 const ROOT_SEGMENT_ALIAS_MAP = new Map<string, string>([
   // canonical
@@ -141,7 +147,7 @@ function normalizeInternalPath(url: string | undefined): string {
 
   const { path: rawPath } = splitPathSuffix(cleaned);
   let path = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
-  path = path.replace(/^\/(en|zh-cn|zh|cn|ja|ar)(?=\/|$)/i, '');
+  path = path.replace(LOCALE_PREFIX_PATTERN, '');
   path = canonicalizeKnownRoutePath(path);
   path = path.replace(/\/+$/, '');
   return path || '/';
@@ -159,7 +165,7 @@ export function toHref(url: string | undefined, locale: string): string {
   const { path: rawPath, suffix } = splitPathSuffix(cleaned);
   let path = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
 
-  path = path.replace(/^\/(en|zh-cn|zh|cn|ja|ar)(?=\/|$)/i, '');
+  path = path.replace(LOCALE_PREFIX_PATTERN, '');
   path = canonicalizeKnownRoutePath(path);
   path = withCanonicalTrailingSlash(path);
   if (path === '') path = '/';

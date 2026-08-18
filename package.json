@@ -14,6 +14,7 @@
     "preview:ssr": "astro preview",
     "astro": "astro",
     "test:strapi": "node scripts/test-strapi.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs",
     "fonts:copy": "node scripts/copy-fonts.mjs",
     "postinstall": "pnpm run fonts:copy",
     "dev:cloudflare": "BUILD_TARGET=pages astro build && wrangler pages dev dist --compatibility-date=2024-01-01",

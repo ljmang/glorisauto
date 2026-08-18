@@ -8,7 +8,7 @@ import InsightFeaturedCard from '@/components/InsightFeaturedCard.astro';
 import InsightGridCard from '@/components/InsightGridCard.astro';
 import InsightPagination from '@/components/InsightPagination.astro';
 import InsightSearch from '@/components/InsightSearch.svelte';
-import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { supportedLocales, type Locale, getLocale, localeLanguageTag } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
@@ -60,11 +60,12 @@ const insightsRes = await fetchApiWithLocaleFallback<{ data?: InsightAttributes[
   pagination: { pageSize: 100 },
   filters: { insight_category: { slug: { $eq: categorySlug } } },
 });
+// 排序：优先按 sort 字段（与英文版一致的排名），未设置 sort 的排在最后
 const insights = (Array.isArray(insightsRes?.data) ? insightsRes.data : [])
   .sort((a, b) => {
-    const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-    const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-    return dateB - dateA;
+    const aSort = Number.isFinite(a.sort) ? (a.sort as number) : Number.MAX_SAFE_INTEGER;
+    const bSort = Number.isFinite(b.sort) ? (b.sort as number) : Number.MAX_SAFE_INTEGER;
+    return aSort - bSort || (a.title ?? '').localeCompare(b.title ?? '', localeLanguageTag[locale]);
   });
 const insightSearchItems = buildInsightSearchItems(insights, locale);
 

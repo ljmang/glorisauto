@@ -147,6 +147,40 @@ const copyByLocale: Record<Locale, Record<PageKey, CollectionPageCopy>> = {
         'تنظم صفحات الحلول منتجات Gloris ومقالات المساعدة والرؤى حسب سيناريوهات العمل الفعلية، لتسهيل تقييم الحلول المتكاملة على الموزعين وورش الإصلاح وقنوات أفلام النوافذ.',
     },
   },
+  es: {
+    products: {
+      heading: 'Productos de Reparación y Acabado de Automóviles',
+      seoTitle: 'Productos de Reparación y Acabado de Automóviles | Abrasivos, Masillas, Películas y PPF',
+      seoDescription:
+        'Explore los productos de reparación y acabado de automóviles de Gloris, incluidos abrasivos, masillas para carrocería, compuestos de pulido, películas para lunas y películas de protección de pintura, para distribuidores, talleres de carrocería y negocios de detallado.',
+      intro:
+        'Consulte la gama completa de Gloris para reparación de automóviles, preparación de superficies, pulido, láminas para lunas y protección de pintura. Esta colección está organizada para distribuidores, talleres de carrocería y socios del mercado de posventa que necesitan calidad constante, soporte técnico práctico y suministro escalable.',
+    },
+    help: {
+      heading: 'Centro de Ayuda',
+      seoTitle: 'Centro de Ayuda de Reparación y Acabado de Automóviles | Preguntas frecuentes y guías de aplicación',
+      seoDescription:
+        'Encuentre respuestas prácticas sobre selección de abrasivos, ventanas de lijado de masilla, pasos de pulido, rendimiento de películas para lunas y cuidado de PPF con los artículos de ayuda y las guías de soporte de Gloris.',
+      intro:
+        'Use este centro de ayuda para comparar productos, solucionar problemas de acabado y avanzar más rápido de la selección a la aplicación. Navegue por tema o entre desde el producto que coincida con su flujo de trabajo.',
+    },
+    insights: {
+      heading: 'Perspectivas',
+      seoTitle: 'Perspectivas de Reparación y Acabado de Automóviles | Artículos técnicos y tendencias del mercado',
+      seoDescription:
+        'Lea las perspectivas más recientes de Gloris sobre tecnología de reparación y acabado de automóviles, tendencias del mercado, optimización del flujo de trabajo, películas para lunas y soluciones de protección de pintura.',
+      intro:
+        'Perspectivas reúne artículos actuales sobre mejora de procesos de reparación, selección de materiales, dirección del mercado y tendencias de cuidado de superficies. Es el centro de contenido para distribuidores, talleres de carrocería y operadores del mercado de posventa que buscan contexto práctico más allá de las especificaciones de producto.',
+    },
+    solutions: {
+      heading: 'Soluciones de Posventa de Automóviles',
+      seoTitle: 'Soluciones de Posventa de Automóviles | Reparación, posventa y películas para lunas',
+      seoDescription:
+        'Explore las páginas de soluciones de Gloris para eficiencia en reparación de colisiones, estandarización de posventa para concesionarios y escenarios de mejora con películas para lunas de automóviles.',
+      intro:
+        'Estas páginas de soluciones organizan los productos, guías y perspectivas de Gloris en torno a escenarios reales de clientes. Úselas para evaluar enfoques completos para talleres de carrocería, grupos de concesionarios e instaladores de películas para lunas.',
+    },
+  },
 };
 
 export function getCollectionPageCopy(locale: Locale, key: PageKey): CollectionPageCopy {

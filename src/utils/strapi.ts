@@ -9,6 +9,7 @@ const STRAPI_LOCALE_MAP: Record<string, string> = {
   'zh-cn': 'zh-cn',
   'ja': 'ja',
   'ar': 'ar',
+  'es': 'es',
 };
 
 type CacheEntry = {

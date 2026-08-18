@@ -7,6 +7,7 @@ import {
 import { sanitizeInlineText } from './contentSanitizers';
 import { toHref } from './navigationData';
 import { stripYoutubeShortcodes } from './youtubeEmbed';
+import { type Locale } from '@/i18n/config';
 import type {
   CategoryAttributes,
   DownloadFileAttributes,
@@ -26,7 +27,7 @@ export interface SearchItem {
   category?: string;
 }
 
-type SearchLocale = 'en' | 'zh-cn' | 'ja' | 'ar';
+type SearchLocale = Locale;
 
 interface SearchStaticText {
   aboutUs: string;
@@ -150,11 +151,34 @@ const SEARCH_TEXTS: Record<SearchLocale, SearchStaticText> = {
     privacy: 'سياسة الخصوصية',
     privacyContent: 'محتوى سياسة الخصوصية',
   },
+  es: {
+    aboutUs: 'Quiénes somos',
+    aboutUsContent: 'Contenido de quiénes somos',
+    brandStory: 'Historia de la marca',
+    brandStoryContent: 'Contenido de la historia de la marca',
+    dealer: 'Distribuidores',
+    dealerContent: 'Información para distribuidores',
+    production: 'Producción',
+    productionContent: 'Información sobre producción',
+    products: 'Productos',
+    productsContent: 'Contenido del catálogo de productos',
+    insights: 'Perspectivas',
+    insightsContent: 'Lista de artículos y perspectivas',
+    support: 'Soporte',
+    supportContent: 'Contenido del centro de soporte',
+    contact: 'Contáctenos',
+    contactContent: 'Formulario de contacto',
+    downloads: 'Descargas',
+    downloadsContent: 'Lista de archivos descargables',
+    helpCenter: 'Centro de ayuda',
+    helpCenterContent: 'Lista de categorías del centro de ayuda',
+    privacy: 'Política de privacidad',
+    privacyContent: 'Contenido de la política de privacidad',
+  },
 };
 
 function resolveSearchTexts(locale: string): SearchStaticText {
-  if (locale === 'zh-cn' || locale === 'ja' || locale === 'ar') return SEARCH_TEXTS[locale];
-  return SEARCH_TEXTS.en;
+  return SEARCH_TEXTS[locale as SearchLocale] || SEARCH_TEXTS.en;
 }
 
 type ProductCategoryRelation = {

@@ -3,7 +3,13 @@ import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import BackToTop from '@/components/BackToTop.astro';
 import { type Messages, type Locale } from '@/i18n';
-import { localeLanguageTag, localeOgTag, isRtlLocale, defaultLocale } from '@/i18n/config';
+import {
+  localeLanguageTag,
+  localeOgTag,
+  isRtlLocale,
+  defaultLocale,
+  stripLocalePrefix,
+} from '@/i18n/config';
 import type { SeoPageAttributes, SiteSeoAttributes } from '@/types/content';
 import type { StrapiResponse, StrapiSeo } from '@/types';
 import type { BreadcrumbMetaItem, JsonLdNode, SeoPageType } from '@/utils/seo';
@@ -46,12 +52,6 @@ const {
 } = Astro.props;
 
 type NavItem = ReturnType<typeof transformNavigations>;
-
-function stripLocalePrefix(path: string): string {
-  const normalized = path.replace(/^\/(en|zh-cn|ja|ar)(?=\/|$)/i, '');
-  const withoutTrailing = normalized.replace(/\/+$/, '');
-  return withoutTrailing || '/';
-}
 
 function navItemKey(item: { href: string }): string {
   return stripLocalePrefix(item.href || '/');
