@@ -207,10 +207,14 @@
     "description": "包括的なトレーニングプログラムでスキルと知識を高めましょう。業界の専門家から学び、表面仕上げと自動車ケアの最新技術を身につけられます。"
   },
   "helpCenter": {
-    "featuredTitle": "注目の質問",
-    "featuredDescription": "よく参照されるサポートトピックと実用ガイドからご覧ください。",
-    "browseByProductTitle": "製品から探す",
-    "browseByProductDescription": "製品から関連するヘルプ記事へすばやく移動できます。",
+    "latestTitle": "最新の質問",
+    "latestDescription": "最近公開されたサポートトピックと実用ガイドをご覧ください。",
+    "browseByProductCategoryTitle": "製品カテゴリーから探す",
+    "browseByProductCategoryDescription": "関連製品の大分類からヘルプ記事を探せます。",
+    "productCategoryFilterTitle": "製品カテゴリーで絞り込む",
+    "productCategoryFilterDescription": "現在の質問カテゴリーを、関連製品の大分類でさらに絞り込みます。",
+    "productCategoryFilterLabel": "製品カテゴリー：",
+    "selectProductCategory": "製品カテゴリーを選択すると、関連する質問が表示されます。",
     "openArticle": "記事を見る",
     "other": "その他",
     "relatedProducts": "関連製品",

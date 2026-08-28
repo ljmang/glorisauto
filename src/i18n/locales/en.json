@@ -207,10 +207,14 @@
     "description": "Enhance your skills and knowledge with our comprehensive training programs. Learn from industry experts and master the latest techniques in surface finishing and automotive care."
   },
   "helpCenter": {
-    "featuredTitle": "Featured Questions",
-    "featuredDescription": "Start with the support topics and practical guidance users look for most often.",
-    "browseByProductTitle": "Browse by Product",
-    "browseByProductDescription": "Jump into the most relevant help article from a specific product entry.",
+    "latestTitle": "Latest Questions",
+    "latestDescription": "See the most recently published support topics and practical guidance.",
+    "browseByProductCategoryTitle": "Browse by Product Category",
+    "browseByProductCategoryDescription": "Explore help articles by the main category of their related products.",
+    "productCategoryFilterTitle": "Filter by Product Category",
+    "productCategoryFilterDescription": "Narrow these questions by the main category of their related products.",
+    "productCategoryFilterLabel": "Product category:",
+    "selectProductCategory": "Select a product category to view related questions.",
     "openArticle": "Open Article",
     "other": "Other",
     "relatedProducts": "Related products",

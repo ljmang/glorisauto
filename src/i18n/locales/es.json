@@ -207,10 +207,14 @@
     "description": "Mejora tus habilidades y conocimientos con nuestros completos programas de formación. Aprende de expertos del sector y domina las técnicas más recientes de acabado de superficies y cuidado del automóvil."
   },
   "helpCenter": {
-    "featuredTitle": "Preguntas destacadas",
-    "featuredDescription": "Empieza por los temas de soporte y las recomendaciones prácticas que los usuarios consultan con más frecuencia.",
-    "browseByProductTitle": "Explorar por producto",
-    "browseByProductDescription": "Accede al artículo de ayuda más relevante desde un producto concreto.",
+    "latestTitle": "Preguntas más recientes",
+    "latestDescription": "Consulta los temas de soporte y las guías prácticas publicados más recientemente.",
+    "browseByProductCategoryTitle": "Explorar por categoría de producto",
+    "browseByProductCategoryDescription": "Consulta artículos de ayuda según la categoría principal de los productos relacionados.",
+    "productCategoryFilterTitle": "Filtrar por categoría de producto",
+    "productCategoryFilterDescription": "Limita estas preguntas según la categoría principal de los productos relacionados.",
+    "productCategoryFilterLabel": "Categoría de producto:",
+    "selectProductCategory": "Selecciona una categoría de producto para ver preguntas relacionadas.",
     "openArticle": "Abrir artículo",
     "other": "Otros",
     "relatedProducts": "Productos relacionados",

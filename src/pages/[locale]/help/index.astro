@@ -10,8 +10,13 @@ import { toHref } from '@/utils/navigationData';
 import { resolveCollectionPageCopy } from '@/utils/collectionPageCopy';
 import { fetchSiteSeo } from '@/utils/siteConfig';
 import { buildHelpSearchItems } from '@/utils/helpSearch';
+import {
+  buildHelpProductCategoryArticles,
+  buildHelpProductCategoryOptions,
+} from '@/utils/helpProductCategories';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import HelpSearch from '@/components/HelpSearch.svelte';
+import HelpProductCategoryBrowser from '@/components/HelpProductCategoryBrowser.svelte';
 import type { HelpCategoryAttributes, HelpCenterAttributes } from '@/types/content';
 
 export async function getStaticPaths() {
@@ -31,7 +36,14 @@ const [categoriesRes, articlesRes, siteSeo] = await Promise.all([
   }),
   fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
     locale,
-    populate: { help_category: true, related_products: true },
+    populate: {
+      help_category: true,
+      related_products: {
+        populate: {
+          category: { populate: { parent: true } },
+        },
+      },
+    },
     pagination: { pageSize: 500 },
   }),
   fetchSiteSeo(locale),
@@ -42,7 +54,19 @@ const categories = (categoriesRes?.data ?? []).sort((a, b) => (a.sort ?? 0) - (b
 
 const articles = articlesRes?.data ?? [];
 const helpSearchItems = buildHelpSearchItems(articles, locale);
-const sortArticles = (a: HelpCenterAttributes, b: HelpCenterAttributes) => {
+const productCategoryOptions = buildHelpProductCategoryOptions(articles, localeLanguageTag[locale]);
+const productCategoryArticles = buildHelpProductCategoryArticles(articles, locale);
+const getArticlePublishedTime = (article: HelpCenterAttributes) => {
+  const timestamp = article.publishedAt ?? article.updatedAt;
+  if (!timestamp) return Number.NEGATIVE_INFINITY;
+
+  const time = Date.parse(timestamp);
+  return Number.isFinite(time) ? time : Number.NEGATIVE_INFINITY;
+};
+const sortLatestArticles = (a: HelpCenterAttributes, b: HelpCenterAttributes) => {
+  const latestTimeDiff = getArticlePublishedTime(b) - getArticlePublishedTime(a);
+  if (latestTimeDiff !== 0) return latestTimeDiff;
+
   const aSort = Number.isFinite(a.sort) ? (a.sort as number) : Number.MAX_SAFE_INTEGER;
   const bSort = Number.isFinite(b.sort) ? (b.sort as number) : Number.MAX_SAFE_INTEGER;
   return aSort - bSort || (a.title ?? '').localeCompare(b.title ?? '', localeLanguageTag[locale]);
@@ -63,41 +87,7 @@ const activeCategories = categories.filter((category) => {
   return slug !== '' && (articlesByCategory.get(slug)?.length ?? 0) > 0;
 });
 
-const recommendedArticles = [...articles]
-  .filter((article) => article.recommend)
-  .sort(sortArticles);
-const featuredArticles = (recommendedArticles.length > 0 ? recommendedArticles : [...articles].sort(sortArticles))
-  .slice(0, 4);
-
-const productHelpLinksMap = new Map<
-  string,
-  { name: string; href: string; articleTitle: string; categoryName: string }
->();
-
-for (const article of [...articles].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))) {
-  const articleCategorySlug = article.help_category?.slug ?? '';
-  const articleCategoryName = article.help_category?.name ?? '';
-  const articleSlug = article.slug ?? '';
-  if (!articleCategorySlug || !articleSlug || !Array.isArray(article.related_products)) continue;
-
-  const articleHref = toHref(`/help/${articleCategorySlug}/${articleSlug}`, locale);
-  for (const product of article.related_products) {
-    const productName = product?.name ?? '';
-    const productSlug = product?.slug ?? productName;
-    if (!productName || !productSlug || productHelpLinksMap.has(productSlug)) continue;
-
-    productHelpLinksMap.set(productSlug, {
-      name: productName,
-      href: articleHref,
-      articleTitle: article.title,
-      categoryName: articleCategoryName,
-    });
-  }
-}
-
-const productHelpLinks = Array.from(productHelpLinksMap.values()).sort((a, b) =>
-  a.name.localeCompare(b.name, localeLanguageTag[locale])
-);
+const latestArticles = [...articles].sort(sortLatestArticles).slice(0, 4);
 
 // 4. 每个分类内的文章按 sort 排序
 articlesByCategory.forEach((items) => {
@@ -174,16 +164,16 @@ const pageCopy = resolveCollectionPageCopy(locale, 'help', siteSeo);
       </section>
     )}
 
-    {featuredArticles.length > 0 && (
-      <section class="mb-14" aria-labelledby="help-featured-questions">
+    {latestArticles.length > 0 && (
+      <section class="mb-14" aria-labelledby="help-latest-questions">
         <div class="mb-5 max-w-3xl">
-          <h2 id="help-featured-questions" class="text-2xl font-bold tracking-tight lg:text-3xl">
-            {t(messages, 'helpCenter.featuredTitle')}
+          <h2 id="help-latest-questions" class="text-2xl font-bold tracking-tight lg:text-3xl">
+            {t(messages, 'helpCenter.latestTitle')}
           </h2>
-          <p class="mt-2 text-sm leading-6 text-gray-600">{t(messages, 'helpCenter.featuredDescription')}</p>
+          <p class="mt-2 text-sm leading-6 text-gray-600">{t(messages, 'helpCenter.latestDescription')}</p>
         </div>
         <div class="grid gap-4 md:grid-cols-2">
-          {featuredArticles.map((article) => {
+          {latestArticles.map((article) => {
             const articleCategorySlug = article.help_category?.slug ?? 'uncategorized';
             const articleHref = toHref(`/help/${articleCategorySlug}/${article.slug}`, locale);
             return (
@@ -214,25 +204,20 @@ const pageCopy = resolveCollectionPageCopy(locale, 'help', siteSeo);
       </section>
     )}
 
-    {productHelpLinks.length > 0 && (
-      <section class="mb-4 border-y border-gray-200 py-8" aria-labelledby="help-browse-by-product">
-        <div class="mb-5 max-w-3xl">
-          <h2 id="help-browse-by-product" class="text-2xl font-bold tracking-tight lg:text-3xl">
-            {t(messages, 'helpCenter.browseByProductTitle')}
-          </h2>
-          <p class="mt-2 text-sm leading-6 text-gray-600">{t(messages, 'helpCenter.browseByProductDescription')}</p>
-        </div>
-        <div class="flex flex-wrap gap-2.5">
-          {productHelpLinks.map((item) => (
-            <a
-              href={item.href}
-              class="rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
-            >
-              {item.name}
-            </a>
-          ))}
-        </div>
-      </section>
+    {productCategoryOptions.length > 0 && (
+      <HelpProductCategoryBrowser
+        client:load
+        options={productCategoryOptions}
+        articles={productCategoryArticles}
+        title={t(messages, 'helpCenter.browseByProductCategoryTitle')}
+        description={t(messages, 'helpCenter.browseByProductCategoryDescription')}
+        filterLabel={t(messages, 'helpCenter.productCategoryFilterLabel')}
+        articleCountLabel={t(messages, 'helpCenter.articleCount')}
+        noArticlesLabel={t(messages, 'helpCenter.noArticles')}
+        selectCategoryLabel={t(messages, 'helpCenter.selectProductCategory')}
+        showArticlesWhenUnfiltered={false}
+      />
     )}
+
   </div>
 </BaseLayout>

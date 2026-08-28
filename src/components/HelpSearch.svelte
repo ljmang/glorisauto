@@ -23,6 +23,7 @@
   let selectedIndex = $state(-1);
   let mounted = $state(false);
   let fuse: Fuse<HelpSearchItem> | null = $state(null);
+  let activeProductCategory = $state('');
 
   const isRtl = $derived(locale === 'ar');
   const hasQuery = $derived(query.trim().length > 0);
@@ -42,7 +43,10 @@
 
   function initFuse() {
     if (typeof window === 'undefined') return;
-    fuse = new Fuse(items, {
+    const searchItems = activeProductCategory
+      ? items.filter((item) => item.productCategorySlugs.includes(activeProductCategory))
+      : items;
+    fuse = new Fuse(searchItems, {
       keys: [
         { name: 'title', weight: 0.38 },
         { name: 'description', weight: 0.22 },
@@ -54,6 +58,14 @@
       includeScore: true,
       minMatchCharLength: 1,
     });
+  }
+
+  function syncProductCategoryFromUrl() {
+    if (typeof window === 'undefined') return;
+    activeProductCategory = new URL(window.location.href).searchParams.get('productCategory') ?? '';
+    fuse = null;
+    initFuse();
+    if (query.trim()) runSearch(query);
   }
 
   function runSearch(value: string) {
@@ -121,7 +133,23 @@
 
   onMount(() => {
     mounted = true;
-    initFuse();
+    syncProductCategoryFromUrl();
+
+    const handleProductCategoryChange = (event: Event) => {
+      const slug = (event as CustomEvent<{ slug?: string }>).detail?.slug ?? '';
+      activeProductCategory = slug;
+      fuse = null;
+      initFuse();
+      if (query.trim()) runSearch(query);
+    };
+
+    window.addEventListener('help-product-category-change', handleProductCategoryChange);
+    window.addEventListener('popstate', syncProductCategoryFromUrl);
+
+    return () => {
+      window.removeEventListener('help-product-category-change', handleProductCategoryChange);
+      window.removeEventListener('popstate', syncProductCategoryFromUrl);
+    };
   });
 </script>
 

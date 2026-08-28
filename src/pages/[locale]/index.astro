@@ -13,7 +13,7 @@ import {
 import { toHref } from "@/utils/navigationData";
 import { CircleChevronRight } from "lucide-svelte";
 import type { HomeAttributes, StrapiResponse, NewsItem } from "@/types";
-import type { ProductAttributes, InsightAttributes } from "@/types/content";
+import type { ProductAttributes, InsightAttributes, HelpCenterAttributes } from "@/types/content";
 import { Image } from "astro:assets";
 import NewsCard from "@/components/NewsCard.astro";
 import ProductCard from "@/components/ProductCard.astro";
@@ -33,46 +33,59 @@ const locale: Locale = getLocale(params.locale);
 const messages = await loadMessages(locale);
 
 // 3. 使用泛型获取数据，避免 unknown
-const homeData = await fetchApiWithLocaleFallback<StrapiResponse<HomeAttributes>>(api.home, {
-	locale,
-	populate: {
-		heroMedia: true,
-		heroDefaultBackground: true,
-		aboutGlorisCover: true,
-		seo: {
-			populate: {
-				metaImage: true,
-				ogImage: true,
-				twitterImage: true,
+const [homeData, latestHelpRes] = await Promise.all([
+	fetchApiWithLocaleFallback<StrapiResponse<HomeAttributes>>(api.home, {
+		locale,
+		populate: {
+			heroMedia: true,
+			heroDefaultBackground: true,
+			aboutGlorisCover: true,
+			seo: {
+				populate: {
+					metaImage: true,
+					ogImage: true,
+					twitterImage: true,
+				},
+			},
+			glorisNews: {
+				populate: {
+					cover: true,
+				},
+			},
+			products: {
+				populate: {
+					cover: true,
+					images: true,
+					category: true,
+				},
+			},
+			insights: {
+				populate: {
+					cover: true,
+					insight_category: true,
+				},
+			},
+			downloadFiles: {
+				populate: {
+					file: true,
+				},
 			},
 		},
-		glorisNews: {
-			populate: {
-				cover: true,
-			},
+	}),
+	fetchApiWithLocaleFallback<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
+		locale,
+		populate: {
+			help_category: true,
 		},
-		products: {
-			populate: {
-				cover: true,
-				images: true,
-				category: true,
-			},
-		},
-		insights: {
-			populate: {
-				cover: true,
-				insight_category: true,
-			},
-		},
-		downloadFiles: {
-			populate: {
-				file: true,
-			},
-		},
-	},
-});
+		sort: ["publishedAt:desc"],
+		pagination: { pageSize: 4 },
+	}),
+]);
 // 4. 安全的数据解构 (即使 API 挂了，页面也不会白屏，而是显示默认值)
 const data = homeData?.data || ({} as Partial<HomeAttributes>);
+const latestHelpArticles = Array.isArray(latestHelpRes?.data)
+	? latestHelpRes.data.filter((article) => Boolean(article?.slug)).slice(0, 4)
+	: [];
 
 const normalizeInsightsCount = (value: number | undefined, fallback: number) =>
 	typeof value === "number" && Number.isFinite(value) && value > 0
@@ -357,6 +370,57 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 							downloadLabel={t(messages, "footer.support.download")}
 						/>
 					))}
+				</div>
+			</div>
+		)}
+
+		{latestHelpArticles.length > 0 && (
+			<div class="w-full" aria-labelledby="home-latest-faq">
+				<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+					<div>
+						<h2 id="home-latest-faq" class="text-3xl font-bold">
+							{t(messages, "helpCenter.latestTitle")}
+						</h2>
+						<p class="mt-2 max-w-3xl text-gray-600">
+							{t(messages, "helpCenter.latestDescription")}
+						</p>
+					</div>
+					<a
+						href={toHref("/help", locale)}
+						class="inline-flex shrink-0 items-center gap-2 text-lg text-cyan-600 transition-colors hover:text-orange-600"
+					>
+						{t(messages, "helpCenter.viewAllArticles")}
+						<CircleChevronRight class="h-4 w-4" />
+					</a>
+				</div>
+				<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+					{latestHelpArticles.map((article) => {
+						const articleCategorySlug = article.help_category?.slug ?? "uncategorized";
+						const articleHref = toHref(`/help/${articleCategorySlug}/${article.slug}`, locale);
+						return (
+							<a
+								href={articleHref}
+								class="group flex min-h-48 flex-col rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md"
+							>
+								{article.help_category?.name && (
+									<div class="mb-3 text-xs font-semibold uppercase tracking-wide text-orange-600">
+										{article.help_category.name}
+									</div>
+								)}
+								<h3 class="text-lg font-semibold leading-7 text-gray-900 transition-colors group-hover:text-orange-500">
+									{article.title}
+								</h3>
+								{(article.quickAnswer || article.description) && (
+									<p class="mt-3 line-clamp-2 text-sm leading-6 text-gray-600">
+										{article.quickAnswer || article.description}
+									</p>
+								)}
+								<div class="mt-auto pt-5 text-sm font-semibold text-cyan-600 transition-colors group-hover:text-orange-500">
+									{t(messages, "helpCenter.openArticle")}
+								</div>
+							</a>
+						);
+					})}
 				</div>
 			</div>
 		)}

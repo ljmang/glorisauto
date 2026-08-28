@@ -1,5 +1,6 @@
 import { sanitizeInlineText } from './contentSanitizers';
 import { extractMarkdownHeadings, stripMarkdown } from './helpContent';
+import { getHelpProductCategories } from './helpProductCategories';
 import { toHref } from './navigationData';
 import type { HelpCenterAttributes } from '@/types/content';
 
@@ -10,6 +11,7 @@ export interface HelpSearchItem {
   keywords: string;
   href: string;
   categoryName: string;
+  productCategorySlugs: string[];
 }
 
 function compactContent(parts: Array<string | null | undefined>, maxLength = 2000): string {
@@ -53,6 +55,7 @@ export function buildHelpSearchItems(
         keywords,
         href: toHref(`/help/${categorySlug}/${slug}`, locale),
         categoryName,
+        productCategorySlugs: getHelpProductCategories(article).map((category) => category.slug),
       };
     })
     .filter((item): item is HelpSearchItem => item !== null);

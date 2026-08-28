@@ -207,10 +207,14 @@
     "description": "通过我们全面的培训计划提升您的技能和知识。向行业专家学习，掌握表面处理和汽车护理的最新技术。"
   },
   "helpCenter": {
-    "featuredTitle": "热门问题",
-    "featuredDescription": "优先查看当前更常被关注的支持内容与操作建议。",
-    "browseByProductTitle": "按产品查看",
-    "browseByProductDescription": "从具体产品进入对应帮助文章，查找更快。",
+    "latestTitle": "最新问题",
+    "latestDescription": "优先查看最近发布的支持内容与操作建议。",
+    "browseByProductCategoryTitle": "按产品分类查看",
+    "browseByProductCategoryDescription": "按关联产品所属的一级分类查找帮助文章。",
+    "productCategoryFilterTitle": "按产品分类筛选",
+    "productCategoryFilterDescription": "在当前问题分类下，继续按关联产品的一级分类筛选。",
+    "productCategoryFilterLabel": "产品分类：",
+    "selectProductCategory": "请选择一个产品分类查看相关问题。",
     "openArticle": "查看文章",
     "other": "其他",
     "relatedProducts": "相关产品",

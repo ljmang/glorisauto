@@ -102,7 +102,7 @@ export interface ProductAttributes {
   productFeatures?: string;
   shortDescription?: string;
   images?: StrapiMedia | StrapiMedia[];
-  category?: unknown;
+  category?: CategoryAttributes | null;
   price?: number;
   sort?: number | null;
   specifications?: Record<string, unknown>;
@@ -121,8 +121,10 @@ export interface CategoryAttributes {
   image?: StrapiMedia | null;
   parent?: {
     id?: number;
+    documentId?: string;
     slug?: string;
     name?: string;
+    sort?: number;
   } | null;
   sort?: number;
   seo?: StrapiSeo | null;
@@ -417,7 +419,6 @@ export interface HelpCenterAttributes {
   sort?: number;
   recommend?: boolean;
   audience?: 'distributor' | 'technician' | 'installer' | 'vehicle-owner' | string;
-  productFamily?: 'abrasives' | 'polishing' | 'window-film' | 'paint-protection-film' | 'body-repair' | 'general' | string;
   intent?: 'selection' | 'application' | 'troubleshooting' | 'maintenance' | string;
   keywords?: string;
   difficulty?: 'basic' | 'intermediate' | 'advanced' | string;

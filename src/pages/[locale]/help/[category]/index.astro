@@ -9,8 +9,13 @@ import { fetchApi, api } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { getHelpCategoryStaticPaths } from '@/utils/helpStaticPaths';
 import { buildHelpSearchItems } from '@/utils/helpSearch';
+import {
+  buildHelpProductCategoryArticles,
+  buildHelpProductCategoryOptions,
+} from '@/utils/helpProductCategories';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import HelpSearch from '@/components/HelpSearch.svelte';
+import HelpProductCategoryBrowser from '@/components/HelpProductCategoryBrowser.svelte';
 import type { HelpCategoryAttributes, HelpCenterAttributes } from '@/types/content';
 
 export async function getStaticPaths() {
@@ -76,11 +81,20 @@ if (!currentCategory) {
 // 3. 获取该分类下的所有文章
 const articlesRes = await fetchApi<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
   locale,
-  populate: { help_category: true },
+  populate: {
+    help_category: true,
+    related_products: {
+      populate: {
+        category: { populate: { parent: true } },
+      },
+    },
+  },
   filters: { help_category: { slug: { $eq: categorySlug } } },
   pagination: { pageSize: 500 },
 });
 const articles = (articlesRes?.data ?? []).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
+const productCategoryOptions = buildHelpProductCategoryOptions(articles, locale);
+const productCategoryArticles = buildHelpProductCategoryArticles(articles, locale);
 
 const categoryName = currentCategory?.name ?? categorySlug;
 const categoryDescription = currentCategory.description ?? currentCategory.descrition;
@@ -141,25 +155,19 @@ const pageTitle = `${categoryName} - ${t(messages, 'footer.support.helpCenter')}
       })}
     </div>
 
-    <!-- 文章列表 -->
+    <!-- 产品分类筛选 + 文章列表 -->
     {articles.length > 0 ? (
-      <div class="space-y-6">
-        {articles.map((article) => {
-          const articleHref = toHref(`/help/${categorySlug}/${article.slug}`, locale);
-          return (
-            <article class="border-b border-gray-200 pb-6 last:border-b-0">
-              <h2 class="text-xl font-semibold mb-2">
-                <a href={articleHref} class="text-cyan-600 hover:text-orange-500 hover:underline transition-colors">
-                  {article.title}
-                </a>
-              </h2>
-              {article.description && (
-                <p class="text-gray-600 mb-2">{article.description}</p>
-              )}
-            </article>
-          );
-        })}
-      </div>
+      <HelpProductCategoryBrowser
+        client:load
+        options={productCategoryOptions}
+        articles={productCategoryArticles}
+        title={t(messages, 'helpCenter.productCategoryFilterTitle')}
+        description={t(messages, 'helpCenter.productCategoryFilterDescription')}
+        filterLabel={t(messages, 'helpCenter.productCategoryFilterLabel')}
+        articleCountLabel={t(messages, 'helpCenter.articleCount')}
+        noArticlesLabel={t(messages, 'helpCenter.noArticles')}
+        showArticlesWhenUnfiltered={true}
+      />
     ) : (
       <div class="text-center py-12">
         <p class="text-gray-500">{t(messages, 'helpCenter.noArticles')}</p>

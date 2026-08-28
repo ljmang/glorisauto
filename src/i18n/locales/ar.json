@@ -207,10 +207,14 @@
     "description": "طوّر مهاراتك ومعرفتك من خلال برامجنا التدريبية الشاملة. تعلّم من خبراء المجال وأتقن أحدث تقنيات تشطيب الأسطح والعناية بالسيارات."
   },
   "helpCenter": {
-    "featuredTitle": "الأسئلة المميزة",
-    "featuredDescription": "ابدأ بموضوعات الدعم والإرشادات العملية الأكثر بحثًا من المستخدمين.",
-    "browseByProductTitle": "تصفح حسب المنتج",
-    "browseByProductDescription": "انتقل مباشرةً إلى أكثر مقالات المساعدة صلةً بمنتج محدد.",
+    "latestTitle": "أحدث الأسئلة",
+    "latestDescription": "اطّلع على أحدث موضوعات الدعم والإرشادات العملية المنشورة.",
+    "browseByProductCategoryTitle": "تصفح حسب فئة المنتج",
+    "browseByProductCategoryDescription": "استكشف مقالات المساعدة حسب الفئة الرئيسية للمنتجات المرتبطة.",
+    "productCategoryFilterTitle": "التصفية حسب فئة المنتج",
+    "productCategoryFilterDescription": "ضيّق نطاق هذه الأسئلة حسب الفئة الرئيسية للمنتجات المرتبطة.",
+    "productCategoryFilterLabel": "فئة المنتج:",
+    "selectProductCategory": "اختر فئة منتج لعرض الأسئلة ذات الصلة.",
     "openArticle": "فتح المقال",
     "other": "أخرى",
     "relatedProducts": "منتجات ذات صلة",
