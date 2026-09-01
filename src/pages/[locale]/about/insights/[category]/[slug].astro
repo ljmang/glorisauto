@@ -58,10 +58,8 @@ const articleRes = await fetchApiWithLocaleFallback<{ data?: InsightAttributes[]
     articles: { populate: { cover: true } },
   },
   filters: {
-    $and: [
-      { insight_category: { slug: { $eq: categorySlug } } },
-      { slug: { $eq: articleSlug } },
-    ],
+    slug: { $eq: articleSlug },
+    insight_category: { slug: { $eq: categorySlug } },
   },
 });
 const article = articleRes?.data?.[0];

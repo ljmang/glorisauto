@@ -59,10 +59,8 @@ if (insightMatch) {
     locale: strapiLocale,
     populate: { localizations: { populate: { insight_category: true } } },
     filters: {
-      $and: [
-        { slug: { $eq: articleSlug } },
-        { insight_category: { slug: { $eq: categorySlug } } },
-      ],
+      slug: { $eq: articleSlug },
+      insight_category: { slug: { $eq: categorySlug } },
     },
     pagination: { pageSize: 1 },
   });
@@ -92,10 +90,8 @@ if (productMatch) {
       },
     },
     filters: {
-      $and: [
-        { slug: { $eq: productSlug } },
-        { category: { slug: { $eq: categorySlug } } },
-      ],
+      slug: { $eq: productSlug },
+      category: { slug: { $eq: categorySlug } },
     },
     pagination: { pageSize: 1 },
   });

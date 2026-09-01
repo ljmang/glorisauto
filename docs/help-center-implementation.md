@@ -26,7 +26,6 @@
 | `description` | string (i18n) | 简短描述 |
 | `content` | blocks (i18n) | 文章正文（Blocks 格式） |
 | `sort` | integer (i18n) | 排序值 |
-| `recommend` | boolean (i18n) | 是否推荐 |
 | `help_category` | relation (oneToOne) | 关联的分类 |
 | `products` | relation (oneToMany) | 关联的产品 |
 | `articles` | relation (oneToMany) | 关联的 insights |
@@ -68,7 +67,7 @@ const articlesRes = await fetchApi<{ data: HelpCenterAttributes[] }>(
   {
     locale,
     populate: { help_category: true },
-    // 可选：按 sort 排序，或按 recommend 优先
+    // 可选：按 sort 排序
   }
 );
 const articles = articlesRes?.data ?? [];
@@ -189,7 +188,6 @@ export interface HelpCenterAttributes {
   description?: string;
   content?: BlockNode[];
   sort?: number;
-  recommend?: boolean;
   help_category?: HelpCategoryAttributes | null;
 }
 

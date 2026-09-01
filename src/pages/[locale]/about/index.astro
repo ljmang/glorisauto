@@ -70,9 +70,9 @@ const latestInsightsRes = aboutUs
   ? await fetchApiWithLocaleFallback<{ data?: InsightAttributes[] }>(api.insights, {
       locale,
       populate: { cover: true, insight_category: true },
-      sort: ['publishedAt:desc'],
+      sort: ['sort:asc'],
       pagination: {
-        pageSize: featuredInsightsCount + latestInsightsCount,
+        pageSize: 30,
       },
     })
   : null;
@@ -81,7 +81,13 @@ const manualFeaturedArticles = Array.isArray(aboutUs?.insights)
   ? aboutUs.insights.filter((insight) => Boolean(insight?.slug))
   : [];
 const allLatestInsights = Array.isArray(latestInsightsRes?.data)
-  ? latestInsightsRes.data.filter((insight) => Boolean(insight?.slug))
+  ? [...latestInsightsRes.data]
+      .filter((insight) => Boolean(insight?.slug))
+      .sort((a, b) => {
+        const aSort = Number.isFinite(a.sort) ? (a.sort as number) : Number.MAX_SAFE_INTEGER;
+        const bSort = Number.isFinite(b.sort) ? (b.sort as number) : Number.MAX_SAFE_INTEGER;
+        return aSort - bSort;
+      })
   : [];
 const featuredArticles = manualFeaturedArticles.slice(0, featuredInsightsCount);
 const featuredInsightSlugs = new Set(

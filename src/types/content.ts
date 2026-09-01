@@ -151,7 +151,6 @@ export interface InsightAttributes {
   description?: string;
   content?: string;
   coverAlt?: string | null;
-  coverCaption?: string | null;
   coverImage?: StrapiMedia | null;
   cover?: StrapiMedia | StrapiMedia[] | null;
   category?: unknown;
@@ -417,7 +416,6 @@ export interface HelpCenterAttributes {
   quickAnswer?: string;
   contentMarkdown?: string | null;
   sort?: number;
-  recommend?: boolean;
   audience?: 'distributor' | 'technician' | 'installer' | 'vehicle-owner' | string;
   intent?: 'selection' | 'application' | 'troubleshooting' | 'maintenance' | string;
   keywords?: string;

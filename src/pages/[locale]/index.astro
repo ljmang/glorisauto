@@ -93,7 +93,7 @@ const normalizeInsightsCount = (value: number | undefined, fallback: number) =>
 		: fallback;
 
 const homeInsightsMode = data.insightsMode === "latest" ? "latest" : "manual";
-const homeInsightsCount = normalizeInsightsCount(data.insightsCount, 3);
+const homeInsightsCount = Math.max(6, normalizeInsightsCount(data.insightsCount, 6));
 const manualInsights = Array.isArray(data.insights)
 	? (data.insights as InsightAttributes[])
 	: [];
@@ -104,24 +104,15 @@ const latestInsightsRes =
 				api.insights,
 				{
 					locale,
-					filters: {
-						insight_category: {
-							slug: { $ne: "news" },
-						},
-					},
 					populate: {
 						cover: true,
 						insight_category: true,
 					},
-					sort: ["publishedAt:desc"],
-					pagination: { pageSize: homeInsightsCount },
+					sort: ["sort:asc"],
+					pagination: { pageSize: 30 },
 				},
 			)
 		: null;
-
-const latestInsights = Array.isArray(latestInsightsRes?.data)
-	? latestInsightsRes.data.filter((insight) => Boolean(insight?.slug))
-	: [];
 
 const getCategorySlug = (insight: InsightAttributes): string => {
 	const category = insight?.insight_category;
@@ -132,10 +123,21 @@ const getCategorySlug = (insight: InsightAttributes): string => {
 const isNonNewsInsight = (insight: InsightAttributes) =>
 	Boolean(insight?.slug) && getCategorySlug(insight) !== "news";
 
+const sortInsightsByRank = (list: InsightAttributes[]) =>
+	[...list].sort((a, b) => {
+		const aSort = Number.isFinite(a.sort) ? (a.sort as number) : Number.MAX_SAFE_INTEGER;
+		const bSort = Number.isFinite(b.sort) ? (b.sort as number) : Number.MAX_SAFE_INTEGER;
+		return aSort - bSort;
+	});
+
+const latestInsights = Array.isArray(latestInsightsRes?.data)
+	? sortInsightsByRank(latestInsightsRes.data.filter(isNonNewsInsight)).slice(0, homeInsightsCount)
+	: [];
+
 const displayInsights =
 	homeInsightsMode === "latest"
-		? latestInsights.filter(isNonNewsInsight)
-		: manualInsights.filter(isNonNewsInsight).slice(0, homeInsightsCount);
+		? latestInsights
+		: sortInsightsByRank(manualInsights.filter(isNonNewsInsight)).slice(0, homeInsightsCount);
 const showInsights = Boolean(data.insightsTitle) && displayInsights.length > 0;
 const aboutGlorisLinkLabel =
 	data.aboutGlorisLinkLabel?.trim() || t(messages, "common.readMore");
