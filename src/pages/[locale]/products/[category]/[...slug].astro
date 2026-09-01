@@ -430,7 +430,7 @@ const breadcrumbItems = [
             </div>
             <div class='space-y-4'>
               {faqItems.map((faq, idx) => (
-                <details class='rounded-xl border border-slate-200 bg-white shadow-sm' open={idx === 0 ? true : undefined}>
+                <details class='rounded-xl border border-slate-200 bg-white shadow-sm'>
                   <summary class='cursor-pointer px-4 py-3 text-lg font-semibold text-gray-900'>
                     {faq.title || `${t(messages, 'products.faq')} ${idx + 1}`}
                   </summary>
