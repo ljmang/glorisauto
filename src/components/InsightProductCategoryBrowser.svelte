@@ -124,44 +124,6 @@
 </script>
 
 <div class="mt-8" bind:this={containerRef}>
-  {#if validOptions.length > 0}
-    <!-- Product Category Filter Bar -->
-    <div class="mb-8 flex flex-col gap-4 border border-slate-200 bg-white p-5 lg:flex-row lg:items-center lg:p-6">
-      <p class="shrink-0 text-base font-bold text-slate-900 lg:w-48">
-        {filterLabel.replace(/[:：]$/, '')}
-      </p>
-      <div class="flex min-w-0 flex-wrap items-center gap-2.5" aria-label={filterLabel}>
-        <button
-          type="button"
-          aria-pressed={selectedSlug === null}
-          class={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-            selectedSlug === null
-              ? 'border-orange-500 bg-orange-500 text-white'
-              : 'border-slate-200 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700'
-          }`}
-          onclick={() => selectCategory(null)}
-        >
-          {allLabel} ({totalCount})
-        </button>
-
-        {#each validOptions as option}
-          <button
-            type="button"
-            aria-pressed={selectedSlug === option.slug}
-            class={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-              selectedSlug === option.slug
-                ? 'border-orange-500 bg-orange-500 text-white'
-                : 'border-slate-200 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700'
-            }`}
-            onclick={() => selectCategory(option.slug)}
-          >
-            {option.name} ({option.count})
-          </button>
-        {/each}
-      </div>
-    </div>
-  {/if}
-
   <!-- Articles List Header -->
   <div class="mb-6 flex items-end justify-between gap-4">
     {#if title}
@@ -175,6 +137,42 @@
       </span>
     {/if}
   </div>
+
+  {#if validOptions.length > 0}
+    <!-- Product Category Filter Bar -->
+    <div class="mb-8 flex flex-wrap items-center gap-2.5" aria-label={filterLabel}>
+      {#if filterLabel}
+        <span class="mr-1 text-sm font-bold text-slate-700">{filterLabel}</span>
+      {/if}
+      <button
+        type="button"
+        aria-pressed={selectedSlug === null}
+        class={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+          selectedSlug === null
+            ? 'border-orange-500 bg-orange-500 text-white'
+            : 'border-slate-200 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700'
+        }`}
+        onclick={() => selectCategory(null)}
+      >
+        {allLabel} ({totalCount})
+      </button>
+
+      {#each validOptions as option}
+        <button
+          type="button"
+          aria-pressed={selectedSlug === option.slug}
+          class={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+            selectedSlug === option.slug
+              ? 'border-orange-500 bg-orange-500 text-white'
+              : 'border-slate-200 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700'
+          }`}
+          onclick={() => selectCategory(option.slug)}
+        >
+          {option.name} ({option.count})
+        </button>
+      {/each}
+    </div>
+  {/if}
 
   <!-- Articles Grid -->
   {#if pagedArticles.length > 0}
