@@ -246,6 +246,10 @@
     "pagination": "Insights pagination",
     "previousPage": "Previous page",
     "nextPage": "Next page",
-    "page": "Page"
+    "page": "Page",
+    "productCategoryFilterLabel": "Product Category:",
+    "all": "All",
+    "articleCount": "{count} articles",
+    "noArticles": "No articles found for this category."
   }
 }

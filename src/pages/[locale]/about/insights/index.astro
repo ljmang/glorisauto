@@ -2,9 +2,8 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import InsightFeaturedCard from '@/components/InsightFeaturedCard.astro';
-import InsightGridCard from '@/components/InsightGridCard.astro';
-import InsightPagination from '@/components/InsightPagination.astro';
 import InsightSearch from '@/components/InsightSearch.svelte';
+import InsightProductCategoryBrowser from '@/components/InsightProductCategoryBrowser.svelte';
 import { supportedLocales, type Locale, getLocale, localeLanguageTag } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
@@ -13,6 +12,7 @@ import { resolveCollectionPageCopy } from '@/utils/collectionPageCopy';
 import { fetchSiteSeo } from '@/utils/siteConfig';
 import { buildInsightSearchItems } from '@/utils/insightSearch';
 import type { InsightAttributes, InsightCategoryAttributes } from '@/types/content';
+import { buildInsightProductCategoryOptions, buildInsightCardItems } from '@/utils/insightProductCategories';
 
 export async function getStaticPaths() {
   return supportedLocales.map((locale) => ({
@@ -35,7 +35,19 @@ const [categoriesRes, insightsRes, siteSeo] = await Promise.all([
   }),
   fetchApiWithLocaleFallback<{ data?: InsightAttributes[] }>(api.insights, {
     locale,
-    populate: { cover: true, insight_category: true },
+    populate: {
+      cover: true,
+      insight_category: true,
+      products: {
+        populate: {
+          category: {
+            populate: {
+              parent: true,
+            },
+          },
+        },
+      },
+    },
     pagination: { pageSize: 100 },
   }),
   fetchSiteSeo(locale),
@@ -61,6 +73,8 @@ const pageTitle = t(messages, 'footer.about.insights');
 const allArticlesLabel = t(messages, 'insights.allArticles');
 const pageCopy = resolveCollectionPageCopy(locale, 'insights', siteSeo);
 const [featuredInsight, ...remainingInsights] = insights;
+const productCategoryOptions = buildInsightProductCategoryOptions(remainingInsights, locale);
+const cardItems = buildInsightCardItems(remainingInsights, locale);
 const pageSize = 12;
 const pageCount = Math.ceil(remainingInsights.length / pageSize);
 const requestedPage = Number.parseInt(Astro.url.searchParams.get('page') || '1', 10);
@@ -116,33 +130,23 @@ const currentPage = Number.isFinite(requestedPage) && requestedPage > 0
         </nav>
       </section>
 
-      <section class="mt-12" aria-labelledby={`insights-list-${locale}`} data-insights-pagination-root>
-        <div class="mb-6 flex items-end justify-between gap-4">
-          <h2 id={`insights-list-${locale}`} class="text-3xl font-black tracking-tight text-slate-950 lg:text-4xl">
-            {allArticlesLabel}
-          </h2>
-          {insights.length > 0 && <span class="text-sm font-medium text-slate-500">{insights.length} {pageTitle}</span>}
-        </div>
-
-        {remainingInsights.length > 0 ? (
-          <div>
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {remainingInsights.map((insight, index) => (
-              <div data-insight-item data-page={Math.floor(index / pageSize) + 1} style={Math.floor(index / pageSize) + 1 === currentPage ? undefined : 'display: none;'}>
-                <InsightGridCard insight={insight} locale={locale} messages={messages} />
-              </div>
-            ))}
-            </div>
-            <InsightPagination
-              currentPage={currentPage}
-              pageCount={pageCount}
-              baseId={`insights-list-${locale}`}
-              messages={messages}
-            />
-          </div>
-        ) : !featuredInsight ? (
-          <p class="border border-dashed border-slate-300 py-16 text-center text-slate-500">{t(messages, 'search.noResults')}</p>
-        ) : null}
+      <section class="mt-12" aria-labelledby={`insights-list-${locale}`}>
+        <InsightProductCategoryBrowser
+          client:load
+          options={productCategoryOptions}
+          articles={cardItems}
+          title={allArticlesLabel}
+          filterLabel={t(messages, 'insights.productCategoryFilterLabel')}
+          allLabel={t(messages, 'insights.all')}
+          readMoreLabel={t(messages, 'common.readMore')}
+          noCoverLabel={t(messages, 'insights.noCover')}
+          noArticlesLabel={t(messages, 'insights.noArticles')}
+          articleCountLabel={t(messages, 'insights.articleCount')}
+          previousPageLabel={t(messages, 'insights.previousPage')}
+          nextPageLabel={t(messages, 'insights.nextPage')}
+          pageLabel={t(messages, 'insights.page')}
+          pageSize={12}
+        />
       </section>
     </div>
   </div>

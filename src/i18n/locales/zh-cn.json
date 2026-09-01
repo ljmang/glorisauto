@@ -246,6 +246,10 @@
     "pagination": "洞察文章分页",
     "previousPage": "上一页",
     "nextPage": "下一页",
-    "page": "第"
+    "page": "第",
+    "productCategoryFilterLabel": "产品分类：",
+    "all": "全部",
+    "articleCount": "{count} 篇文章",
+    "noArticles": "该分类下暂无文章。"
   }
 }

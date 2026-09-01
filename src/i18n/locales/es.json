@@ -246,6 +246,10 @@
     "pagination": "Paginación de perspectivas",
     "previousPage": "Página anterior",
     "nextPage": "Página siguiente",
-    "page": "Página"
+    "page": "Página",
+    "productCategoryFilterLabel": "Categoría de producto:",
+    "all": "Todos",
+    "articleCount": "{count} artículos",
+    "noArticles": "No se encontraron artículos para esta categoría."
   }
 }

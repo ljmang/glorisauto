@@ -246,6 +246,10 @@
     "pagination": "Insights のページネーション",
     "previousPage": "前のページ",
     "nextPage": "次のページ",
-    "page": "ページ"
+    "page": "ページ",
+    "productCategoryFilterLabel": "製品カテゴリー：",
+    "all": "すべて",
+    "articleCount": "{count} 件の記事",
+    "noArticles": "このカテゴリーの記事は見つかりませんでした。"
   }
 }

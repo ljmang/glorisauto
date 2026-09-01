@@ -246,6 +246,10 @@
     "pagination": "ترقيم صفحات المقالات",
     "previousPage": "الصفحة السابقة",
     "nextPage": "الصفحة التالية",
-    "page": "صفحة"
+    "page": "صفحة",
+    "productCategoryFilterLabel": "فئة المنتج:",
+    "all": "الكل",
+    "articleCount": "{count} مقالات",
+    "noArticles": "لم يتم العثور على مقالات لهذه الفئة."
   }
 }
