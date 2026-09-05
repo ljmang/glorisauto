@@ -87,13 +87,8 @@ const latestHelpArticles = Array.isArray(latestHelpRes?.data)
 	? latestHelpRes.data.filter((article) => Boolean(article?.slug)).slice(0, 4)
 	: [];
 
-const normalizeInsightsCount = (value: number | undefined, fallback: number) =>
-	typeof value === "number" && Number.isFinite(value) && value > 0
-		? Math.floor(value)
-		: fallback;
-
 const homeInsightsMode = data.insightsMode === "latest" ? "latest" : "manual";
-const homeInsightsCount = Math.max(6, normalizeInsightsCount(data.insightsCount, 6));
+const homeInsightsCount = 3;
 const manualInsights = Array.isArray(data.insights)
 	? (data.insights as InsightAttributes[])
 	: [];
