@@ -42,6 +42,8 @@ interface SearchStaticText {
   productsContent: string;
   insights: string;
   insightsContent: string;
+  videos: string;
+  videosContent: string;
   support: string;
   supportContent: string;
   contact: string;
@@ -68,6 +70,8 @@ const SEARCH_TEXTS: Record<SearchLocale, SearchStaticText> = {
     productsContent: 'Products list content',
     insights: 'Insights',
     insightsContent: 'Insights articles list content',
+    videos: 'Videos',
+    videosContent: 'Product demonstrations and application cases',
     support: 'Support',
     supportContent: 'Support center content',
     contact: 'Contact Us',
@@ -92,6 +96,8 @@ const SEARCH_TEXTS: Record<SearchLocale, SearchStaticText> = {
     productsContent: '产品列表内容',
     insights: '洞察',
     insightsContent: '洞察文章列表内容',
+    videos: '视频',
+    videosContent: '产品讲解与案例应用视频',
     support: '支持',
     supportContent: '支持中心内容',
     contact: '联系我们',
@@ -116,6 +122,8 @@ const SEARCH_TEXTS: Record<SearchLocale, SearchStaticText> = {
     productsContent: '製品一覧',
     insights: 'インサイト',
     insightsContent: 'インサイト記事一覧',
+    videos: '動画',
+    videosContent: '製品紹介と応用事例の動画',
     support: 'サポート',
     supportContent: 'サポートセンター情報',
     contact: 'お問い合わせ',
@@ -140,6 +148,8 @@ const SEARCH_TEXTS: Record<SearchLocale, SearchStaticText> = {
     productsContent: 'محتوى قائمة المنتجات',
     insights: 'الرؤى',
     insightsContent: 'محتوى قائمة المقالات',
+    videos: 'الفيديوهات',
+    videosContent: 'فيديوهات المنتجات والحالات التطبيقية',
     support: 'الدعم',
     supportContent: 'محتوى مركز الدعم',
     contact: 'اتصل بنا',
@@ -164,6 +174,8 @@ const SEARCH_TEXTS: Record<SearchLocale, SearchStaticText> = {
     productsContent: 'Contenido del catálogo de productos',
     insights: 'Perspectivas',
     insightsContent: 'Lista de artículos y perspectivas',
+    videos: 'Vídeos',
+    videosContent: 'Vídeos de productos y casos de aplicación',
     support: 'Soporte',
     supportContent: 'Contenido del centro de soporte',
     contact: 'Contáctenos',
@@ -295,6 +307,14 @@ async function buildSearchIndex(locale: string): Promise<SearchItem[]> {
     content: texts.productsContent,
     url: toHref('/products', locale),
     type: 'product',
+    locale,
+  });
+
+  addSearchItem(items, {
+    title: texts.videos,
+    content: texts.videosContent,
+    url: toHref('/about/videos', locale),
+    type: 'about',
     locale,
   });
 

@@ -11,6 +11,16 @@
     "topBrands": "主要ブランド",
     "solutions": "ソリューション"
   },
+  "videos": {
+    "title": "動画",
+    "description": "Glorisの自動車補修製品を実際の施工で紹介する、製品紹介と応用事例の動画です。",
+    "caseStudies": "応用事例",
+    "productIntroductions": "製品紹介",
+    "play": "動画を再生",
+    "close": "動画を閉じる",
+    "noVideos": "現在表示できる動画はありません。",
+    "videoUnavailable": "この動画は現在再生できません。"
+  },
   "solutions": {
     "atAGlance": "クイック概要",
     "audienceTitle": "最適な対象",
@@ -93,7 +103,8 @@
       "productionBase": "生産拠点",
       "becomeDealer": "販売代理店になる",
       "contactUs": "お問い合わせ",
-      "insights": "インサイト"
+      "insights": "インサイト",
+      "videos": "動画"
     },
     "chat": "お問い合わせください"
   },

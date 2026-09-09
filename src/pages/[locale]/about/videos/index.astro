@@ -1,0 +1,153 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import VideoGallery, { type VideoGalleryItem } from '@/components/VideoGallery.svelte';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
+import { loadMessages, t } from '@/i18n';
+import {
+  fetchApiWithLocaleFallback,
+  api,
+  parseImage,
+  parseMedia,
+  getMediaUrlFromField,
+  resolveImageAltText,
+  resolveLocalizedImageAltText,
+} from '@/utils/strapiApi';
+import { extractYouTubeVideoId } from '@/utils/youtubeEmbed';
+import { toHref } from '@/utils/navigationData';
+import { fetchSiteSeo } from '@/utils/siteConfig';
+import type { StrapiResponse } from '@/types';
+import type { VideoAttributes } from '@/types/content';
+import { localeDateTag } from '@/i18n/config';
+
+export async function getStaticPaths() {
+  return supportedLocales.map((locale) => ({
+    params: { locale },
+  }));
+}
+
+const params = Astro.params as { locale?: string };
+const locale: Locale = getLocale(params.locale);
+const messages = await loadMessages(locale);
+
+const [videosRes, siteSeo] = await Promise.all([
+  fetchApiWithLocaleFallback<StrapiResponse<VideoAttributes[]>>(api.videos, {
+    locale,
+    populate: {
+      cover: true,
+      videoFile: true,
+      captionsFile: true,
+      seo: {
+        populate: {
+          metaImage: true,
+          ogImage: true,
+          twitterImage: true,
+        },
+      },
+    },
+    sort: ['sort:asc', 'publishedAt:desc', 'title:asc'],
+    pagination: {
+      pageSize: 100,
+    },
+  }),
+  fetchSiteSeo(locale),
+]);
+
+const rawVideos = Array.isArray(videosRes?.data) ? videosRes.data : [];
+
+const videos: VideoGalleryItem[] = rawVideos
+  .map((video, index) => {
+    const record = video as VideoAttributes & {
+      id?: number;
+      documentId?: string;
+    };
+    const cover = parseImage(record.cover);
+    const uploadedVideo = parseMedia(record.videoFile);
+    const youtubeId = record.sourceType === 'youtube' ? extractYouTubeVideoId(record.youtubeUrl) : null;
+    const poster =
+      cover?.src ||
+      uploadedVideo?.poster ||
+      (youtubeId ? `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg` : '');
+    const posterAlt = resolveLocalizedImageAltText(
+      locale,
+      record.coverAlt,
+      cover?.alt,
+      record.title,
+    );
+    const publishedAt = record.publishedAt || undefined;
+    const date = publishedAt
+      ? new Date(publishedAt).toLocaleDateString(localeDateTag[locale], {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      : '';
+
+    return {
+      id: String(record.documentId || record.id || `${record.category}-${index}`),
+      title: record.title?.trim() || '',
+      description: record.description?.trim() || '',
+      category: record.category,
+      poster,
+      posterAlt: resolveImageAltText(record.coverAlt, posterAlt, record.title),
+      date,
+      publishedAt,
+      sourceType: record.sourceType,
+      videoSrc: record.sourceType === 'upload' ? uploadedVideo?.src : undefined,
+      captionsSrc: getMediaUrlFromField(record.captionsFile) || undefined,
+      youtubeId: youtubeId || undefined,
+    };
+  })
+  .filter((video) => {
+    const hasPlayableSource = Boolean(video.videoSrc || video.youtubeId);
+    return Boolean(video.title && video.poster && hasPlayableSource);
+  });
+
+const breadcrumbItems = [
+  { label: t(messages, 'pageTitle.home'), href: '/' },
+  { label: t(messages, 'pageTitle.about'), href: '/about' },
+  { label: t(messages, 'videos.title'), href: undefined },
+];
+
+const videoDescription = t(messages, 'videos.description');
+---
+
+<BaseLayout
+  title={t(messages, 'videos.title')}
+  description={videoDescription}
+  pageType="collection"
+  breadcrumbs={breadcrumbItems}
+  messages={messages}
+  locale={locale}
+  siteSeo={siteSeo}
+>
+  <section class="bg-gray-50">
+    <div class="container mx-auto px-4 pb-20 pt-8 lg:pb-28 lg:pt-10">
+      <Breadcrumb items={breadcrumbItems} locale={locale} />
+
+      <div class="mx-auto max-w-[1200px] pt-14 lg:pt-16">
+        <header class="mb-14 lg:mb-16">
+          <h1 class="text-5xl font-semibold tracking-[-0.04em] text-gray-950 sm:text-6xl lg:text-[4.25rem]">
+            {t(messages, 'videos.title')}
+          </h1>
+          <p class="mt-8 max-w-4xl text-lg leading-8 text-gray-800 lg:text-xl">
+            {videoDescription}
+          </p>
+        </header>
+
+        <VideoGallery
+          client:load
+          videos={videos}
+          labels={{
+            caseStudy: t(messages, 'videos.caseStudies'),
+            productIntro: t(messages, 'videos.productIntroductions'),
+            play: t(messages, 'videos.play'),
+            close: t(messages, 'videos.close'),
+            noVideos: t(messages, 'videos.noVideos'),
+            videoUnavailable: t(messages, 'videos.videoUnavailable'),
+          }}
+        />
+      </div>
+    </div>
+  </section>
+</BaseLayout>

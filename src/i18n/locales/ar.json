@@ -11,6 +11,16 @@
     "topBrands": "أبرز العلامات التجارية",
     "solutions": "الحلول"
   },
+  "videos": {
+    "title": "الفيديوهات",
+    "description": "فيديوهات تعريفية وتطبيقية تعرض أداء منتجات Gloris لإصلاح السيارات في الاستخدام العملي.",
+    "caseStudies": "حالات تطبيقية",
+    "productIntroductions": "المنتجات",
+    "play": "تشغيل الفيديو",
+    "close": "إغلاق الفيديو",
+    "noVideos": "لا توجد فيديوهات متاحة حالياً.",
+    "videoUnavailable": "هذا الفيديو غير متاح حالياً."
+  },
   "solutions": {
     "atAGlance": "نظرة سريعة",
     "audienceTitle": "الأنسب لـ",
@@ -93,7 +103,8 @@
       "productionBase": "قاعدة الإنتاج",
       "becomeDealer": "كن وكيلنا",
       "contactUs": "اتصل بنا",
-      "insights": "الرؤى"
+      "insights": "الرؤى",
+      "videos": "الفيديوهات"
     },
     "chat": "نحن هنا!"
   },

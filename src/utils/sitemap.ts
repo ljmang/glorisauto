@@ -43,6 +43,7 @@ const STATIC_PAGE_PATHS = [
   '/about/dealer',
   '/about/brand-story',
   '/about/insights',
+  '/about/videos',
   '/help',
   '/products',
   '/support',

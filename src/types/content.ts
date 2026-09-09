@@ -162,6 +162,29 @@ export interface InsightAttributes {
 
 export type InsightContent = StrapiContent<InsightAttributes>;
 
+export type VideoCategory = 'case-study' | 'product-intro';
+export type VideoSourceType = 'upload' | 'youtube';
+
+/** Videos 视频内容类型（独立集合，支持站内上传或 YouTube） */
+export interface VideoAttributes {
+  title: string;
+  description?: string;
+  category: VideoCategory;
+  sourceType: VideoSourceType;
+  cover?: StrapiMedia | null;
+  coverAlt?: string | null;
+  videoFile?: StrapiMedia | null;
+  captionsFile?: StrapiMedia | null;
+  youtubeUrl?: string | null;
+  sort?: number | null;
+  featured?: boolean;
+  publishedAt?: string;
+  updatedAt?: string;
+  seo?: StrapiSeo | null;
+}
+
+export type VideoContent = StrapiContent<VideoAttributes>;
+
 export interface SolutionListOption {
   name?: string;
   image?: StrapiMedia | null;

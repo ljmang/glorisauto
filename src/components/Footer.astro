@@ -67,11 +67,12 @@ const fallbackSections: FooterSection[] = [
       { label: t(messages, 'footer.about.becomeDealer'), href: toHref('/about/dealer', locale) },
       { label: t(messages, 'footer.about.contactUs'), href: toHref('/support/customer-service', locale) },
       { label: t(messages, 'footer.about.insights'), href: toHref('/about/insights', locale) },
+      { label: t(messages, 'footer.about.videos'), href: toHref('/about/videos', locale) },
     ],
   },
 ];
 
-const footerSections: FooterSection[] = navData.length > 0
+const baseFooterSections: FooterSection[] = navData.length > 0
   ? navData
       .map((item) => ({
         title: item.label,
@@ -79,6 +80,20 @@ const footerSections: FooterSection[] = navData.length > 0
       }))
       .filter((section) => section.links.length > 0)
   : fallbackSections;
+
+const videosFooterLink = {
+  label: t(messages, 'footer.about.videos'),
+  href: toHref('/about/videos', locale),
+};
+
+const footerSections: FooterSection[] = baseFooterSections.map((section) => {
+  const isAboutSection =
+    section.title === t(messages, 'footer.about.title') ||
+    section.links.some((link) => link.href.includes(`/${locale}/about`));
+  if (!isAboutSection) return section;
+  const hasVideosLink = section.links.some((link) => link.href.replace(/\/$/, '').endsWith('/about/videos'));
+  return hasVideosLink ? section : { ...section, links: [...section.links, videosFooterLink] };
+});
 ---
 
 <footer class="bg-black text-white mt-auto">

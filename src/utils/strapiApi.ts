@@ -328,6 +328,7 @@ export const api = {
   topBrands: 'top-brands',
   brandHome: 'brand-home',
   insights: 'insights',
+  videos: 'videos',
   insightCategories: 'insight-categories',
   helpCenters: 'help-centers',
   helpCategories: 'help-categories',

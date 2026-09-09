@@ -11,6 +11,16 @@
     "topBrands": "Marcas destacadas",
     "solutions": "Soluciones"
   },
+  "videos": {
+    "title": "Vídeos",
+    "description": "Vídeos de producto y casos de aplicación que muestran el rendimiento real de los productos de reparación de automóviles Gloris.",
+    "caseStudies": "Casos de aplicación",
+    "productIntroductions": "Productos",
+    "play": "Reproducir vídeo",
+    "close": "Cerrar vídeo",
+    "noVideos": "Todavía no hay vídeos disponibles.",
+    "videoUnavailable": "Este vídeo no está disponible todavía."
+  },
   "solutions": {
     "atAGlance": "Vista general",
     "audienceTitle": "Ideal para",
@@ -93,7 +103,8 @@
       "productionBase": "Centro de producción",
       "becomeDealer": "Conviértete en distribuidor",
       "contactUs": "Contáctenos",
-      "insights": "Perspectivas"
+      "insights": "Perspectivas",
+      "videos": "Vídeos"
     },
     "chat": "¡Estamos aquí!"
   },

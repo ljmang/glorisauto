@@ -11,6 +11,16 @@
     "topBrands": "Top Brands",
     "solutions": "Solutions"
   },
+  "videos": {
+    "title": "Videos",
+    "description": "Product demonstrations and application cases that show Gloris automotive repair products in real-world use.",
+    "caseStudies": "Application Cases",
+    "productIntroductions": "Products",
+    "play": "Play video",
+    "close": "Close video",
+    "noVideos": "No videos available yet.",
+    "videoUnavailable": "This video is not available yet."
+  },
   "solutions": {
     "atAGlance": "At a Glance",
     "audienceTitle": "Best Fit",
@@ -93,7 +103,8 @@
       "productionBase": "Production Base",
       "becomeDealer": "Become Our Dealer",
       "contactUs": "Contact Us",
-      "insights": "Insights"
+      "insights": "Insights",
+      "videos": "Videos"
     },
     "chat": "We are here!"
   },
