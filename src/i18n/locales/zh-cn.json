@@ -14,8 +14,8 @@
   "videos": {
     "title": "视频",
     "description": "产品讲解与应用视频，直观看到 Gloris 汽车修复产品的真实施工表现。",
-    "caseStudies": "案例应用",
-    "productIntroductions": "产品介绍",
+    "caseStudies": "应用案例",
+    "productIntroductions": "产品演示",
     "play": "播放视频",
     "close": "关闭视频",
     "noVideos": "暂时还没有可展示的视频。",

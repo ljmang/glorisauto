@@ -6,7 +6,7 @@
     id: string;
     title: string;
     description?: string;
-    category: 'case-study' | 'product-intro';
+    category: 'Product Demos' | 'Application Cases';
     poster: string;
     posterAlt: string;
     date?: string;
@@ -29,13 +29,13 @@
   export let videos: VideoGalleryItem[] = [];
   export let labels: VideoGalleryLabels;
 
-  const categoryOrder: Array<VideoGalleryItem['category']> = ['case-study', 'product-intro'];
+  const categoryOrder: Array<VideoGalleryItem['category']> = ['Product Demos', 'Application Cases'];
   let selectedVideo: VideoGalleryItem | null = null;
   let closeButton: HTMLButtonElement;
 
   $: groups = categoryOrder.map((category) => ({
     category,
-    label: category === 'case-study' ? labels.caseStudy : labels.productIntro,
+    label: category === 'Application Cases' ? labels.caseStudy : labels.productIntro,
     items: videos.filter((video) => video.category === category),
   }));
 

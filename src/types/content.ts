@@ -162,7 +162,7 @@ export interface InsightAttributes {
 
 export type InsightContent = StrapiContent<InsightAttributes>;
 
-export type VideoCategory = 'case-study' | 'product-intro';
+export type VideoCategory = 'Product Demos' | 'Application Cases';
 export type VideoSourceType = 'upload' | 'youtube';
 
 /** Videos 视频内容类型（独立集合，支持站内上传或 YouTube） */
