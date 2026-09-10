@@ -76,6 +76,12 @@ const ROOT_SEGMENT_ALIAS_MAP = new Map<string, string>([
   ['الحلول', 'solutions'],
 ]);
 
+const LEGACY_ROUTE_ALIAS_MAP = new Map<string, string>([
+  ['/about/factory', '/about/insights/news/production-base'],
+  ['/about/insights/news/our-factory', '/about/insights/news/production-base'],
+  ['/about/insights/production-base', '/about/insights/news/production-base'],
+]);
+
 function normalizeRootSegment(segment: string): string {
   const decoded = decodeURIComponent(segment).trim();
   const lower = decoded.toLowerCase();
@@ -92,6 +98,17 @@ function canonicalizeKnownRoutePath(path: string): string {
   }
   const joined = segments.join('/');
   return hasLeadingSlash ? `/${joined}` : joined;
+}
+
+function canonicalizeLegacyRoutePath(path: string, locale?: string): string {
+  const legacyPath = LEGACY_ROUTE_ALIAS_MAP.get(path);
+  if (legacyPath) return legacyPath;
+
+  if (locale === 'zh-cn' && path === '/products/paint-protection-film') {
+    return '/products/tpu-ppf';
+  }
+
+  return path;
 }
 
 function splitPathSuffix(url: string): { path: string; suffix: string } {
@@ -132,7 +149,7 @@ function byOrder(a: ComponentNavNode, b: ComponentNavNode): number {
   return aOrder - bOrder;
 }
 
-function normalizeInternalPath(url: string | undefined): string {
+function normalizeInternalPath(url: string | undefined, locale?: string): string {
   if (!url) return '';
 
   const cleaned = url.replace(/\u00a0/g, '').trim();
@@ -149,6 +166,7 @@ function normalizeInternalPath(url: string | undefined): string {
   let path = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
   path = path.replace(LOCALE_PREFIX_PATTERN, '');
   path = canonicalizeKnownRoutePath(path);
+  path = canonicalizeLegacyRoutePath(path, locale);
   path = path.replace(/\/+$/, '');
   return path || '/';
 }
@@ -167,6 +185,7 @@ export function toHref(url: string | undefined, locale: string): string {
 
   path = path.replace(LOCALE_PREFIX_PATTERN, '');
   path = canonicalizeKnownRoutePath(path);
+  path = canonicalizeLegacyRoutePath(path, locale);
   path = withCanonicalTrailingSlash(path);
   if (path === '') path = '/';
 
@@ -186,7 +205,7 @@ function isVisibleNavNode(node: ComponentNavNode, locale: string): boolean {
     return false;
   }
 
-  const normalizedPath = normalizeInternalPath(resolveNodeHref(node, locale, ''));
+  const normalizedPath = normalizeInternalPath(resolveNodeHref(node, locale, ''), locale);
   if (!isSolutionsEnabled() && normalizedPath === '/solutions') {
     return false;
   }

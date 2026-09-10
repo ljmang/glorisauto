@@ -16,6 +16,8 @@ export type {
 // 内容类型
 export type {
   HomeAttributes,
+  HomeWhyChooseItem,
+  HomeVideoDisplayMode,
   HomeContent,
   SiteSeoAttributes,
   SiteSeoContent,

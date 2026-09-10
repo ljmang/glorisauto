@@ -17,6 +17,8 @@
     "caseStudies": "Casos de aplicación",
     "productIntroductions": "Demostraciones de productos",
     "play": "Reproducir vídeo",
+    "previous": "Vídeos anteriores",
+    "next": "Vídeos siguientes",
     "close": "Cerrar vídeo",
     "noVideos": "Todavía no hay vídeos disponibles.",
     "videoUnavailable": "Este vídeo no está disponible todavía."

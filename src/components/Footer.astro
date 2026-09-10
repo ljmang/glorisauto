@@ -20,6 +20,10 @@ const currentYear = new Date().getFullYear().toString();
 const homeHref = toHref('/', locale);
 const privacyHref = toHref('/privacy-policy', locale);
 const cookiePreferencesHref = toHref('/cookie-preferences', locale);
+const paintProtectionFilmHref = toHref(
+  locale === 'zh-cn' ? '/products/tpu-ppf' : '/products/paint-protection-film',
+  locale,
+);
 
 function linksFromNavItem(item: NavItem): NavLink[] {
   if (Array.isArray(item.columns) && item.columns.length > 0) {
@@ -44,11 +48,11 @@ const fallbackSections: FooterSection[] = [
   {
     title: t(messages, 'footer.products.title'),
     links: [
-      { label: t(messages, 'footer.products.abrasivePaper'), href: toHref('/products/abrasive-paper', locale) },
-      { label: t(messages, 'footer.products.films'), href: toHref('/products/films', locale) },
-      { label: t(messages, 'footer.products.compoundsPolishes'), href: toHref('/products/compounds-polishes', locale) },
+      { label: t(messages, 'footer.products.abrasivePaper'), href: toHref('/products/sand-paper', locale) },
+      { label: t(messages, 'footer.products.films'), href: toHref('/products/film-sanding-disc', locale) },
+      { label: t(messages, 'footer.products.compoundsPolishes'), href: toHref('/products/polishing-compound', locale) },
       { label: t(messages, 'footer.products.automotiveWindowFilm'), href: toHref('/products/automotive-window-film', locale) },
-      { label: t(messages, 'footer.products.paintProtectionFilms'), href: toHref('/products/paint-protection-film', locale) },
+      { label: t(messages, 'footer.products.paintProtectionFilms'), href: paintProtectionFilmHref },
     ],
   },
   {
@@ -63,7 +67,7 @@ const fallbackSections: FooterSection[] = [
     title: t(messages, 'footer.about.title'),
     links: [
       { label: t(messages, 'footer.about.brandStory'), href: toHref('/about/brand-story', locale) },
-      { label: t(messages, 'footer.about.productionBase'), href: toHref('/about/insights/production-base', locale) },
+      { label: t(messages, 'footer.about.productionBase'), href: toHref('/about/insights/news/production-base', locale) },
       { label: t(messages, 'footer.about.becomeDealer'), href: toHref('/about/dealer', locale) },
       { label: t(messages, 'footer.about.contactUs'), href: toHref('/support/customer-service', locale) },
       { label: t(messages, 'footer.about.insights'), href: toHref('/about/insights', locale) },

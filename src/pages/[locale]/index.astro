@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Hero from "@/components/Hero.svelte";
-import { supportedLocales, type Locale, getLocale } from "@/i18n/config";
+import { supportedLocales, type Locale, getLocale, defaultLocale } from "@/i18n/config";
 import { loadMessages, t } from "@/i18n";
 import {
 	fetchApiWithLocaleFallback,
@@ -13,12 +13,21 @@ import {
 import { toHref } from "@/utils/navigationData";
 import { CircleChevronRight } from "lucide-svelte";
 import type { HomeAttributes, StrapiResponse, NewsItem } from "@/types";
-import type { ProductAttributes, InsightAttributes, HelpCenterAttributes } from "@/types/content";
+import type {
+	ProductAttributes,
+	InsightAttributes,
+	HelpCenterAttributes,
+	HomeWhyChooseItem,
+	VideoAttributes,
+} from "@/types/content";
 import { Image } from "astro:assets";
 import NewsCard from "@/components/NewsCard.astro";
 import ProductCard from "@/components/ProductCard.astro";
 import InsightCard from "@/components/InsightCard.astro";
 import DownloadFileCard from "@/components/DownloadFileCard.astro";
+import HomeWhyChoose from "@/components/HomeWhyChoose.astro";
+import HomeVideoRail from "@/components/HomeVideoRail.astro";
+import HomeCta from "@/components/HomeCta.astro";
 
 export async function getStaticPaths() {
 	return supportedLocales.map((locale) => ({
@@ -32,46 +41,93 @@ const locale: Locale = getLocale(params.locale);
 
 const messages = await loadMessages(locale);
 
-// 3. 使用泛型获取数据，避免 unknown
-const [homeData, latestHelpRes] = await Promise.all([
-	fetchApiWithLocaleFallback<StrapiResponse<HomeAttributes>>(api.home, {
-		locale,
+const homepageBasePopulate = {
+	heroMedia: true,
+	heroDefaultBackground: true,
+	aboutGlorisCover: true,
+	seo: {
 		populate: {
-			heroMedia: true,
-			heroDefaultBackground: true,
-			aboutGlorisCover: true,
-			seo: {
-				populate: {
-					metaImage: true,
-					ogImage: true,
-					twitterImage: true,
-				},
-			},
-			glorisNews: {
-				populate: {
-					cover: true,
-				},
-			},
-			products: {
-				populate: {
-					cover: true,
-					images: true,
-					category: true,
-				},
-			},
-			insights: {
-				populate: {
-					cover: true,
-					insight_category: true,
-				},
-			},
-			downloadFiles: {
-				populate: {
-					file: true,
-				},
-			},
+			metaImage: true,
+			ogImage: true,
+			twitterImage: true,
 		},
-	}),
+	},
+	glorisNews: {
+		populate: {
+			cover: true,
+		},
+	},
+	products: {
+		populate: {
+			cover: true,
+			images: true,
+			category: true,
+		},
+	},
+	insights: {
+		populate: {
+			cover: true,
+			insight_category: true,
+		},
+	},
+	downloadFiles: {
+		populate: {
+			file: true,
+		},
+	},
+} as const;
+
+const homepagePopulate = {
+	...homepageBasePopulate,
+	whyChooseItems: {
+		populate: {
+			cover: true,
+		},
+	},
+	videos: {
+		populate: {
+			cover: true,
+		},
+	},
+	ctaBackground: true,
+} as const;
+
+async function fetchHomepageData() {
+	try {
+		return await fetchApiWithLocaleFallback<StrapiResponse<HomeAttributes>>(api.home, {
+			locale,
+			populate: homepagePopulate,
+		});
+	} catch (error) {
+		// Keep a newly deployed frontend compatible while an older Strapi instance is still being updated.
+		if (!/Invalid key (whyChooseItems|videos|ctaBackground)/.test(String(error))) throw error;
+		return fetchApiWithLocaleFallback<StrapiResponse<HomeAttributes>>(api.home, {
+			locale,
+			populate: homepageBasePopulate,
+		});
+	}
+}
+
+async function fetchDefaultHeroBackground() {
+	if (locale === defaultLocale) return null;
+
+	try {
+		return await fetchApiWithLocaleFallback<
+			StrapiResponse<Pick<HomeAttributes, "heroDefaultBackground">>
+		>(api.home, {
+			locale: defaultLocale,
+			populate: {
+				heroDefaultBackground: true,
+			},
+		});
+	} catch {
+		return null;
+	}
+}
+
+// 3. 使用泛型获取数据，避免 unknown
+const [homeData, latestHelpRes, defaultHomeData] = await Promise.all([
+	fetchHomepageData(),
 	fetchApiWithLocaleFallback<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
 		locale,
 		populate: {
@@ -80,12 +136,69 @@ const [homeData, latestHelpRes] = await Promise.all([
 		sort: ["publishedAt:desc"],
 		pagination: { pageSize: 4 },
 	}),
+	fetchDefaultHeroBackground(),
 ]);
 // 4. 安全的数据解构 (即使 API 挂了，页面也不会白屏，而是显示默认值)
 const data = homeData?.data || ({} as Partial<HomeAttributes>);
 const latestHelpArticles = Array.isArray(latestHelpRes?.data)
 	? latestHelpRes.data.filter((article) => Boolean(article?.slug)).slice(0, 4)
 	: [];
+
+const sortBySortThenDate = <T extends { sort?: number | null; publishedAt?: string }>(list: T[]) =>
+	[...list].sort((a, b) => {
+		const aSort = typeof a.sort === "number" ? a.sort : Number.MAX_SAFE_INTEGER;
+		const bSort = typeof b.sort === "number" ? b.sort : Number.MAX_SAFE_INTEGER;
+		if (aSort !== bSort) return aSort - bSort;
+		const aDate = a.publishedAt ? Date.parse(a.publishedAt) : 0;
+		const bDate = b.publishedAt ? Date.parse(b.publishedAt) : 0;
+		return bDate - aDate;
+	});
+
+const homeWhyChooseItems = (Array.isArray(data.whyChooseItems)
+	? (data.whyChooseItems as HomeWhyChooseItem[])
+	: []
+)
+	.filter((item) => Boolean(item?.title?.trim()))
+	.map((item, index) => ({ item, index }))
+	.sort((a, b) => {
+		const aSort = typeof a.item.sort === "number" ? a.item.sort : Number.MAX_SAFE_INTEGER;
+		const bSort = typeof b.item.sort === "number" ? b.item.sort : Number.MAX_SAFE_INTEGER;
+		return aSort - bSort || a.index - b.index;
+	})
+	.map(({ item }) => item);
+const showWhyChoose = data.whyChooseEnabled !== false && Boolean(data.whyChooseTitle?.trim()) && homeWhyChooseItems.length > 0;
+
+const homeVideosMode = data.videosMode === "latest" ? "latest" : "manual";
+const homeVideosCount = Number.isFinite(data.videosCount) && (data.videosCount as number) > 0
+	? Math.min(Math.floor(data.videosCount as number), 6)
+	: 2;
+const manualHomeVideos = Array.isArray(data.videos)
+	? (data.videos as VideoAttributes[]).filter((video) => Boolean(video?.title?.trim()))
+	: [];
+const latestHomeVideosRes =
+	data.videosTitle?.trim() && homeVideosMode === "latest"
+		? await fetchApiWithLocaleFallback<{ data?: VideoAttributes[] }>(api.videos, {
+				locale,
+				populate: {
+					cover: true,
+				},
+				sort: ["featured:desc", "sort:asc", "publishedAt:desc"],
+				pagination: { pageSize: homeVideosCount },
+			})
+		: null;
+const latestHomeVideos = Array.isArray(latestHomeVideosRes?.data)
+	? latestHomeVideosRes.data.filter((video) => Boolean(video?.title?.trim()))
+	: [];
+const displayHomeVideos = (homeVideosMode === "latest"
+	? latestHomeVideos
+	: sortBySortThenDate(manualHomeVideos)
+).slice(0, homeVideosCount);
+const showHomeVideos = data.videosEnabled !== false && Boolean(data.videosTitle?.trim()) && displayHomeVideos.length > 0;
+
+const whyChooseLinkLabel = data.whyChooseLinkLabel?.trim() || t(messages, "common.viewAll");
+const whyChooseLinkHref = toHref(data.whyChooseLink?.trim() || "/about/insights/news", locale);
+const videosLinkLabel = data.videosLinkLabel?.trim() || t(messages, "common.viewAll");
+const videosLinkHref = toHref(data.videosLink?.trim() || "/about/videos", locale);
 
 const homeInsightsMode = data.insightsMode === "latest" ? "latest" : "manual";
 const homeInsightsCount = 3;
@@ -152,10 +265,17 @@ const downloadFilesLinkHref = toHref(
 	data.downloadFilesLink?.trim() || "/support/download",
 	locale,
 );
+const ctaPrimaryHref = toHref(data.ctaPrimaryLink?.trim() || "/contact", locale);
+const ctaSecondaryHref = toHref(data.ctaSecondaryLink?.trim() || "/about/dealer", locale);
+const showHomeCta = data.ctaEnabled !== false && Boolean(data.ctaTitle?.trim());
 
 // 处理数据
 const heroMediaProp = parseHeroMedia(data.heroMedia);
 const heroDefaultBackground = parseImage(data.heroDefaultBackground);
+const ctaBackground =
+	data.heroDefaultBackground ??
+	defaultHomeData?.data?.heroDefaultBackground ??
+	data.ctaBackground;
 const heroTitle = data.heroTitle ?? t(messages, "home.heroTitle");
 const heroCtaHref = toHref(data.heroButtonLink ?? "/", locale);
 const heroSampleCta = t(messages, "dealer.actionCta");
@@ -315,6 +435,35 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 			)
 		}
 
+		<!-- Why Choose Gloris 为什么选择我们 -->
+		{showWhyChoose && (
+			<HomeWhyChoose
+				title={data.whyChooseTitle as string}
+				description={data.whyChooseDescription}
+				linkLabel={whyChooseLinkLabel}
+				href={whyChooseLinkHref}
+				items={homeWhyChooseItems}
+				locale={locale}
+			/>
+		)}
+
+		<!-- Videos / Real Applications 视频展示 -->
+		{showHomeVideos && (
+			<HomeVideoRail
+				title={data.videosTitle as string}
+				description={data.videosDescription}
+				linkLabel={videosLinkLabel}
+				href={videosLinkHref}
+				videos={displayHomeVideos}
+				locale={locale}
+				playLabel={t(messages, "videos.play")}
+				previousLabel={t(messages, "videos.previous")}
+				nextLabel={t(messages, "videos.next")}
+				closeLabel={t(messages, "videos.close")}
+				videoUnavailableLabel={t(messages, "videos.videoUnavailable")}
+			/>
+		)}
+
 		<!-- Insights 文章/洞察展示 -->
 		{
 			showInsights && (
@@ -390,14 +539,14 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 						<CircleChevronRight class="h-4 w-4" />
 					</a>
 				</div>
-				<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+				<div class="grid grid-cols-1 gap-x-10 md:grid-cols-2 md:gap-x-12">
 					{latestHelpArticles.map((article) => {
 						const articleCategorySlug = article.help_category?.slug ?? "uncategorized";
 						const articleHref = toHref(`/help/${articleCategorySlug}/${article.slug}`, locale);
 						return (
 							<a
 								href={articleHref}
-								class="group flex min-h-48 flex-col rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md"
+								class="group flex min-h-40 flex-col border-t border-gray-200 py-7 transition-colors hover:border-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-4 sm:py-8"
 							>
 								{article.help_category?.name && (
 									<div class="mb-3 text-xs font-semibold uppercase tracking-wide text-orange-600">
@@ -422,4 +571,19 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 			</div>
 		)}
 	</div>
+
+		<!-- Homepage CTA 行动召唤 -->
+		{showHomeCta && (
+			<HomeCta
+				eyebrow={data.ctaEyebrow}
+				title={data.ctaTitle as string}
+				description={data.ctaDescription}
+				primaryLabel={data.ctaPrimaryLabel}
+				primaryHref={data.ctaPrimaryLabel ? ctaPrimaryHref : undefined}
+				secondaryLabel={data.ctaSecondaryLabel}
+				secondaryHref={data.ctaSecondaryLabel ? ctaSecondaryHref : undefined}
+				background={ctaBackground}
+				locale={locale}
+			/>
+		)}
 </BaseLayout>

@@ -7,6 +7,17 @@ import type { StrapiMedia, StrapiContent, StrapiLinkItem, StrapiSeo } from './st
 import type { BlockNode, NewsItem } from './blocks';
 
 export type InsightDisplayMode = 'manual' | 'latest';
+export type HomeVideoDisplayMode = 'manual' | 'latest';
+
+export interface HomeWhyChooseItem {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  cover?: StrapiMedia | null;
+  coverAlt?: string | null;
+  featured?: boolean;
+  sort?: number | null;
+}
 
 /** Home 页面内容类型 */
 export interface HomeAttributes {
@@ -24,6 +35,19 @@ export interface HomeAttributes {
   aboutGlorisLinkLabel?: string;
   aboutGlorisLink?: string;
   glorisNewsTitle?: string;
+  whyChooseEnabled?: boolean;
+  whyChooseTitle?: string;
+  whyChooseDescription?: string;
+  whyChooseLinkLabel?: string;
+  whyChooseLink?: string;
+  whyChooseItems?: HomeWhyChooseItem[];
+  videosEnabled?: boolean;
+  videosTitle?: string;
+  videosDescription?: string;
+  videosLinkLabel?: string;
+  videosLink?: string;
+  videosMode?: HomeVideoDisplayMode;
+  videosCount?: number;
   productsTitle?: string;
   productsLinkLabel?: string;
   productsLink?: string;
@@ -39,6 +63,16 @@ export interface HomeAttributes {
   products?: unknown[];
   insights?: InsightAttributes[];
   downloadFiles?: unknown[];
+  videos?: VideoAttributes[];
+  ctaEnabled?: boolean;
+  ctaEyebrow?: string;
+  ctaTitle?: string;
+  ctaDescription?: string;
+  ctaPrimaryLabel?: string;
+  ctaPrimaryLink?: string;
+  ctaSecondaryLabel?: string;
+  ctaSecondaryLink?: string;
+  ctaBackground?: StrapiMedia | null;
   seo?: StrapiSeo | null;
 }
 

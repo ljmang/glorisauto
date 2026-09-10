@@ -17,6 +17,8 @@
     "caseStudies": "应用案例",
     "productIntroductions": "产品演示",
     "play": "播放视频",
+    "previous": "上一个视频",
+    "next": "下一个视频",
     "close": "关闭视频",
     "noVideos": "暂时还没有可展示的视频。",
     "videoUnavailable": "该视频暂时无法播放。"

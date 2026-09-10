@@ -23,12 +23,14 @@
 # Legacy localized product paths.
 /en/products/tpu-ppf/tpu-paint-protection-film /en/products/paint-protection-film/tpu-paint-protection-film/ 301
 /en/products/tpu-ppf/tpu-paint-protection-film/ /en/products/paint-protection-film/tpu-paint-protection-film/ 301
-/zh-cn/products/tpu-ppf /zh-cn/products/paint-protection-film/ 301
-/zh-cn/products/tpu-ppf/ /zh-cn/products/paint-protection-film/ 301
+/zh-cn/products/paint-protection-film /zh-cn/products/tpu-ppf/ 301
+/zh-cn/products/paint-protection-film/ /zh-cn/products/tpu-ppf/ 301
 /ja/products/tpu-ppf /ja/products/paint-protection-film/ 301
 /ja/products/tpu-ppf/ /ja/products/paint-protection-film/ 301
 /ar/products/tpu-ppf /ar/products/paint-protection-film/ 301
 /ar/products/tpu-ppf/ /ar/products/paint-protection-film/ 301
+/es/products/tpu-ppf /es/products/paint-protection-film/ 301
+/es/products/tpu-ppf/ /es/products/paint-protection-film/ 301
 
 # Legacy contact and factory paths.
 /contact /en/support/customer-service/ 301
@@ -51,23 +53,39 @@
 /ar/support/contact /ar/support/customer-service/ 301
 /ar/support/contact/ /ar/support/customer-service/ 301
 
-/en/about/factory /en/about/insights/production-base/ 301
-/en/about/factory/ /en/about/insights/production-base/ 301
-/zh-cn/about/factory /zh-cn/about/insights/production-base/ 301
-/zh-cn/about/factory/ /zh-cn/about/insights/production-base/ 301
-/ja/about/factory /ja/about/insights/production-base/ 301
-/ja/about/factory/ /ja/about/insights/production-base/ 301
-/ar/about/factory /ar/about/insights/production-base/ 301
-/ar/about/factory/ /ar/about/insights/production-base/ 301
+/en/about/factory /en/about/insights/news/production-base/ 301
+/en/about/factory/ /en/about/insights/news/production-base/ 301
+/zh-cn/about/factory /zh-cn/about/insights/news/production-base/ 301
+/zh-cn/about/factory/ /zh-cn/about/insights/news/production-base/ 301
+/ja/about/factory /ja/about/insights/news/production-base/ 301
+/ja/about/factory/ /ja/about/insights/news/production-base/ 301
+/ar/about/factory /ar/about/insights/news/production-base/ 301
+/ar/about/factory/ /ar/about/insights/news/production-base/ 301
+/es/about/factory /es/about/insights/news/production-base/ 301
+/es/about/factory/ /es/about/insights/news/production-base/ 301
 
-/en/about/insights/news/our-factory /en/about/insights/production-base/ 301
-/en/about/insights/news/our-factory/ /en/about/insights/production-base/ 301
-/zh-cn/about/insights/news/our-factory /zh-cn/about/insights/production-base/ 301
-/zh-cn/about/insights/news/our-factory/ /zh-cn/about/insights/production-base/ 301
-/ja/about/insights/news/our-factory /ja/about/insights/production-base/ 301
-/ja/about/insights/news/our-factory/ /ja/about/insights/production-base/ 301
-/ar/about/insights/news/our-factory /ar/about/insights/production-base/ 301
-/ar/about/insights/news/our-factory/ /ar/about/insights/production-base/ 301
+/en/about/insights/news/our-factory /en/about/insights/news/production-base/ 301
+/en/about/insights/news/our-factory/ /en/about/insights/news/production-base/ 301
+/zh-cn/about/insights/news/our-factory /zh-cn/about/insights/news/production-base/ 301
+/zh-cn/about/insights/news/our-factory/ /zh-cn/about/insights/news/production-base/ 301
+/ja/about/insights/news/our-factory /ja/about/insights/news/production-base/ 301
+/ja/about/insights/news/our-factory/ /ja/about/insights/news/production-base/ 301
+/ar/about/insights/news/our-factory /ar/about/insights/news/production-base/ 301
+/ar/about/insights/news/our-factory/ /ar/about/insights/news/production-base/ 301
+/es/about/insights/news/our-factory /es/about/insights/news/production-base/ 301
+/es/about/insights/news/our-factory/ /es/about/insights/news/production-base/ 301
+
+# Legacy production-base path without its insight category.
+/en/about/insights/production-base /en/about/insights/news/production-base/ 301
+/en/about/insights/production-base/ /en/about/insights/news/production-base/ 301
+/zh-cn/about/insights/production-base /zh-cn/about/insights/news/production-base/ 301
+/zh-cn/about/insights/production-base/ /zh-cn/about/insights/news/production-base/ 301
+/ja/about/insights/production-base /ja/about/insights/news/production-base/ 301
+/ja/about/insights/production-base/ /ja/about/insights/news/production-base/ 301
+/ar/about/insights/production-base /ar/about/insights/news/production-base/ 301
+/ar/about/insights/production-base/ /ar/about/insights/news/production-base/ 301
+/es/about/insights/production-base /es/about/insights/news/production-base/ 301
+/es/about/insights/production-base/ /es/about/insights/news/production-base/ 301
 
 # Legacy insights shortcuts.
 /insights /en/about/insights/ 301

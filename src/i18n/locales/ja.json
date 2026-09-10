@@ -17,6 +17,8 @@
     "caseStudies": "応用事例",
     "productIntroductions": "製品デモ",
     "play": "動画を再生",
+    "previous": "前の動画",
+    "next": "次の動画",
     "close": "動画を閉じる",
     "noVideos": "現在表示できる動画はありません。",
     "videoUnavailable": "この動画は現在再生できません。"

@@ -2,7 +2,7 @@
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import BackToTop from '@/components/BackToTop.astro';
-import { type Messages, type Locale } from '@/i18n';
+import { t, type Messages, type Locale } from '@/i18n';
 import {
   localeLanguageTag,
   localeOgTag,
@@ -61,15 +61,37 @@ function hasDropdown(navData: NavItem): boolean {
   return navData.some((item) => Array.isArray(item.columns) && item.columns.length > 0);
 }
 
+function navPathKey(href: string | undefined): string {
+  return stripLocalePrefix(href || '/');
+}
+
+function mergeNavColumns(localized: NavItem['columns'], fallback: NavItem['columns']): NavItem['columns'] {
+  if (!fallback || fallback.length === 0) return localized;
+  if (!localized || localized.length === 0) return fallback;
+
+  const fallbackByPath = new Map(fallback.map((column) => [navPathKey(column.href), column]));
+  const mergedLocalized = localized.map((column) => {
+    const fallbackColumn = fallbackByPath.get(navPathKey(column.href));
+    if (!fallbackColumn) return column;
+
+    const existingLinks = new Set(column.items.map((link) => navPathKey(link.href)));
+    const missingLinks = fallbackColumn.items.filter((link) => !existingLinks.has(navPathKey(link.href)));
+    return missingLinks.length > 0
+      ? { ...column, items: [...column.items, ...missingLinks] }
+      : column;
+  });
+
+  const existingColumns = new Set(mergedLocalized.map((column) => navPathKey(column.href)));
+  const missingColumns = fallback.filter((column) => !existingColumns.has(navPathKey(column.href)));
+  return [...mergedLocalized, ...missingColumns];
+}
+
 function mergeNavWithFallback(localized: NavItem, fallback: NavItem): NavItem {
   const fallbackByKey = new Map(fallback.map((item) => [navItemKey(item), item]));
   const mergedLocalized = localized.map((item) => {
-    if (Array.isArray(item.columns) && item.columns.length > 0) return item;
     const fallbackItem = fallbackByKey.get(navItemKey(item));
-    if (fallbackItem?.columns && fallbackItem.columns.length > 0) {
-      return { ...item, columns: fallbackItem.columns };
-    }
-    return item;
+    if (!fallbackItem?.columns || fallbackItem.columns.length === 0) return item;
+    return { ...item, columns: mergeNavColumns(item.columns, fallbackItem.columns) };
   });
 
   const existingKeys = new Set(mergedLocalized.map((item) => navItemKey(item)));
@@ -77,7 +99,21 @@ function mergeNavWithFallback(localized: NavItem, fallback: NavItem): NavItem {
   return [...mergedLocalized, ...fallbackOnly];
 }
 
-async function getNavData(currentLocale: Locale): Promise<NavItem> {
+function localizeVideosNavigation(navData: NavItem[], videoLabel: string): NavItem[] {
+  return navData.map((item) => ({
+    ...item,
+    columns: item.columns?.map((column) => ({
+      ...column,
+      title: navPathKey(column.href) === '/about/videos' ? videoLabel : column.title,
+      items: column.items.map((link) => ({
+        ...link,
+        label: navPathKey(link.href) === '/about/videos' ? videoLabel : link.label,
+      })),
+    })),
+  }));
+}
+
+async function getNavData(currentLocale: Locale, messages: Messages): Promise<NavItem> {
   const navigationQuery = {
     populate: {
       items: {
@@ -98,8 +134,8 @@ async function getNavData(currentLocale: Locale): Promise<NavItem> {
   });
   const localizedNav = transformNavigations(localizedRes, currentLocale);
 
-  if (currentLocale === defaultLocale || hasDropdown(localizedNav)) {
-    return localizedNav;
+  if (currentLocale === defaultLocale) {
+    return localizeVideosNavigation(localizedNav, t(messages, 'videos.title'));
   }
 
   const fallbackRes = await fetchApiWithLocaleFallback<{ data?: unknown }>(api.navigation, {
@@ -107,8 +143,8 @@ async function getNavData(currentLocale: Locale): Promise<NavItem> {
     ...navigationQuery,
   });
   const fallbackNav = transformNavigations(fallbackRes, currentLocale);
-  if (!hasDropdown(fallbackNav)) return localizedNav;
-  return mergeNavWithFallback(localizedNav, fallbackNav);
+  if (!hasDropdown(fallbackNav)) return localizeVideosNavigation(localizedNav, t(messages, 'videos.title'));
+  return localizeVideosNavigation(mergeNavWithFallback(localizedNav, fallbackNav), t(messages, 'videos.title'));
 }
 
 async function getSiteSeo(currentLocale: Locale): Promise<SiteSeoAttributes | null> {
@@ -130,7 +166,7 @@ async function getSeoPage(currentLocale: Locale, pathname: string): Promise<SeoP
 }
 
 const [navData, siteSeo, seoPage] = await Promise.all([
-  getNavData(locale),
+  getNavData(locale, messages),
   providedSiteSeo === undefined ? getSiteSeo(locale) : Promise.resolve(providedSiteSeo),
   getSeoPage(locale, Astro.url.pathname),
 ]);

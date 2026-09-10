@@ -1,0 +1,121 @@
+---
+import { CircleChevronRight } from 'lucide-svelte';
+import type { Locale } from '@/i18n/config';
+import type { HomeWhyChooseItem } from '@/types/content';
+import { parseImage, resolveLocalizedImageAltText } from '@/utils/strapiApi';
+
+interface Props {
+  title: string;
+  description?: string;
+  linkLabel?: string;
+  href: string;
+  items: HomeWhyChooseItem[];
+  locale: Locale;
+}
+
+const { title, description, linkLabel, href, items, locale } = Astro.props;
+const featuredItem = items.find((item) => item.featured) ?? items[0];
+const supportingItems = items.filter((item) => item !== featuredItem);
+
+function renderImage(item: HomeWhyChooseItem) {
+  const image = parseImage(item.cover);
+  if (!image?.src) return null;
+
+  return {
+    ...image,
+    alt: resolveLocalizedImageAltText(locale, item.coverAlt, image.alt, item.title),
+  };
+}
+---
+
+<section class="mt-8 w-full lg:mt-12" aria-labelledby="home-why-choose-title">
+  <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h2 id="home-why-choose-title" class="text-3xl font-bold text-gray-950">
+        {title}
+      </h2>
+      {description && <p class="mt-3 max-w-3xl text-base leading-7 text-gray-600 lg:text-lg">{description}</p>}
+    </div>
+    {linkLabel && (
+      <a
+        href={href}
+        class="inline-flex shrink-0 items-center gap-2 text-lg text-cyan-600 transition-colors hover:text-orange-600"
+      >
+        {linkLabel}
+        <CircleChevronRight class="h-5 w-5" aria-hidden="true" />
+      </a>
+    )}
+  </div>
+
+  <div class="grid gap-5 lg:grid-cols-2">
+    <article class="group overflow-hidden border border-gray-200 bg-transparent lg:col-span-2">
+      <div class="flex h-full flex-col lg:flex-row">
+        {
+          (() => {
+            const image = renderImage(featuredItem);
+            return image ? (
+              <div class="relative aspect-[620/215] overflow-hidden bg-transparent lg:w-1/2">
+                <img
+                  src={image.src}
+                  alt={image.alt}
+                  width={image.width}
+                  height={image.height}
+                  class="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            ) : null;
+          })()
+        }
+        <div class="flex flex-1 flex-col justify-center p-6 sm:p-8 lg:p-10">
+          {featuredItem.eyebrow && (
+            <p class="text-sm font-semibold uppercase tracking-[0.12em] text-orange-500">
+              {featuredItem.eyebrow}
+            </p>
+          )}
+          <h3 class="mt-3 text-2xl font-bold leading-tight text-gray-950 sm:text-3xl">
+            {featuredItem.title}
+          </h3>
+          {featuredItem.description && (
+            <p class="mt-4 max-w-2xl text-base leading-7 text-gray-600">
+              {featuredItem.description}
+            </p>
+          )}
+        </div>
+      </div>
+    </article>
+
+    {supportingItems.map((item) => {
+      const image = renderImage(item);
+      return (
+        <article class="group overflow-hidden border border-gray-200 bg-transparent">
+          {image ? (
+            <div class="relative aspect-[620/186] overflow-hidden bg-transparent">
+              <img
+                src={image.src}
+                alt={image.alt}
+                width={image.width}
+                height={image.height}
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          ) : null}
+          <div class="p-6 sm:p-8">
+            {item.eyebrow && (
+              <p class="text-sm font-semibold uppercase tracking-[0.12em] text-orange-500">
+                {item.eyebrow}
+              </p>
+            )}
+            <h3 class="mt-3 text-2xl font-bold leading-tight text-gray-950">
+              {item.title}
+            </h3>
+            {item.description && <p class="mt-4 text-base leading-7 text-gray-600">{item.description}</p>}
+          </div>
+        </article>
+      );
+    })}
+  </div>
+</section>

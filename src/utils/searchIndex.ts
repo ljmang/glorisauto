@@ -275,7 +275,7 @@ async function buildSearchIndex(locale: string): Promise<SearchItem[]> {
   addSearchItem(items, {
     title: texts.aboutUs,
     content: texts.aboutUsContent,
-    url: toHref('/about', locale),
+    url: toHref('/about/insights/news/production-base', locale),
     type: 'about',
     locale,
   });
@@ -296,7 +296,7 @@ async function buildSearchIndex(locale: string): Promise<SearchItem[]> {
   addSearchItem(items, {
     title: texts.production,
     content: texts.productionContent,
-    url: toHref('/about/insights/production-base', locale),
+    url: toHref('/about', locale),
     type: 'about',
     locale,
   });
