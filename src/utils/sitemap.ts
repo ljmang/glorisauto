@@ -37,6 +37,18 @@ type InsightRecord = InsightAttributes & {
 };
 type FileCategoryRecord = { slug?: string; updatedAt?: string; publishedAt?: string };
 
+async function safeFetch<T>(label: string, request: Promise<T>): Promise<T> {
+  try {
+    return await request;
+  } catch (error) {
+    // Sitemap generation should not make the whole static build depend on
+    // every Strapi collection being available at the same time. Static URLs
+    // are still emitted and the affected dynamic collection is skipped.
+    console.warn(`[sitemap] Failed to load ${label}; continuing without dynamic entries`, error);
+    return {} as T;
+  }
+}
+
 const STATIC_PAGE_PATHS = [
   '/',
   '/about',
@@ -85,37 +97,37 @@ async function collectLocaleEntries(locale: Locale, addEntry: AddEntry): Promise
     insightsRes,
     fileCategoriesRes,
   ] = await Promise.all([
-    fetchApi<{ data?: CategoryRecord[] }>(api.categories, {
+    safeFetch('product categories', fetchApi<{ data?: CategoryRecord[] }>(api.categories, {
       locale,
       pagination: { pageSize: 200 },
-    }),
-    fetchApi<{ data?: ProductRecord[] }>(api.products, {
+    })),
+    safeFetch('products', fetchApi<{ data?: ProductRecord[] }>(api.products, {
       locale,
       populate: { category: true },
       pagination: { pageSize: 500 },
-    }),
-    fetchApi<{ data?: HelpCategoryRecord[] }>(api.helpCategories, {
+    })),
+    safeFetch('help categories', fetchApi<{ data?: HelpCategoryRecord[] }>(api.helpCategories, {
       locale,
       pagination: { pageSize: 200 },
-    }),
-    fetchApi<{ data?: HelpArticleRecord[] }>(api.helpCenters, {
+    })),
+    safeFetch('help articles', fetchApi<{ data?: HelpArticleRecord[] }>(api.helpCenters, {
       locale,
       populate: { help_category: true },
       pagination: { pageSize: 500 },
-    }),
-    fetchApi<{ data?: InsightCategoryRecord[] }>(api.insightCategories, {
+    })),
+    safeFetch('insight categories', fetchApi<{ data?: InsightCategoryRecord[] }>(api.insightCategories, {
       locale,
       pagination: { pageSize: 200 },
-    }),
-    fetchApi<{ data?: InsightRecord[] }>(api.insights, {
+    })),
+    safeFetch('insights', fetchApi<{ data?: InsightRecord[] }>(api.insights, {
       locale,
       populate: { insight_category: true },
       pagination: { pageSize: 500 },
-    }),
-    fetchApi<{ data?: FileCategoryRecord[] }>(api.fileCategories, {
+    })),
+    safeFetch('download file categories', fetchApi<{ data?: FileCategoryRecord[] }>(api.fileCategories, {
       locale,
       pagination: { pageSize: 200 },
-    }),
+    })),
   ]);
 
   for (const category of categoriesRes?.data ?? []) {
