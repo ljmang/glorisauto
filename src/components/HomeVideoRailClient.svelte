@@ -15,7 +15,6 @@
 
   interface Props {
     title: string;
-    href: string;
     videos: VideoAttributes[];
     locale: Locale;
     playLabel: string;
@@ -26,7 +25,6 @@
   }
 
   export let title: Props['title'];
-  export let href: Props['href'];
   export let videos: Props['videos'];
   export let locale: Props['locale'];
   export let playLabel: Props['playLabel'];
@@ -148,10 +146,10 @@
   >
     {#each cardVideos as video (video.id)}
       <article class="home-video-card min-w-0 snap-start" data-home-video-card>
-        <a
-          href={href}
-          class="group block min-w-0 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-4"
-          on:click|preventDefault={() => openVideo(video.player)}
+        <button
+          type="button"
+          class="group block w-full min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-4"
+          on:click={() => openVideo(video.player)}
         >
           <span class="sr-only">{playLabel}: </span>
           <div class="aspect-video overflow-hidden bg-gray-100">
@@ -190,7 +188,7 @@
               {video.publishedAt}
             </time>
           {/if}
-        </a>
+        </button>
       </article>
     {/each}
   </div>

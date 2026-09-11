@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+html,
+body {
+  overflow-x: clip;
+}
+
 .article-content {
   @apply text-[18px] leading-[1.8] text-slate-700;
 }
