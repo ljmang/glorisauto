@@ -2,7 +2,7 @@
 import { CircleChevronRight } from 'lucide-svelte';
 import type { Locale } from '@/i18n/config';
 import type { HomeWhyChooseItem } from '@/types/content';
-import { parseImage, resolveLocalizedImageAltText } from '@/utils/strapiApi';
+import { getImageSrcSet, parseImage, resolveLocalizedImageAltText } from '@/utils/strapiApi';
 
 interface Props {
   title: string;
@@ -39,7 +39,7 @@ function renderImage(item: HomeWhyChooseItem) {
     {linkLabel && (
       <a
         href={href}
-        class="inline-flex shrink-0 items-center gap-2 text-lg text-cyan-600 transition-colors hover:text-orange-600"
+        class="inline-flex shrink-0 items-center gap-2 text-lg text-cyan-700 transition-colors hover:text-orange-700"
       >
         {linkLabel}
         <CircleChevronRight class="h-5 w-5" aria-hidden="true" />
@@ -57,6 +57,8 @@ function renderImage(item: HomeWhyChooseItem) {
               <div class="relative aspect-[620/215] overflow-hidden bg-transparent lg:w-1/2">
                 <img
                   src={image.src}
+                  srcset={getImageSrcSet(image)}
+                  sizes="(min-width: 1024px) 50vw, 100vw"
                   alt={image.alt}
                   width={image.width}
                   height={image.height}
@@ -70,7 +72,7 @@ function renderImage(item: HomeWhyChooseItem) {
         }
         <div class="flex flex-1 flex-col justify-center p-6 sm:p-8 lg:p-10">
           {featuredItem.eyebrow && (
-            <p class="text-sm font-semibold uppercase tracking-[0.12em] text-orange-500">
+            <p class="text-sm font-semibold uppercase tracking-[0.12em] text-orange-700">
               {featuredItem.eyebrow}
             </p>
           )}
@@ -94,6 +96,8 @@ function renderImage(item: HomeWhyChooseItem) {
             <div class="relative aspect-[620/186] overflow-hidden bg-transparent">
               <img
                 src={image.src}
+                srcset={getImageSrcSet(image)}
+                sizes="(min-width: 1024px) 50vw, 100vw"
                 alt={image.alt}
                 width={image.width}
                 height={image.height}
@@ -105,7 +109,7 @@ function renderImage(item: HomeWhyChooseItem) {
           ) : null}
           <div class="p-6 sm:p-8">
             {item.eyebrow && (
-              <p class="text-sm font-semibold uppercase tracking-[0.12em] text-orange-500">
+              <p class="text-sm font-semibold uppercase tracking-[0.12em] text-orange-700">
                 {item.eyebrow}
               </p>
             )}

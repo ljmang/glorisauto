@@ -47,7 +47,9 @@
   $: videoPoster = media?.poster || defaultBackground || '';
 
   onMount(() => {
-    if (media?.type !== 'video' || !media.src) return;
+    // If Strapi has not supplied a poster/fallback yet, keep the video out of
+    // the initial request path. A direct mobile interaction can still load it.
+    if (media?.type !== 'video' || !media.src || !videoPoster) return;
 
     const loadAfterIdle = () => {
       loadHeroVideo();
@@ -143,9 +145,10 @@
   {/if}
 
   <div
-    class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent pointer-events-none z-10"
+    class="absolute inset-x-0 bottom-0 z-10 h-2/3 bg-gradient-to-t from-black to-transparent pointer-events-none"
     aria-hidden="true"
-  >
+  ></div>
+  <div class="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
     <div class="container mx-auto px-4 py-10 md:py-20 pointer-events-auto">
       <div class="md:max-w-4xl">
         {#if title}

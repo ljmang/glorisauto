@@ -271,7 +271,9 @@ const showHomeCta = data.ctaEnabled !== false && Boolean(data.ctaTitle?.trim());
 
 // 处理数据
 const heroMediaProp = parseHeroMedia(data.heroMedia);
-const heroDefaultBackground = parseImage(data.heroDefaultBackground);
+const heroDefaultBackground =
+	parseImage(data.heroDefaultBackground) ??
+	parseImage(defaultHomeData?.data?.heroDefaultBackground);
 const ctaBackground =
 	data.heroDefaultBackground ??
 	defaultHomeData?.data?.heroDefaultBackground ??
@@ -316,7 +318,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 <BaseLayout
 	title={t(messages, "pageTitle.home")}
 	description={data.heroDescription}
-	image={data.aboutGlorisCover ?? data.heroDefaultBackground ?? data.heroMedia}
+	image={data.aboutGlorisCover ?? data.heroDefaultBackground ?? defaultHomeData?.data?.heroDefaultBackground ?? data.heroMedia}
 	seo={data.seo}
 	pageType="website"
 	messages={messages}
@@ -340,9 +342,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 		<!-- 品牌故事 -->
 		<div class="flex flex-col lg:flex-row items-center bg-white">
 			{
-				aboutGlorisCover &&
-					aboutGlorisCover.width &&
-					aboutGlorisCover.height && (
+				aboutGlorisCover?.src && (
 						<Image
 							src={aboutGlorisCover.src}
 							alt={
@@ -353,8 +353,8 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 									data.aboutGlorisTitle || "Company Image",
 								)
 							}
-							width={aboutGlorisCover.width}
-							height={aboutGlorisCover.height}
+							width={aboutGlorisCover.width ?? 1200}
+							height={aboutGlorisCover.height ?? 800}
 							class="w-full lg:w-1/3 h-auto object-cover"
 							loading="lazy"
 							format="webp"
@@ -365,7 +365,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 				<div class="flex flex-col gap-3 lg:gap-6 p-4 lg:p-16">
 					{
 						data.aboutGlorisTitle && (
-							<p class="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-600">
+							<p class="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-700">
 								{data.aboutGlorisTitle}
 							</p>
 						)
@@ -381,7 +381,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 				</p>
 					<a
 						href={aboutGlorisLinkHref}
-						class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+						class="text-cyan-700 text-lg flex items-center gap-2 hover:text-orange-700 transition-colors"
 					>
 						{aboutGlorisLinkLabel}
 						<CircleChevronRight class="w-4 h-4" />
@@ -415,7 +415,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 							</h2>
 							<a
 								href={productsLinkHref}
-								class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+								class="text-cyan-700 text-lg flex items-center gap-2 hover:text-orange-700 transition-colors"
 							>
 								{productsLinkLabel}
 								<CircleChevronRight class="w-4 h-4" />
@@ -474,7 +474,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 							</h2>
 							<a
 								href={insightsLinkHref}
-								class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+								class="text-cyan-700 text-lg flex items-center gap-2 hover:text-orange-700 transition-colors"
 							>
 								{insightsLinkLabel}
 								<CircleChevronRight class="w-4 h-4" />
@@ -503,7 +503,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 						</h2>
 						<a
 							href={downloadFilesLinkHref}
-							class="text-cyan-600 text-lg flex items-center gap-2 hover:text-orange-600 transition-colors"
+						class="text-cyan-700 text-lg flex items-center gap-2 hover:text-orange-700 transition-colors"
 						>
 							{downloadFilesLinkLabel}
 							<CircleChevronRight class="w-4 h-4" />
@@ -533,7 +533,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 					</div>
 					<a
 						href={toHref("/help", locale)}
-						class="inline-flex shrink-0 items-center gap-2 text-lg text-cyan-600 transition-colors hover:text-orange-600"
+						class="inline-flex shrink-0 items-center gap-2 text-lg text-cyan-700 transition-colors hover:text-orange-700"
 					>
 						{t(messages, "helpCenter.viewAllArticles")}
 						<CircleChevronRight class="h-4 w-4" />
@@ -549,11 +549,11 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 								class="group flex min-h-40 flex-col border-t border-gray-200 py-7 transition-colors hover:border-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-4 sm:py-8"
 							>
 								{article.help_category?.name && (
-									<div class="mb-3 text-xs font-semibold uppercase tracking-wide text-orange-600">
+									<div class="mb-3 text-xs font-semibold uppercase tracking-wide text-orange-700">
 										{article.help_category.name}
 									</div>
 								)}
-								<h3 class="text-lg font-semibold leading-7 text-gray-900 transition-colors group-hover:text-orange-500">
+								<h3 class="text-lg font-semibold leading-7 text-gray-900 transition-colors group-hover:text-orange-700">
 									{article.title}
 								</h3>
 								{(article.quickAnswer || article.description) && (
@@ -561,7 +561,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 										{article.quickAnswer || article.description}
 									</p>
 								)}
-								<div class="mt-auto pt-5 text-sm font-semibold text-cyan-600 transition-colors group-hover:text-orange-500">
+								<div class="mt-auto pt-5 text-sm font-semibold text-cyan-700 transition-colors group-hover:text-orange-700">
 									{t(messages, "helpCenter.openArticle")}
 								</div>
 							</a>

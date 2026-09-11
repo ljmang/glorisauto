@@ -5,6 +5,7 @@
   import type { VideoAttributes } from '@/types/content';
   import {
     getMediaUrlFromField,
+    getImageSrcSet,
     parseImage,
     parseMedia,
     resolveLocalizedImageAltText,
@@ -143,7 +144,6 @@
     class="home-video-rail-bleed flex snap-x snap-mandatory gap-6 overflow-x-auto pb-3 scroll-smooth md:gap-8"
     data-home-video-track
     role="region"
-    tabindex="0"
     aria-label={title}
   >
     {#each cardVideos as video (video.id)}
@@ -151,13 +151,15 @@
         <a
           href={href}
           class="group block min-w-0 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-4"
-          aria-label={`${playLabel}: ${video.title}`}
           on:click|preventDefault={() => openVideo(video.player)}
         >
+          <span class="sr-only">{playLabel}: </span>
           <div class="aspect-video overflow-hidden bg-gray-100">
             {#if video.image?.src}
               <img
                 src={video.image.src}
+                srcset={getImageSrcSet(video.image)}
+                sizes="(min-width: 768px) 42vw, 82vw"
                 alt={video.imageAlt}
                 width={video.image.width}
                 height={video.image.height}
@@ -184,7 +186,7 @@
             {video.title}
           </h3>
           {#if video.publishedAt}
-            <time class="mt-2 block text-base text-gray-400" datetime={video.publishedAtValue}>
+            <time class="mt-2 block text-base text-gray-600" datetime={video.publishedAtValue}>
               {video.publishedAt}
             </time>
           {/if}

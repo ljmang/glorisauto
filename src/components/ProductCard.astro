@@ -7,7 +7,7 @@
 
 import type { Locale } from '@/i18n/config';
 import type { ProductAttributes } from '@/types/content';
-import { parseImage, resolveLocalizedImageAltText } from '@/utils/strapiApi';
+import { getImageSrcSet, parseImage, resolveLocalizedImageAltText } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { sanitizeInlineText } from '@/utils/contentSanitizers';
 import { CircleChevronRight } from 'lucide-svelte';
@@ -50,10 +50,12 @@ const noImageLabel = noImageLabelByLocale[locale] || noImageLabelByLocale.en;
   class="group block transition-all duration-300 hover:opacity-90"
 >
   <!-- 正方形图片 -->
-  {productImage && productImage.src && productImage.width && productImage.height ? (
+  {productImage && productImage.src ? (
     <div class="relative w-full aspect-square overflow-hidden mb-4 flex items-center justify-center">
       <img
         src={productImage.src}
+        srcset={getImageSrcSet(productImage)}
+        sizes="(min-width: 1024px) 22vw, (min-width: 640px) 33vw, 66vw"
         alt={productImageAlt}
         width={productImage.width}
         height={productImage.height}
@@ -70,7 +72,7 @@ const noImageLabel = noImageLabelByLocale[locale] || noImageLabelByLocale.en;
 
   <!-- 标题和描述 -->
   <div class="space-y-2 text-center">
-    <HeadingTag class="text-xl font-bold group-hover:text-orange-500 transition-colors">
+    <HeadingTag class="text-xl font-bold group-hover:text-orange-700 transition-colors">
       {product.name}
     </HeadingTag>
     {productDescription ? (
@@ -80,7 +82,7 @@ const noImageLabel = noImageLabelByLocale[locale] || noImageLabelByLocale.en;
     ) : null}
     {showCta && (
       <div class="pt-2">
-        <span class="inline-flex items-center gap-2 text-cyan-600 group-hover:text-orange-600 transition-colors font-semibold">
+        <span class="inline-flex items-center gap-2 text-cyan-700 group-hover:text-orange-700 transition-colors font-semibold">
           {ctaLabel}
           <CircleChevronRight class="w-4 h-4" />
         </span>

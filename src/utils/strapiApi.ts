@@ -253,14 +253,60 @@ export interface StrapiImage {
   updatedAt?: string;
 }
 
-/** 解析图片字段，返回图片信息对象（用于 img 标签） */
-export function parseImage(field: unknown): {
+export interface ParsedImageFormat {
+  src: string;
+  width?: number;
+  height?: number;
+}
+
+export interface ParsedImage {
   src: string;
   alt: string;
   width?: number;
   height?: number;
   name?: string;
-} | null {
+  formats?: ParsedImageFormat[];
+}
+
+function parseImageFormats(img: StrapiImage): ParsedImageFormat[] {
+  if (!img.formats || typeof img.formats !== 'object') return [];
+
+  return Object.values(img.formats)
+    .map((format) => {
+      if (!format || typeof format !== 'object') return null;
+
+      const record = format as Record<string, unknown>;
+      const url = typeof record.url === 'string' ? record.url : '';
+      if (!url) return null;
+
+      return {
+        src: appendMediaVersion(getMediaUrlBase(url), getMediaVersion(record) || getMediaVersion(img as Record<string, unknown>)),
+        width: typeof record.width === 'number' ? record.width : undefined,
+        height: typeof record.height === 'number' ? record.height : undefined,
+      } satisfies ParsedImageFormat;
+    })
+    .filter((format): format is ParsedImageFormat => format !== null);
+}
+
+/** 为原生 img 提供 Strapi 生成的响应式图片候选，缺少 formats 时返回 undefined。 */
+export function getImageSrcSet(image: ParsedImage | null | undefined): string | undefined {
+  if (!image) return undefined;
+
+  const candidates = [
+    ...(image.formats ?? []),
+    { src: image.src, width: image.width, height: image.height },
+  ].filter((candidate): candidate is ParsedImageFormat => Boolean(candidate.src && candidate.width));
+
+  const uniqueCandidates = Array.from(
+    new Map(candidates.map((candidate) => [candidate.src, candidate])).values(),
+  ).sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
+
+  if (uniqueCandidates.length < 2) return undefined;
+  return uniqueCandidates.map((candidate) => `${candidate.src} ${candidate.width}w`).join(', ');
+}
+
+/** 解析图片字段，返回图片信息对象（用于 img 标签） */
+export function parseImage(field: unknown): ParsedImage | null {
   if (field == null) return null;
   
   // 处理数组：取第一项
@@ -281,6 +327,7 @@ export function parseImage(field: unknown): {
     width,
     height,
     name: typeof img?.name === 'string' ? img.name : undefined,
+    formats: parseImageFormats(img),
   };
 }
 
@@ -297,6 +344,7 @@ export function parseImages(field: unknown): Array<{
   width?: number;
   height?: number;
   name?: string;
+  formats?: ParsedImageFormat[];
 }> {
   if (field == null) return [];
   
