@@ -233,16 +233,6 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
       <meta property="article:modified_time" content={modifiedTime || publishedTime} />
     )}
 
-    <!-- Google Tag Manager -->
-    <script is:inline>
-      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-      })(window,document,'script','dataLayer','GTM-MBDTPXL3');
-    </script>
-    <!-- End Google Tag Manager -->
-
     {resolvedSeo.jsonLd.map((schema, index) => (
       <script type="application/ld+json" set:html={JSON.stringify(schema)} data-schema={String(index)} />
     ))}
@@ -265,14 +255,50 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
     <Footer messages={messages} locale={locale} navData={navData} />
     <BackToTop />
     <script is:inline>
-      var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
       (function () {
-        var s1 = document.createElement('script'), s0 = document.getElementsByTagName('script')[0];
-        s1.async = true;
-        s1.src = 'https://embed.tawk.to/69d745e76839171c36f07831/default';
-        s1.charset = 'UTF-8';
-        s1.setAttribute('crossorigin', '*');
-        s0.parentNode.insertBefore(s1, s0);
+        var w = window;
+
+        function runWhenIdle(callback, delay) {
+          w.setTimeout(function () {
+            if (typeof w.requestIdleCallback === 'function') {
+              w.requestIdleCallback(callback, { timeout: 2000 });
+            } else {
+              callback();
+            }
+          }, delay);
+        }
+
+        function loadGtm() {
+          if (w.__glorisGtmLoaded) return;
+          w.__glorisGtmLoaded = true;
+          w.dataLayer = w.dataLayer || [];
+          w.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+
+          var firstScript = document.getElementsByTagName('script')[0];
+          var script = document.createElement('script');
+          script.async = true;
+          script.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-MBDTPXL3';
+          firstScript.parentNode.insertBefore(script, firstScript);
+        }
+
+        function loadTawk() {
+          if (w.__glorisTawkLoaded) return;
+          w.__glorisTawkLoaded = true;
+          w.Tawk_API = w.Tawk_API || {};
+          w.Tawk_LoadStart = new Date();
+
+          var firstScript = document.getElementsByTagName('script')[0];
+          var script = document.createElement('script');
+          script.async = true;
+          script.src = 'https://embed.tawk.to/69d745e76839171c36f07831/default';
+          script.charset = 'UTF-8';
+          script.setAttribute('crossorigin', '*');
+          firstScript.parentNode.insertBefore(script, firstScript);
+        }
+
+        // Keep analytics and chat available, but let the first screen render first.
+        runWhenIdle(loadGtm, 1200);
+        runWhenIdle(loadTawk, 3000);
       })();
     </script>
   </body>
