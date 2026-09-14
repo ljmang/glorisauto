@@ -178,7 +178,7 @@
   "home": {
     "heroTitle": "Bienvenido",
     "heroCta": "Contáctenos",
-    "heroSecondaryCta": "Conviértete en distribuidor",
+    "heroSecondaryCta": "Explorar colaboraciones B2B",
     "technicalResourcesDescription": "Accede a fichas técnicas de productos, guías de aplicación y soluciones para problemas habituales de aplicación.",
     "freeSampleCta": "Obtener muestras gratuitas"
   },
@@ -209,7 +209,7 @@
     }
   },
   "dealer": {
-    "headerCta": "Conviértete en distribuidor",
+    "headerCta": "Venta mayorista o distribución",
     "sectionTag": "Programa de distribuidores",
     "actionCta": "Conviértete en distribuidor",
     "joinUsTitle": "Únete ahora",

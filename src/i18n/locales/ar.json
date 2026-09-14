@@ -178,7 +178,7 @@
   "home": {
     "heroTitle": "مرحبًا",
     "heroCta": "اتصل بنا",
-    "heroSecondaryCta": "انضم كموزع",
+    "heroSecondaryCta": "استكشف شراكات B2B",
     "technicalResourcesDescription": "احصل على المواد التقنية للمنتجات وإرشادات الاستخدام وحلول المشكلات الشائعة أثناء التطبيق.",
     "freeSampleCta": "احصل على عينات مجانية"
   },
@@ -209,7 +209,7 @@
     }
   },
   "dealer": {
-    "headerCta": "انضم كموزع",
+    "headerCta": "البيع بالجملة أو التوزيع",
     "sectionTag": "برنامج الموزعين",
     "actionCta": "انضم كموزع",
     "joinUsTitle": "انضم إلينا الآن",

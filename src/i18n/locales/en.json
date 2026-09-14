@@ -178,7 +178,7 @@
   "home": {
     "heroTitle": "Welcome",
     "heroCta": "Contact Us",
-    "heroSecondaryCta": "Become Our Distributor",
+    "heroSecondaryCta": "Explore B2B Partnerships",
     "technicalResourcesDescription": "Access product technical materials, application guidance, and solutions to common application issues.",
     "freeSampleCta": "Get Free Samples"
   },
@@ -209,7 +209,7 @@
     }
   },
   "dealer": {
-    "headerCta": "Become Our Distributor",
+    "headerCta": "Wholesale or Distribution",
     "sectionTag": "Distributor Program",
     "actionCta": "Become Our Distributor",
     "joinUsTitle": "Join Us Now",
