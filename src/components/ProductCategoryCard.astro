@@ -1,0 +1,78 @@
+---
+import type { Locale } from '@/i18n/config';
+import type { CategoryAttributes } from '@/types/content';
+import { getImageSrcSet, parseImage, resolveLocalizedImageAltText } from '@/utils/strapiApi';
+import { toHref } from '@/utils/navigationData';
+import { sanitizeInlineText } from '@/utils/contentSanitizers';
+import { CircleChevronRight } from 'lucide-svelte';
+
+interface Props {
+  category: CategoryAttributes;
+  locale: Locale;
+  ctaLabel?: string;
+}
+
+const { category, locale, ctaLabel } = Astro.props;
+const categoryImage = parseImage(category.cover);
+const categoryImageAlt = resolveLocalizedImageAltText(
+  locale,
+  null,
+  categoryImage?.alt,
+  category.name,
+);
+const description = sanitizeInlineText(category.description);
+const href = toHref(`/products/${category.slug}`, locale);
+const showCta = typeof ctaLabel === 'string' && ctaLabel.trim().length > 0;
+const noImageLabelByLocale: Record<string, string> = {
+  en: 'No image',
+  'zh-cn': '暂无图片',
+  ja: '画像なし',
+  ar: 'لا توجد صورة',
+  es: 'Sin imagen',
+};
+const noImageLabel = noImageLabelByLocale[locale] || noImageLabelByLocale.en;
+---
+
+<a
+  href={href}
+  class="group flex h-full flex-col transition-all duration-300 hover:opacity-90"
+>
+  {categoryImage?.src ? (
+    <div class="relative mb-4 flex aspect-square w-full items-center justify-center overflow-hidden">
+      <img
+        src={categoryImage.src}
+        srcset={getImageSrcSet(categoryImage)}
+        sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
+        alt={categoryImageAlt}
+        width={categoryImage.width}
+        height={categoryImage.height}
+        class="h-4/5 w-4/5 object-contain transition-transform duration-300 group-hover:scale-105"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  ) : (
+    <div class="relative mb-4 flex aspect-square w-full items-center justify-center bg-gray-100">
+      <span class="text-sm text-gray-500">{noImageLabel}</span>
+    </div>
+  )}
+
+  <div class="flex flex-1 flex-col space-y-2 text-center">
+    <h3 class="text-xl font-bold transition-colors group-hover:text-orange-700">
+      {category.name}
+    </h3>
+    {description ? (
+      <p class="line-clamp-3 leading-relaxed text-gray-700">
+        {description}
+      </p>
+    ) : null}
+    {showCta && (
+      <div class="mt-auto pt-2">
+        <span class="inline-flex items-center gap-2 font-semibold text-cyan-700 transition-colors group-hover:text-orange-700">
+          {ctaLabel}
+          <CircleChevronRight class="h-4 w-4" />
+        </span>
+      </div>
+    )}
+  </div>
+</a>

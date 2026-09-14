@@ -152,6 +152,7 @@ export interface CategoryAttributes {
   name: string;
   slug: string;
   description?: string;
+  cover?: StrapiMedia | null;
   image?: StrapiMedia | null;
   parent?: {
     id?: number;

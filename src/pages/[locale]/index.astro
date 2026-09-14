@@ -14,7 +14,7 @@ import { toHref } from "@/utils/navigationData";
 import { CircleChevronRight } from "lucide-svelte";
 import type { HomeAttributes, StrapiResponse, NewsItem } from "@/types";
 import type {
-	ProductAttributes,
+	CategoryAttributes,
 	InsightAttributes,
 	HelpCenterAttributes,
 	HomeWhyChooseItem,
@@ -22,7 +22,7 @@ import type {
 } from "@/types/content";
 import { Image } from "astro:assets";
 import NewsCard from "@/components/NewsCard.astro";
-import ProductCard from "@/components/ProductCard.astro";
+import ProductCategoryCard from "@/components/ProductCategoryCard.astro";
 import InsightCard from "@/components/InsightCard.astro";
 import DownloadFileCard from "@/components/DownloadFileCard.astro";
 import HomeWhyChoose from "@/components/HomeWhyChoose.astro";
@@ -55,17 +55,6 @@ const homepageBasePopulate = {
 	glorisNews: {
 		populate: {
 			cover: true,
-		},
-	},
-	products: {
-		populate: {
-			cover: true,
-			images: true,
-			category: {
-				populate: {
-					parent: true,
-				},
-			},
 		},
 	},
 	insights: {
@@ -129,8 +118,29 @@ async function fetchDefaultHeroBackground() {
 	}
 }
 
+async function fetchHomepageCategories() {
+	try {
+		return await fetchApiWithLocaleFallback<{ data?: CategoryAttributes[] }>(api.categories, {
+			locale,
+			populate: {
+				parent: true,
+				cover: true,
+			},
+			pagination: { pageSize: 100 },
+		});
+	} catch (error) {
+		// Keep the page build compatible while the new Category.cover field is being deployed.
+		if (!/Invalid key cover/.test(String(error))) throw error;
+		return fetchApiWithLocaleFallback<{ data?: CategoryAttributes[] }>(api.categories, {
+			locale,
+			populate: { parent: true },
+			pagination: { pageSize: 100 },
+		});
+	}
+}
+
 // 3. 使用泛型获取数据，避免 unknown
-const [homeData, latestHelpRes, defaultHomeData] = await Promise.all([
+const [homeData, latestHelpRes, defaultHomeData, homepageCategoriesRes] = await Promise.all([
 	fetchHomepageData(),
 	fetchApiWithLocaleFallback<{ data?: HelpCenterAttributes[] }>(api.helpCenters, {
 		locale,
@@ -141,6 +151,7 @@ const [homeData, latestHelpRes, defaultHomeData] = await Promise.all([
 		pagination: { pageSize: 2 },
 	}),
 	fetchDefaultHeroBackground(),
+	fetchHomepageCategories(),
 ]);
 // 4. 安全的数据解构 (即使 API 挂了，页面也不会白屏，而是显示默认值)
 const data = homeData?.data || ({} as Partial<HomeAttributes>);
@@ -263,6 +274,7 @@ const insightsLinkHref = toHref(
 	data.insightsLink?.trim() || "/about/insights",
 	locale,
 );
+const insightsSectionTitle = t(messages, "home.insightsTitle");
 const downloadFilesLinkLabel =
 	data.downloadFilesLinkLabel?.trim() || t(messages, "common.viewAll");
 const downloadFilesLinkHref = toHref(
@@ -298,28 +310,26 @@ type DownloadFileItem = {
 const downloadFileList = ((data.downloadFiles as DownloadFileItem[]) || []).filter(
 	(item) => item?.file?.url,
 );
-const homeProducts = (((data.products as (ProductAttributes & { sort?: number | null })[]) || [])
-	.map((product, index) => ({ product, index }))
-	.sort((a, b) => {
-		const aSort = a.product.sort;
-		const bSort = b.product.sort;
-		const aHasSort = typeof aSort === "number";
-		const bHasSort = typeof bSort === "number";
-
-		if (aHasSort && bHasSort && aSort !== bSort) return aSort - bSort;
-		if (aHasSort !== bHasSort) return aHasSort ? -1 : 1;
-		const aDocumentId = (a.product as ProductAttributes & { documentId?: string }).documentId ?? "";
-		const bDocumentId = (b.product as ProductAttributes & { documentId?: string }).documentId ?? "";
-		if (aDocumentId && bDocumentId && aDocumentId !== bDocumentId) {
-			return aDocumentId.localeCompare(bDocumentId);
-		}
-		return a.index - b.index;
-	})
-	.map(({ product }) => product));
-const getHomepageProductCategoryHref = (product: ProductAttributes): string => {
-	const categorySlug = product.category?.parent?.slug?.trim() || product.category?.slug?.trim();
-	return categorySlug ? toHref(`/products/${categorySlug}`, locale) : productsLinkHref;
+const homepageCategoryOrder: Record<string, number> = {
+	"sand-paper": 1,
+	"clear-coat": 2,
+	"body-fillers": 3,
+	"polishing-compound": 4,
+	"automotive-window-film": 5,
+	"tpu-ppf": 6,
+	"paint-protection-film": 6,
 };
+const homepageCategories = (Array.isArray(homepageCategoriesRes?.data)
+	? homepageCategoriesRes.data
+	: [])
+	.filter((category) => Boolean(category?.name?.trim() && category?.slug?.trim()) && !category.parent?.id)
+	.filter((category) => Object.hasOwn(homepageCategoryOrder, category.slug))
+	.sort((a, b) => {
+		const aOrder = homepageCategoryOrder[a.slug] ?? Number.MAX_SAFE_INTEGER;
+		const bOrder = homepageCategoryOrder[b.slug] ?? Number.MAX_SAFE_INTEGER;
+		return aOrder - bOrder || a.slug.localeCompare(b.slug);
+	})
+	.slice(0, 6);
 ---
 
 <BaseLayout
@@ -414,27 +424,31 @@ const getHomepageProductCategoryHref = (product: ProductAttributes): string => {
 
 		<!-- Products 产品展示 -->
 		{
-			data.productsTitle && (
+		data.productsTitle && (
 				<div class="w-full">
-					<div class="flex items-center justify-between mb-6">
+					<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+						<div>
 							<h2 class="text-3xl font-bold">
 								{data.productsTitle as string}
 							</h2>
+							<p class="mt-2 max-w-3xl text-base leading-7 text-gray-600">
+								{t(messages, "home.productsDescription")}
+							</p>
+						</div>
 							<a
 								href={productsLinkHref}
-								class="text-cyan-700 text-lg flex items-center gap-2 hover:text-orange-700 transition-colors"
+								class="text-cyan-700 text-lg flex shrink-0 items-center gap-2 transition-colors hover:text-orange-700"
 							>
 								{productsLinkLabel}
 								<CircleChevronRight class="w-4 h-4" />
 							</a>
-						</div>
+					</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-						{homeProducts.map(
-							(product) => (
-								<ProductCard
-									product={product}
+						{homepageCategories.map(
+							(category) => (
+								<ProductCategoryCard
+									category={category}
 									locale={locale}
-									href={getHomepageProductCategoryHref(product)}
 								/>
 							),
 						)}
@@ -479,7 +493,7 @@ const getHomepageProductCategoryHref = (product: ProductAttributes): string => {
 					<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 						<div>
 							<h2 class="text-3xl font-bold">
-								{data.insightsTitle as string}
+								{insightsSectionTitle}
 							</h2>
 							<p class="mt-2 max-w-3xl text-base leading-7 text-gray-600">
 								{t(messages, "home.technicalResourcesDescription")}
@@ -538,7 +552,7 @@ const getHomepageProductCategoryHref = (product: ProductAttributes): string => {
 				<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 					<div>
 						<h2 id="home-latest-faq" class="text-3xl font-bold">
-							{t(messages, "helpCenter.latestTitle")}
+							{t(messages, "home.latestHelpTitle")}
 						</h2>
 						<p class="mt-2 max-w-3xl text-gray-600">
 							{t(messages, "helpCenter.latestDescription")}
