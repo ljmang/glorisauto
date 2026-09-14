@@ -118,9 +118,15 @@ async function fetchDefaultHeroBackground() {
 	}
 }
 
-async function fetchHomepageCategories() {
+type HomepageCategoryResponse = {
+	data?: CategoryAttributes[] | null;
+};
+
+async function fetchHomepageCategories(): Promise<HomepageCategoryResponse> {
+	let localizedResponse: HomepageCategoryResponse;
+
 	try {
-		return await fetchApiWithLocaleFallback<{ data?: CategoryAttributes[] }>(api.categories, {
+		localizedResponse = await fetchApiWithLocaleFallback<HomepageCategoryResponse>(api.categories, {
 			locale,
 			populate: {
 				parent: true,
@@ -131,11 +137,47 @@ async function fetchHomepageCategories() {
 	} catch (error) {
 		// Keep the page build compatible while the new Category.cover field is being deployed.
 		if (!/Invalid key cover/.test(String(error))) throw error;
-		return fetchApiWithLocaleFallback<{ data?: CategoryAttributes[] }>(api.categories, {
+		localizedResponse = await fetchApiWithLocaleFallback<HomepageCategoryResponse>(api.categories, {
 			locale,
 			populate: { parent: true },
 			pagination: { pageSize: 100 },
 		});
+	}
+
+	// Strapi's existing translated category rows may not expose a non-localized
+	// media value even though the document shares the same documentId. Use the
+	// default locale as the single source for the shared cover while preserving
+	// each locale's own category name, slug, and description.
+	if (locale === defaultLocale || !Array.isArray(localizedResponse.data)) {
+		return localizedResponse;
+	}
+
+	try {
+		const defaultResponse = await fetchApiWithLocaleFallback<HomepageCategoryResponse>(
+			api.categories,
+			{
+				locale: defaultLocale,
+				populate: { cover: true },
+				pagination: { pageSize: 100 },
+			},
+		);
+		const coversByDocumentId = new Map(
+			(defaultResponse.data ?? [])
+				.filter((category) => Boolean(category.documentId && category.cover))
+				.map((category) => [category.documentId as string, category.cover]),
+		);
+
+		return {
+			...localizedResponse,
+			data: localizedResponse.data.map((category) => ({
+				...category,
+				cover:
+					category.cover ??
+					(category.documentId ? coversByDocumentId.get(category.documentId) ?? null : null),
+			})),
+		};
+	} catch {
+		return localizedResponse;
 	}
 }
 

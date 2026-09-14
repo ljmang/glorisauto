@@ -149,6 +149,7 @@ export type ProductContent = StrapiContent<ProductAttributes>;
 
 /** Category 分类类型 */
 export interface CategoryAttributes {
+	documentId?: string;
   name: string;
   slug: string;
   description?: string;
