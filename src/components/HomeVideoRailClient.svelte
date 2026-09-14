@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { ChevronLeft, ChevronRight } from 'lucide-svelte';
   import type { Locale } from '@/i18n/config';
   import type { VideoAttributes } from '@/types/content';
   import {
@@ -47,6 +46,8 @@
   let track: HTMLDivElement;
   let canScrollLeft = false;
   let canScrollRight = false;
+  let previousControl: HTMLButtonElement | null = null;
+  let nextControl: HTMLButtonElement | null = null;
 
   function formatPublishedAt(value: string | undefined): string {
     if (!value) return '';
@@ -100,6 +101,9 @@
     const edgeTolerance = 4;
     canScrollLeft = track.scrollLeft > edgeTolerance;
     canScrollRight = track.scrollLeft + track.clientWidth < track.scrollWidth - edgeTolerance;
+
+    if (previousControl) previousControl.disabled = !canScrollLeft;
+    if (nextControl) nextControl.disabled = !canScrollRight;
   }
 
   function scrollRail(direction: -1 | 1): void {
@@ -122,6 +126,15 @@
   }
 
   onMount(() => {
+    const section = track.closest<HTMLElement>('[data-home-video-section]');
+    previousControl = section?.querySelector<HTMLButtonElement>('[data-home-video-previous]') ?? null;
+    nextControl = section?.querySelector<HTMLButtonElement>('[data-home-video-next]') ?? null;
+
+    const handlePreviousClick = () => scrollRail(-1);
+    const handleNextClick = () => scrollRail(1);
+
+    previousControl?.addEventListener('click', handlePreviousClick);
+    nextControl?.addEventListener('click', handleNextClick);
     updateScrollButtons();
     track.addEventListener('scroll', updateScrollButtons, { passive: true });
 
@@ -129,13 +142,15 @@
     resizeObserver.observe(track);
 
     return () => {
+      previousControl?.removeEventListener('click', handlePreviousClick);
+      nextControl?.removeEventListener('click', handleNextClick);
       track?.removeEventListener('scroll', updateScrollButtons);
       resizeObserver.disconnect();
     };
   });
 </script>
 
-<div class="home-video-rail-shell relative">
+<div class="home-video-rail-shell">
   <div
     bind:this={track}
     id="home-video-rail-track"
@@ -193,28 +208,6 @@
     {/each}
   </div>
 
-  {#if cardVideos.length > 1}
-    <button
-      type="button"
-      class="home-video-rail-control left-2"
-      aria-label={previousLabel}
-      aria-controls="home-video-rail-track"
-      disabled={!canScrollLeft}
-      on:click={() => scrollRail(-1)}
-    >
-      <ChevronLeft class="h-5 w-5" aria-hidden="true" />
-    </button>
-    <button
-      type="button"
-      class="home-video-rail-control right-2"
-      aria-label={nextLabel}
-      aria-controls="home-video-rail-track"
-      disabled={!canScrollRight}
-      on:click={() => scrollRail(1)}
-    >
-      <ChevronRight class="h-5 w-5" aria-hidden="true" />
-    </button>
-  {/if}
 </div>
 
 {#if selectedVideo}
@@ -241,47 +234,9 @@
     flex: 0 0 42%;
   }
 
-  .home-video-rail-control {
-    position: absolute;
-    top: 34%;
-    z-index: 10;
-    display: none;
-    height: 2.75rem;
-    width: 2.75rem;
-    align-items: center;
-    justify-content: center;
-    border-radius: 9999px;
-    background: rgb(255 255 255 / 0.96);
-    color: rgb(17 24 39);
-    border: 1px solid rgb(229 231 235);
-    box-shadow: 0 8px 24px rgb(15 23 42 / 0.14);
-    transition: color 160ms ease, opacity 160ms ease, transform 160ms ease;
-  }
-
-  .home-video-rail-control:hover:not(:disabled) {
-    color: rgb(234 88 12);
-    transform: translateY(-1px);
-  }
-
-  .home-video-rail-control:focus-visible {
-    outline: 2px solid rgb(249 115 22);
-    outline-offset: 3px;
-  }
-
-  .home-video-rail-control:disabled {
-    cursor: not-allowed;
-    opacity: 0.35;
-  }
-
   @media (max-width: 767px) {
     .home-video-card {
       flex-basis: 82vw;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .home-video-rail-control {
-      display: flex;
     }
   }
 </style>

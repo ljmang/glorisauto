@@ -1,5 +1,5 @@
 ---
-import { CircleChevronRight } from 'lucide-svelte';
+import { ChevronLeft, ChevronRight, CircleChevronRight } from 'lucide-svelte';
 import type { Locale } from '@/i18n/config';
 import type { VideoAttributes } from '@/types/content';
 import HomeVideoRailClient from './HomeVideoRailClient.svelte';
@@ -33,7 +33,7 @@ const {
 } = Astro.props;
 ---
 
-<section class="w-full" aria-labelledby="home-videos-title">
+<section class="w-full" data-home-video-section aria-labelledby="home-videos-title">
   <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
       <h2 id="home-videos-title" class="text-3xl font-bold text-gray-950">
@@ -41,15 +41,40 @@ const {
       </h2>
       {description && <p class="mt-3 max-w-3xl text-base leading-7 text-gray-600 lg:text-lg">{description}</p>}
     </div>
-    {linkLabel && (
-      <a
-        href={href}
-        class="inline-flex shrink-0 items-center gap-2 text-lg text-cyan-700 transition-colors hover:text-orange-700"
-      >
-        {linkLabel}
-        <CircleChevronRight class="h-5 w-5" aria-hidden="true" />
-      </a>
-    )}
+    <div class="flex shrink-0 items-center gap-4">
+      {videos.length > 1 && (
+        <div class="hidden items-center gap-2 md:flex" role="group" aria-label={title} data-home-video-controls>
+          <button
+            type="button"
+            class="home-video-rail-control inline-flex h-11 w-11 items-center justify-center rounded-full"
+            aria-label={previousLabel}
+            aria-controls="home-video-rail-track"
+            data-home-video-previous
+            disabled
+          >
+            <ChevronLeft class="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            class="home-video-rail-control inline-flex h-11 w-11 items-center justify-center rounded-full"
+            aria-label={nextLabel}
+            aria-controls="home-video-rail-track"
+            data-home-video-next
+          >
+            <ChevronRight class="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+      {linkLabel && (
+        <a
+          href={href}
+          class="inline-flex shrink-0 items-center gap-2 text-lg text-cyan-700 transition-colors hover:text-orange-700"
+        >
+          {linkLabel}
+          <CircleChevronRight class="h-5 w-5" aria-hidden="true" />
+        </a>
+      )}
+    </div>
   </div>
 
   <HomeVideoRailClient
@@ -64,3 +89,28 @@ const {
     videoUnavailableLabel={videoUnavailableLabel}
   />
 </section>
+
+<style>
+  .home-video-rail-control {
+    border: 1px solid rgb(229 231 235);
+    background: rgb(255 255 255 / 0.96);
+    color: rgb(17 24 39);
+    box-shadow: 0 8px 24px rgb(15 23 42 / 0.14);
+    transition: color 160ms ease, opacity 160ms ease, transform 160ms ease;
+  }
+
+  .home-video-rail-control:hover:not(:disabled) {
+    color: rgb(234 88 12);
+    transform: translateY(-1px);
+  }
+
+  .home-video-rail-control:focus-visible {
+    outline: 2px solid rgb(249 115 22);
+    outline-offset: 3px;
+  }
+
+  .home-video-rail-control:disabled {
+    cursor: not-allowed;
+    opacity: 0.35;
+  }
+</style>
