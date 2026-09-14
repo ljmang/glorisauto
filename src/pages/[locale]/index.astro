@@ -61,7 +61,11 @@ const homepageBasePopulate = {
 		populate: {
 			cover: true,
 			images: true,
-			category: true,
+			category: {
+				populate: {
+					parent: true,
+				},
+			},
 		},
 	},
 	insights: {
@@ -134,14 +138,14 @@ const [homeData, latestHelpRes, defaultHomeData] = await Promise.all([
 			help_category: true,
 		},
 		sort: ["publishedAt:desc"],
-		pagination: { pageSize: 4 },
+		pagination: { pageSize: 2 },
 	}),
 	fetchDefaultHeroBackground(),
 ]);
 // 4. 安全的数据解构 (即使 API 挂了，页面也不会白屏，而是显示默认值)
 const data = homeData?.data || ({} as Partial<HomeAttributes>);
 const latestHelpArticles = Array.isArray(latestHelpRes?.data)
-	? latestHelpRes.data.filter((article) => Boolean(article?.slug)).slice(0, 4)
+	? latestHelpRes.data.filter((article) => Boolean(article?.slug)).slice(0, 2)
 	: [];
 
 const sortBySortThenDate = <T extends { sort?: number | null; publishedAt?: string }>(list: T[]) =>
@@ -266,7 +270,6 @@ const downloadFilesLinkHref = toHref(
 	locale,
 );
 const ctaPrimaryHref = toHref(data.ctaPrimaryLink?.trim() || "/contact", locale);
-const ctaSecondaryHref = toHref(data.ctaSecondaryLink?.trim() || "/about/dealer", locale);
 const showHomeCta = data.ctaEnabled !== false && Boolean(data.ctaTitle?.trim());
 
 // 处理数据
@@ -280,7 +283,7 @@ const ctaBackground =
 	data.ctaBackground;
 const heroTitle = data.heroTitle ?? t(messages, "home.heroTitle");
 const heroCtaHref = toHref(data.heroButtonLink ?? "/", locale);
-const heroSampleCta = t(messages, "dealer.actionCta");
+const heroSampleCta = t(messages, "home.heroSecondaryCta");
 const heroSampleCtaHref = toHref("/about/dealer", locale);
 const aboutGlorisCover = parseImage(data.aboutGlorisCover);
 const showDownloadFiles =
@@ -313,6 +316,10 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 		return a.index - b.index;
 	})
 	.map(({ product }) => product));
+const getHomepageProductCategoryHref = (product: ProductAttributes): string => {
+	const categorySlug = product.category?.parent?.slug?.trim() || product.category?.slug?.trim();
+	return categorySlug ? toHref(`/products/${categorySlug}`, locale) : productsLinkHref;
+};
 ---
 
 <BaseLayout
@@ -427,6 +434,7 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 								<ProductCard
 									product={product}
 									locale={locale}
+									href={getHomepageProductCategoryHref(product)}
 								/>
 							),
 						)}
@@ -468,18 +476,23 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 		{
 			showInsights && (
 				<div class="w-full">
-					<div class="flex items-center justify-between mb-6">
+					<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+						<div>
 							<h2 class="text-3xl font-bold">
 								{data.insightsTitle as string}
 							</h2>
-							<a
-								href={insightsLinkHref}
-								class="text-cyan-700 text-lg flex items-center gap-2 hover:text-orange-700 transition-colors"
-							>
-								{insightsLinkLabel}
-								<CircleChevronRight class="w-4 h-4" />
-							</a>
+							<p class="mt-2 max-w-3xl text-base leading-7 text-gray-600">
+								{t(messages, "home.technicalResourcesDescription")}
+							</p>
 						</div>
+						<a
+							href={insightsLinkHref}
+							class="text-cyan-700 text-lg flex items-center gap-2 hover:text-orange-700 transition-colors"
+						>
+							{insightsLinkLabel}
+							<CircleChevronRight class="w-4 h-4" />
+						</a>
+					</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 						{displayInsights.map(
 							(insight) => (
@@ -580,8 +593,6 @@ const homeProducts = (((data.products as (ProductAttributes & { sort?: number | 
 				description={data.ctaDescription}
 				primaryLabel={data.ctaPrimaryLabel}
 				primaryHref={data.ctaPrimaryLabel ? ctaPrimaryHref : undefined}
-				secondaryLabel={data.ctaSecondaryLabel}
-				secondaryHref={data.ctaSecondaryLabel ? ctaSecondaryHref : undefined}
 				background={ctaBackground}
 				locale={locale}
 			/>

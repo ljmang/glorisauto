@@ -178,6 +178,8 @@
   "home": {
     "heroTitle": "Welcome",
     "heroCta": "Contact Us",
+    "heroSecondaryCta": "Become Our Distributor",
+    "technicalResourcesDescription": "Access product technical materials, application guidance, and solutions to common application issues.",
     "freeSampleCta": "Get Free Samples"
   },
   "articleSampleCta": {

@@ -178,6 +178,8 @@
   "home": {
     "heroTitle": "مرحبًا",
     "heroCta": "اتصل بنا",
+    "heroSecondaryCta": "انضم كموزع",
+    "technicalResourcesDescription": "احصل على المواد التقنية للمنتجات وإرشادات الاستخدام وحلول المشكلات الشائعة أثناء التطبيق.",
     "freeSampleCta": "احصل على عينات مجانية"
   },
   "articleSampleCta": {

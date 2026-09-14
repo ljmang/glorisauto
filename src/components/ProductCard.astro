@@ -15,11 +15,12 @@ import { CircleChevronRight } from 'lucide-svelte';
 interface Props {
   product: ProductAttributes;
   locale: Locale;
+  href?: string;
   ctaLabel?: string;
   headingTag?: 'h2' | 'h3';
 }
 
-const { product, locale, ctaLabel, headingTag = 'h3' } = Astro.props;
+const { product, locale, href: hrefOverride, ctaLabel, headingTag = 'h3' } = Astro.props;
 const HeadingTag = headingTag;
 
 // 产品卡片优先使用独立封面图，未设置时回退到图片列表第一张
@@ -30,9 +31,10 @@ const categorySlug =
   product.category && typeof product.category === 'object' && 'slug' in product.category
     ? (product.category as { slug?: string }).slug
     : '';
-const href = categorySlug
+const defaultHref = categorySlug
   ? toHref(`/products/${categorySlug}/${product.slug}`, locale)
   : toHref(`/products/${product.slug}`, locale);
+const href = hrefOverride ?? defaultHref;
 const productDescription = sanitizeInlineText(product.description);
 const showCta = typeof ctaLabel === 'string' && ctaLabel.trim().length > 0;
 const noImageLabelByLocale: Record<string, string> = {

@@ -178,6 +178,8 @@
   "home": {
     "heroTitle": "欢迎",
     "heroCta": "联系我们",
+    "heroSecondaryCta": "探索B2B合作",
+    "technicalResourcesDescription": "获取产品技术资料、应用指导及常见施工问题解决方案。",
     "freeSampleCta": "获取免费样品"
   },
   "articleSampleCta": {
@@ -207,7 +209,7 @@
     }
   },
   "dealer": {
-    "headerCta": "招募代理商",
+    "headerCta": "批发或代理",
     "sectionTag": "招募代理商",
     "actionCta": "成为代理商",
     "joinUsTitle": "立即加入我们",

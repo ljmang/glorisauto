@@ -178,6 +178,8 @@
   "home": {
     "heroTitle": "Bienvenido",
     "heroCta": "Contáctenos",
+    "heroSecondaryCta": "Conviértete en distribuidor",
+    "technicalResourcesDescription": "Accede a fichas técnicas de productos, guías de aplicación y soluciones para problemas habituales de aplicación.",
     "freeSampleCta": "Obtener muestras gratuitas"
   },
   "articleSampleCta": {

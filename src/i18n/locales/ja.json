@@ -178,6 +178,8 @@
   "home": {
     "heroTitle": "ようこそ",
     "heroCta": "お問い合わせ",
+    "heroSecondaryCta": "販売代理店になる",
+    "technicalResourcesDescription": "製品の技術資料、施工ガイド、よくある施工上の問題への解決策をご覧いただけます。",
     "freeSampleCta": "無料サンプルを入手"
   },
   "articleSampleCta": {
