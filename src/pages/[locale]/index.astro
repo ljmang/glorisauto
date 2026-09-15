@@ -307,6 +307,8 @@ const showInsights = Boolean(data.insightsTitle) && displayInsights.length > 0;
 const aboutGlorisLinkLabel =
 	data.aboutGlorisLinkLabel?.trim() || t(messages, "common.readMore");
 const aboutGlorisLinkHref = toHref(data.aboutGlorisLink?.trim() || "/about", locale);
+const glorisNewsLinkLabel = t(messages, "common.viewMore");
+const glorisNewsLinkHref = toHref("/about/insights/news", locale);
 const productsLinkLabel =
 	data.productsLinkLabel?.trim() || t(messages, "common.viewAll");
 const productsLinkHref = toHref(data.productsLink?.trim() || "/products", locale);
@@ -451,10 +453,19 @@ const homepageCategories = (Array.isArray(homepageCategoriesRes?.data)
 		<!-- Gloris News 新闻卡片 -->
 			{
 				data.glorisNewsTitle && (
-					<div class="w-full space-y-6">
-						<h2 class="text-3xl font-bold">
-							{data.glorisNewsTitle as string}
-						</h2>
+					<div class="w-full">
+						<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+							<h2 class="text-3xl font-bold">
+								{data.glorisNewsTitle as string}
+							</h2>
+							<a
+								href={glorisNewsLinkHref}
+								class="text-cyan-700 text-lg flex shrink-0 items-center gap-2 transition-colors hover:text-orange-700"
+							>
+								{glorisNewsLinkLabel}
+								<CircleChevronRight class="w-4 h-4" />
+							</a>
+						</div>
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 							{((data.glorisNews as NewsItem[]) || []).map((news) => (
 								<NewsCard news={news} locale={locale} />
