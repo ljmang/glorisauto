@@ -822,7 +822,7 @@ const formApiBase = (() => {
   .dealer-intro-richtext :global(.blocks-content),
   .dealer-intro-richtext :global(.article-content) {
     color: var(--dealer-ink);
-    font-size: 0.94rem;
+    font-size: 1rem;
     line-height: 1.8;
   }
 
@@ -848,7 +848,7 @@ const formApiBase = (() => {
   .dealer-product-line {
     margin: 1.2rem 0 0;
     color: var(--dealer-ink);
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1.8;
   }
@@ -865,13 +865,13 @@ const formApiBase = (() => {
     min-width: 9rem;
     min-height: 3.25rem;
     padding: 0.85rem 1.5rem;
-    font-size: 1rem;
+    font-size: 1.125rem;
   }
 
   .dealer-cta-row .dealer-button-icon,
   .dealer-partner > .dealer-button-icon {
-    width: 1.15rem;
-    height: 1.15rem;
+    width: 1.25rem;
+    height: 1.25rem;
   }
 
   .dealer-button,
@@ -985,7 +985,7 @@ const formApiBase = (() => {
     padding: 0.85rem 0.1rem;
     color: var(--dealer-ink);
     cursor: pointer;
-    font-size: 0.91rem;
+    font-size: 1rem;
     font-weight: 500;
     line-height: 1.35;
     list-style: none;
@@ -1023,7 +1023,7 @@ const formApiBase = (() => {
   .dealer-support-subtitle {
     margin: 0 0 0.65rem;
     color: var(--dealer-ink);
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1.45;
   }
@@ -1032,13 +1032,13 @@ const formApiBase = (() => {
   .dealer-support-scope {
     margin: 0 0 0.8rem;
     color: var(--dealer-muted);
-    font-size: 0.88rem;
-    line-height: 1.75;
+    font-size: 0.95rem;
+    line-height: 1.8;
   }
 
   .dealer-support-scope {
     color: var(--dealer-ink);
-    font-size: 0.82rem;
+    font-size: 0.9rem;
   }
 
   .dealer-support-scope strong {
@@ -1211,7 +1211,7 @@ const formApiBase = (() => {
   .dealer-section-lede {
     margin: -0.35rem 0 0;
     color: var(--dealer-muted);
-    font-size: 0.95rem;
+    font-size: 1rem;
     line-height: 1.7;
   }
 
@@ -1225,7 +1225,7 @@ const formApiBase = (() => {
   .dealer-list-title {
     margin: 0 0 0.9rem;
     color: var(--dealer-orange);
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 800;
     line-height: 1.4;
   }
@@ -1239,10 +1239,10 @@ const formApiBase = (() => {
   }
 
   .dealer-list li {
-    margin-bottom: 0.55rem;
+    margin-bottom: 0.6rem;
     padding-inline-start: 0.15rem;
-    font-size: 0.9rem;
-    line-height: 1.65;
+    font-size: 1rem;
+    line-height: 1.75;
   }
 
   .dealer-partner > .dealer-button {
@@ -1271,7 +1271,7 @@ const formApiBase = (() => {
 
   .dealer-process-number {
     color: var(--dealer-orange);
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     font-weight: 800;
     line-height: 1.7;
     white-space: nowrap;
@@ -1280,7 +1280,7 @@ const formApiBase = (() => {
   .dealer-process-step h3 {
     margin: 0;
     color: var(--dealer-ink);
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-weight: 700;
     line-height: 1.45;
   }
@@ -1288,8 +1288,8 @@ const formApiBase = (() => {
   .dealer-process-step p {
     margin: 0.4rem 0 0;
     color: var(--dealer-muted);
-    font-size: 0.86rem;
-    line-height: 1.7;
+    font-size: 0.95rem;
+    line-height: 1.8;
   }
 
   .dealer-faq {
@@ -1306,8 +1306,12 @@ const formApiBase = (() => {
   .dealer-faq-answer {
     margin: 0;
     color: var(--dealer-muted);
-    font-size: 0.95rem;
-    line-height: 1.75;
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+
+  .dealer-join-section label {
+    font-size: 1rem;
   }
 
   .dealer-faq-answer :global(p) {
@@ -1376,7 +1380,7 @@ const formApiBase = (() => {
     .dealer-intro-richtext :global(.blocks-content),
     .dealer-intro-richtext :global(.article-content),
     .dealer-product-line {
-      font-size: 1.125rem;
+      font-size: 1.25rem;
       line-height: 1.75;
     }
 
@@ -1385,21 +1389,34 @@ const formApiBase = (() => {
     }
 
     .dealer-section-title {
-      font-size: 2rem;
+      font-size: 2.25rem;
       margin-bottom: 0.9rem;
     }
 
     .dealer-support-group .dealer-section-title {
-      font-size: 1.7rem;
+      font-size: 1.8rem;
       margin-bottom: 0.9rem;
     }
 
     .dealer-section-lede {
-      font-size: 1rem;
+      font-size: 1.125rem;
     }
 
     .dealer-accordion-summary {
+      font-size: 1.125rem;
+    }
+
+    .dealer-support-subtitle {
+      font-size: 1.125rem;
+    }
+
+    .dealer-support-description,
+    .dealer-support-scope {
       font-size: 1rem;
+    }
+
+    .dealer-support-scope {
+      font-size: 0.95rem;
     }
 
     .dealer-partner-columns {
@@ -1408,9 +1425,13 @@ const formApiBase = (() => {
     }
 
     .dealer-list li {
-      margin-bottom: 0.45rem;
-      font-size: 1rem;
-      line-height: 1.7;
+      margin-bottom: 0.55rem;
+      font-size: 1.125rem;
+      line-height: 1.75;
+    }
+
+    .dealer-list-title {
+      font-size: 1.125rem;
     }
 
     .dealer-process-list {
@@ -1469,15 +1490,20 @@ const formApiBase = (() => {
     }
 
     .dealer-process-number {
-      font-size: 0.95rem;
+      font-size: 1rem;
     }
 
     .dealer-process-step h3 {
-      font-size: 1rem;
+      font-size: 1.125rem;
     }
 
     .dealer-process-step p {
       margin-top: 0.4rem;
+      font-size: 1.05rem;
+    }
+
+    .dealer-faq-answer {
+      font-size: 1.05rem;
     }
 
     .dealer-legacy-grid {
