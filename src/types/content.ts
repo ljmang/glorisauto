@@ -375,6 +375,48 @@ export interface BecomeDealerSupportItem {
   description?: string;
 }
 
+export interface BecomeDealerSupportDetail {
+  id?: number;
+  title?: string;
+  subtitle?: string;
+  description?: BlockNode[];
+  supportScope?: string;
+  gallery?: StrapiMedia[];
+  ctaLabel?: string;
+  ctaLink?: string;
+}
+
+export interface BecomeDealerSupportGroup {
+  id?: number;
+  title?: string;
+  items?: BecomeDealerSupportDetail[];
+  ctaLabel?: string;
+  ctaLink?: string;
+}
+
+export interface BecomeDealerPartnerItem {
+  id?: number;
+  text?: string;
+}
+
+export interface BecomeDealerPartnerProfile {
+  id?: number;
+  title?: string;
+  description?: BlockNode[];
+  targetTitle?: string;
+  targetItems?: BecomeDealerPartnerItem[];
+  idealTitle?: string;
+  idealItems?: BecomeDealerPartnerItem[];
+  ctaLabel?: string;
+  ctaLink?: string;
+}
+
+export interface BecomeDealerFaqItem {
+  id?: number;
+  question?: string;
+  answer?: BlockNode[];
+}
+
 export interface BecomeDealerProcessStep {
   id?: number;
   cover?: StrapiMedia | null;
@@ -388,10 +430,21 @@ export interface BecomeDealerAttributes {
   heroMedia?: StrapiMedia | StrapiMedia[] | null;
   introContent?: BlockNode[] | string;
   introMedia?: StrapiMedia | StrapiMedia[] | null;
+  heroSubtitle?: string;
+  heroPrimaryLabel?: string;
+  heroPrimaryLink?: string;
+  heroSecondaryLabel?: string;
+  heroSecondaryLink?: string;
+  introProductLine?: string;
   supportTitle?: string;
   supportItems?: BecomeDealerSupportItem[];
+  supportGroups?: BecomeDealerSupportGroup[];
   processTitle?: string;
+  processTagline?: string;
   processSteps?: BecomeDealerProcessStep[];
+  partnerProfile?: BecomeDealerPartnerProfile | null;
+  faqTitle?: string;
+  faqItems?: BecomeDealerFaqItem[];
   joinUsTitle?: string;
   yourName?: string;
   yourEmail?: string;

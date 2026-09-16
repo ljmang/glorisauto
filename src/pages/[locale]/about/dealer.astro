@@ -6,7 +6,7 @@ import InsightCard from '@/components/InsightCard.astro';
 import ProductCard from '@/components/ProductCard.astro';
 import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
-import { fetchApiWithLocaleFallback, api, parseHeroMedia, parseImage, getStrapiUrl, resolveLocalizedImageAltText } from '@/utils/strapiApi';
+import { fetchApiWithLocaleFallback, api, parseHeroMedia, parseImage, parseImages, getStrapiUrl, resolveLocalizedImageAltText } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { fetchSiteSeo } from '@/utils/siteConfig';
 import { getSiteContactInfo } from '@/utils/siteContact';
@@ -15,7 +15,7 @@ import type { BecomeDealerAttributes, InsightAttributes, ProductAttributes } fro
 import type { StrapiResponse } from '@/types';
 import { Image } from 'astro:assets';
 import { extractTextFromBlocks } from '@/utils/blocks';
-import { CircleChevronRight, MessageCircle, Phone, Mail, MapPin, Sparkles, Wrench, TrendingUp } from 'lucide-svelte';
+import { ArrowLeft, ArrowRight, ChevronDown, CircleChevronRight, MessageCircle, Phone, Mail, MapPin, Sparkles, Wrench, TrendingUp } from 'lucide-svelte';
 import { countryOptions, getCountryLabel } from '@/data/countries';
 
 export async function getStaticPaths() {
@@ -35,6 +35,7 @@ const messages = await loadMessages(locale);
 function resolveSectionHref(rawHref: string | null | undefined, fallbackHref: string): string {
   const href = rawHref?.trim();
   if (!href) return fallbackHref;
+  if (href.startsWith('#')) return href;
   if (/^(https?:)?\/\//i.test(href)) return href;
   return toHref(href.startsWith('/') ? href : `/${href}`, locale);
 }
@@ -50,6 +51,8 @@ async function fetchBecomeDealerContent() {
       },
     },
     introMedia: true,
+    supportGroups: { populate: { items: { populate: { gallery: true } } } },
+    partnerProfile: { populate: { targetItems: true, idealItems: true } },
     focus: { populate: { cover: true } },
     supportItems: { populate: { icon: true } },
     processSteps: { populate: { cover: true } },
@@ -85,6 +88,8 @@ const heroMedia = dealer ? parseHeroMedia(dealer.heroMedia) : null;
 const introMedia = parseImage(dealer?.introMedia);
 const focusItems = dealer?.focus ?? [];
 const supportItems = dealer?.supportItems ?? [];
+const supportGroups = dealer?.supportGroups ?? [];
+const partnerProfile = dealer?.partnerProfile ?? null;
 const processSteps = dealer?.processSteps ?? [];
 const dealerProducts = (dealer?.products ?? []) as ProductAttributes[];
 const advantageInsights = ((dealer?.articles ?? (dealer as (BecomeDealerAttributes & { insights?: (InsightAttributes & { cover?: unknown })[] }) | null)?.insights) ?? []) as (InsightAttributes & { cover?: unknown })[];
@@ -101,6 +106,31 @@ const articlesSectionLabel = dealer?.articlesLinkLabel?.trim() || t(messages, 'i
 const articlesSectionTitle =
   dealer?.articlesTitle?.trim() || dealer?.advantagesTitle || t(messages, 'dealer.advantagesTitle');
 const processSectionTitle = dealer?.processTitle?.trim() || 'Cooperation Process';
+const heroTitle = dealer?.title ?? t(messages, 'footer.about.becomeDealer');
+const mobileHeroTitle =
+  (dealer as (BecomeDealerAttributes & { mobileHeroTitle?: string }) | null)?.mobileHeroTitle?.trim() ||
+  (locale === 'zh-cn' ? '成为 Gloris 汽车修复产品 B2B 合作伙伴' : heroTitle);
+const heroSubtitle = dealer?.heroSubtitle?.trim();
+const heroPrimaryLabel = dealer?.heroPrimaryLabel?.trim() || t(messages, 'common.allProducts');
+const heroPrimaryHref = resolveSectionHref(dealer?.heroPrimaryLink, toHref('/products', locale));
+const heroSecondaryLabel = dealer?.heroSecondaryLabel?.trim() || t(messages, 'dealer.actionCta');
+const heroSecondaryHref = resolveSectionHref(dealer?.heroSecondaryLink, '#dealer-form');
+const introProductLine = dealer?.introProductLine?.trim();
+const supportScopeLabels: Record<Locale, string> = {
+  en: 'Support includes:',
+  'zh-cn': '支持范围：',
+  ja: 'サポート内容：',
+  ar: 'يشمل الدعم:',
+  es: 'El soporte incluye:',
+};
+function stripSupportScopeLabel(value: string): string {
+  return value
+    .trim()
+    .replace(/^(?:Support includes:|支持范围：|サポート内容：|يشمل الدعم：|يشمل الدعم:|El soporte incluye:)\s*/i, '');
+}
+const introBlocks = Array.isArray(dealer?.introContent) ? dealer.introContent : [];
+const introLeadBlocks = introBlocks.slice(0, 1);
+const introBodyBlocks = introBlocks.slice(1);
 const dealerIntroHtml = await renderDealerIntroHtml(dealer?.introContent, dealer?.title, locale);
 const introMediaAlt = resolveLocalizedImageAltText(
   locale,
@@ -112,7 +142,7 @@ const introMediaAlt = resolveLocalizedImageAltText(
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
   { label: t(messages, 'footer.about.title'), href: '/about' },
-  { label: dealer?.title ?? t(messages, 'footer.about.becomeDealer'), href: undefined },
+  { label: heroTitle, href: undefined },
 ];
 
 /** Message 接口 type：成为代理商 / 客户服务 */
@@ -135,7 +165,7 @@ const formApiBase = (() => {
 ---
 
 <BaseLayout
-  title={dealer?.title ?? t(messages, 'footer.about.becomeDealer')}
+  title={heroTitle}
   description={dealer?.joinUsTitle}
   image={dealer?.heroMedia}
   seo={dealer?.seo}
@@ -145,185 +175,280 @@ const formApiBase = (() => {
   locale={locale}
   siteSeo={siteSeo}
 >
-  <div class="container mx-auto px-4 pb-12">
-    <div class="pt-4 pb-2">
+  <div class="dealer-page-shell mx-auto w-full px-4 pb-16 sm:px-6 lg:px-10 lg:pb-24">
+    <div class="dealer-breadcrumb pt-4 pb-2">
       <Breadcrumb items={breadcrumbItems} locale={locale} />
     </div>
 
-    <!-- Hero -->
+    <!-- 首屏：保留品牌大图，新增标题、副标题和橙色强调线 -->
     {heroMedia && heroMedia.src && (
-      <section class="relative mb-12 overflow-hidden rounded-xl lg:mb-14">
-        <Image
-          src={heroMedia.src}
-          alt={dealer?.title ?? t(messages, 'footer.about.becomeDealer')}
-          width={1920}
-          height={600}
-          class="absolute inset-0 h-full w-full object-cover"
-          format="webp"
-          quality={100}
-          loading="eager"
-        />
-        <div class="absolute inset-0 bg-black/35" />
-        <div class="relative flex min-h-[300px] items-center justify-center lg:min-h-[420px]">
-          <div class="max-w-5xl px-6 py-8 text-center lg:px-10 lg:py-12">
-            <h1 class="text-4xl font-black leading-tight text-white drop-shadow-lg lg:text-5xl">
-              {dealer?.title ?? t(messages, 'footer.about.becomeDealer')}
+      <section class="dealer-hero">
+        {heroMedia.type === 'video' ? (
+          <video
+            class="dealer-hero-media"
+            src={heroMedia.src}
+            poster={heroMedia.poster}
+            autoplay
+            muted
+            loop
+            playsinline
+            aria-label={heroTitle}
+          />
+        ) : (
+          <Image
+            src={heroMedia.src}
+            alt={heroTitle}
+            width={1920}
+            height={780}
+            class="dealer-hero-media"
+            format="webp"
+            quality={100}
+            loading="eager"
+          />
+        )}
+        <div class="dealer-hero-overlay" />
+        <div class="dealer-hero-content">
+          <div class="dealer-hero-copy">
+            <h1>
+              <span class="dealer-hero-title-desktop">{heroTitle}</span>
+              <span class="dealer-hero-title-mobile">{mobileHeroTitle}</span>
             </h1>
+            {heroSubtitle && <p>{heroSubtitle}</p>}
           </div>
         </div>
       </section>
     )}
 
-    <!-- 产品图 + 介绍区 -->
-    {(dealer?.introContent?.length || introMedia?.src) && (
-      <section class="mb-16 lg:mb-20">
+    <!-- 产品图 + 介绍区：移动端图在上，桌面端图文并置 -->
+    {(dealer?.introContent?.length || introMedia?.src || introProductLine) && (
+      <section class="dealer-section dealer-intro">
         {introMedia?.src && (
-          <div class="mb-8 flex justify-center lg:mb-10">
-              <Image
+          <div class="dealer-intro-media">
+            <Image
               src={introMedia.src}
               alt={introMediaAlt}
               width={introMedia.width ?? 800}
               height={introMedia.height ?? 560}
-              class="max-h-[240px] w-auto max-w-full object-contain lg:max-h-[300px]"
+              class="dealer-intro-image"
               format="webp"
               quality={100}
             />
           </div>
         )}
-        <div class="dealer-intro-richtext mx-auto max-w-[760px] text-center">
-          {dealerIntroHtml ? (
-            <div
-              class="dealer-intro-content article-content prose prose-lg max-w-none text-left lg:text-center"
-              set:html={dealerIntroHtml}
-            />
-          ) : Array.isArray(dealer?.introContent) && dealer.introContent.length > 0 ? (
-            <BlocksRenderer blocks={dealer.introContent} locale={locale} variant="dealer" class="dealer-intro-blocks text-left lg:text-center" />
-          ) : null}
+        <div class="dealer-intro-copy">
+          <div class="dealer-intro-richtext">
+            {dealerIntroHtml ? (
+              <div class="dealer-intro-content article-content prose max-w-none" set:html={dealerIntroHtml} />
+            ) : (
+              <>
+                {introLeadBlocks.length > 0 && (
+                  <BlocksRenderer blocks={introLeadBlocks} locale={locale} variant="dealer" class="dealer-intro-blocks" />
+                )}
+                {introProductLine && <p class="dealer-product-line">{introProductLine}</p>}
+                {introBodyBlocks.length > 0 && (
+                  <BlocksRenderer blocks={introBodyBlocks} locale={locale} variant="dealer" class="dealer-intro-blocks" />
+                )}
+              </>
+            )}
+          </div>
+          {dealerIntroHtml && introProductLine && <p class="dealer-product-line">{introProductLine}</p>}
+          <div class="dealer-cta-row">
+            <a class="dealer-button dealer-button--outline" href={heroPrimaryHref}>
+              {heroPrimaryLabel}
+              <ArrowRight class="dealer-button-icon" aria-hidden="true" />
+            </a>
+            <a class="dealer-button dealer-button--solid" href={heroSecondaryHref}>
+              {heroSecondaryLabel}
+              <ArrowRight class="dealer-button-icon" aria-hidden="true" />
+            </a>
+          </div>
         </div>
       </section>
     )}
 
-    <!-- 核心支持区：优先使用 supportItems，未配置时回退旧 focus -->
-    {supportItems.length > 0 ? (
-      <section class="mb-16 lg:mb-20">
-        <h2 class="mx-auto mb-8 max-w-4xl text-center text-3xl font-black text-slate-950 lg:mb-10 lg:text-4xl">
-          {dealer?.supportTitle || t(messages, 'dealer.advantagesTitle')}
-        </h2>
-        <div class="mx-auto grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {supportItems.map((item) => {
-            const iconImage = parseImage(item.icon);
-            const iconAlt = resolveLocalizedImageAltText(locale, null, iconImage?.alt, item.title || '');
+    <!-- 合作支持区：新 CMS 分组优先，旧语言或旧数据仍保留兼容展示 -->
+    {supportGroups.length > 0 ? (
+      <section id="support" class="dealer-section dealer-support">
+        <div class="dealer-support-groups">
+          {supportGroups.map((group) => {
+            const groupTitle = group.title?.replace(/[（(]\s*折叠效果\s*[）)]/g, '').replace(/\s{2,}/g, ' ').trim();
+            const groupKind = /经销商|dealer|distributor/i.test(group.title || '') ? 'dealer' : 'wholesale';
+            const defaultOpenIndex = (group.items?.length ?? 0) > 1 ? 1 : 0;
             return (
-              <div class="rounded-2xl bg-white px-6 py-7 text-center">
-                {iconImage?.src ? (
-                  <div class="mb-4 flex justify-center">
-                    <Image
-                      src={iconImage.src}
-                      alt={iconAlt}
-                      width={iconImage.width ?? 96}
-                      height={iconImage.height ?? 96}
-                      class="h-14 w-14 object-contain"
-                      format="webp"
-                      quality={100}
-                    />
-                  </div>
-                ) : (
-                  <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-orange-50 text-orange-500">
-                    <Sparkles class="h-7 w-7" aria-hidden="true" />
-                  </div>
-                )}
-                {item.title && <h3 class="mb-2 text-lg font-bold text-slate-950">{item.title}</h3>}
-                {item.description && <p class="mx-auto max-w-[280px] text-sm leading-6 text-slate-600">{item.description}</p>}
+            <div class="dealer-support-group" data-support-group={groupKind}>
+              {groupTitle && <h2 class="dealer-section-title">{groupTitle}</h2>}
+              <div class="dealer-accordion" data-dealer-accordion>
+                {(group.items ?? []).map((item, itemIndex) => {
+                  const description = extractTextFromBlocks(item.description, 1000);
+                  const galleryImages = parseImages(item.gallery);
+                  return (
+                    <details class="dealer-accordion-item" open={itemIndex === defaultOpenIndex}>
+                      <summary class="dealer-accordion-summary">
+                        <span>{item.title}</span>
+                        <ChevronDown class="dealer-accordion-icon" aria-hidden="true" />
+                      </summary>
+                      <div class="dealer-accordion-panel">
+                        {item.subtitle && <h3 class="dealer-support-subtitle">{item.subtitle}</h3>}
+                        {description && <p class="dealer-support-description">{description}</p>}
+                        {item.supportScope && (
+                          <p class="dealer-support-scope">
+                            <strong>{supportScopeLabels[locale]}</strong>
+                            {stripSupportScopeLabel(item.supportScope)}
+                          </p>
+                        )}
+                        {galleryImages.length > 0 && (
+                          <div class="dealer-gallery" data-dealer-gallery>
+                            <div class="dealer-gallery-stage">
+                              <div class="dealer-gallery-track" data-dealer-gallery-track>
+                                {galleryImages.map((galleryImage, galleryIndex) => (
+                                  <div class="dealer-gallery-slide" data-dealer-gallery-slide>
+                                    <Image
+                                      src={galleryImage.src}
+                                      alt={resolveLocalizedImageAltText(locale, null, galleryImage.alt, item.title || heroTitle)}
+                                      width={galleryImage.width ?? 1200}
+                                      height={galleryImage.height ?? 800}
+                                      class="dealer-gallery-image"
+                                      format="webp"
+                                      quality={100}
+                                      loading="lazy"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                              {galleryImages.length > 1 && (
+                                <div class="dealer-gallery-switcher" aria-label={locale === 'zh-cn' ? '切换合作支持图片' : 'Change support image'}>
+                                  <button
+                                    type="button"
+                                    class="dealer-gallery-arrow"
+                                    data-dealer-gallery-prev
+                                    aria-label={locale === 'zh-cn' ? '上一张图片' : 'Previous image'}
+                                  >
+                                    <ArrowLeft class="dealer-gallery-arrow-icon" aria-hidden="true" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    class="dealer-gallery-arrow"
+                                    data-dealer-gallery-next
+                                    aria-label={locale === 'zh-cn' ? '下一张图片' : 'Next image'}
+                                  >
+                                    <ArrowRight class="dealer-gallery-arrow-icon" aria-hidden="true" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                            {galleryImages.length > 1 && (
+                              <div class="dealer-gallery-dots" role="tablist" aria-label={locale === 'zh-cn' ? '合作支持图片' : 'Support images'}>
+                                {galleryImages.map((_, galleryIndex) => (
+                                  <button
+                                    type="button"
+                                    class:list={["dealer-gallery-dot", galleryIndex === 0 && "is-active"]}
+                                    data-dealer-gallery-dot
+                                    data-slide-index={galleryIndex}
+                                    aria-label={`${locale === 'zh-cn' ? '图片' : 'Image'} ${galleryIndex + 1}`}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </details>
+                  );
+                })}
               </div>
+            </div>
             );
           })}
         </div>
       </section>
     ) : (
-      focusItems.length > 0 && (
-        <section class="mb-16 lg:mb-20">
-          <h2 class="mx-auto mb-8 max-w-4xl text-center text-3xl font-black text-slate-950 lg:mb-10 lg:text-4xl">
-            {dealer?.supportTitle || dealer?.advantagesTitle || t(messages, 'dealer.advantagesTitle')}
-          </h2>
-          <div class="mx-auto grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {focusItems.slice(0, 3).map((item, index) => {
-            const coverImg = parseImage(item.cover);
-            const coverAlt = resolveLocalizedImageAltText(locale, null, coverImg?.alt, item.title || '');
-            const subtitle = extractTextFromBlocks(item.content, 120);
-            const FallbackIcon = focusFallbackIcons[index] ?? Sparkles;
-            return (
-              <div class="rounded-2xl bg-white px-6 py-7 text-center">
-                {coverImg?.src ? (
-                  <div class="mb-4 flex justify-center">
-                    <Image
-                      src={coverImg.src}
-                      alt={coverAlt}
-                      width={coverImg.width ?? 256}
-                      height={coverImg.height ?? 256}
-                      class="h-20 w-20 object-contain"
-                      format="webp"
-                      quality={100}
-                    />
-                  </div>
-                ) : (
-                  <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                    <FallbackIcon class="h-10 w-10 text-orange-500" aria-hidden="true" />
-                  </div>
-                )}
-                <h3 class="mb-2 text-lg font-bold text-slate-950">{item.title}</h3>
-                {subtitle && <p class="mx-auto max-w-[280px] text-sm leading-6 text-slate-600">{subtitle}</p>}
-              </div>
-            );
-          })}
+      (supportItems.length > 0 || focusItems.length > 0) && (
+        <section id="support" class="dealer-section dealer-support dealer-support--legacy">
+          <h2 class="dealer-section-title">{dealer?.supportTitle || dealer?.advantagesTitle || t(messages, 'dealer.advantagesTitle')}</h2>
+          <div class="dealer-legacy-grid">
+            {(supportItems.length > 0 ? supportItems : focusItems.slice(0, 3)).map((item, index) => {
+              const iconImage = 'icon' in item ? parseImage(item.icon) : parseImage(item.cover);
+              const iconAlt = resolveLocalizedImageAltText(locale, null, iconImage?.alt, item.title || '');
+              const subtitle = 'description' in item ? item.description : extractTextFromBlocks(item.content, 120);
+              const FallbackIcon = focusFallbackIcons[index] ?? Sparkles;
+              return (
+                <div class="dealer-legacy-card">
+                  {iconImage?.src ? (
+                    <Image src={iconImage.src} alt={iconAlt} width={iconImage.width ?? 96} height={iconImage.height ?? 96} class="dealer-legacy-icon" format="webp" quality={100} />
+                  ) : (
+                    <FallbackIcon class="dealer-legacy-icon dealer-legacy-icon--fallback" aria-hidden="true" />
+                  )}
+                  {item.title && <h3>{item.title}</h3>}
+                  {subtitle && <p>{subtitle}</p>}
+                </div>
+              );
+            })}
           </div>
         </section>
       )
     )}
 
-    <!-- 合作流程 -->
-    {processSteps.length > 0 && (
-      <section class="mx-auto mb-16 max-w-4xl lg:mb-20">
-        <h2 class="mb-8 text-center text-3xl font-black text-slate-950 lg:mb-10 lg:text-4xl">
-          {processSectionTitle}
-        </h2>
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {processSteps.map((step, index) => {
-            const coverImage = parseImage(step.cover);
-            const stepText = step.stepLabel?.trim() || `Step ${index + 1}`;
-            const stepImageAlt = resolveLocalizedImageAltText(
-              locale,
-              null,
-              coverImage?.alt,
-              step.title || stepText
-            );
-            return (
-              <div class="overflow-hidden rounded-2xl bg-white">
-                {coverImage?.src && (
-                  <Image
-                    src={coverImage.src}
-                    alt={stepImageAlt}
-                    width={coverImage.width ?? 960}
-                    height={coverImage.height ?? 540}
-                    class="aspect-[16/5.8] w-full object-cover"
-                    format="webp"
-                    quality={100}
-                  />
-                )}
-                <div class="p-5 lg:p-6">
-                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">{stepText}</p>
-                  {step.title && <h3 class="mt-2 text-base font-bold text-slate-950 lg:text-lg">{step.title}</h3>}
-                  {step.description && <p class="mt-2 text-sm leading-6 text-slate-600">{step.description}</p>}
-                </div>
-              </div>
-            );
-          })}
+    <!-- 合作伙伴画像 + 合作流程：桌面端并排，移动端顺序堆叠 -->
+    {(partnerProfile || processSteps.length > 0) && (
+      <div class="dealer-section dealer-partner-process">
+      {partnerProfile && (
+      <section id="partner" class="dealer-partner">
+        <div class="dealer-section-heading dealer-section-heading--wide">
+          {partnerProfile.title && <h2 class="dealer-section-title">{partnerProfile.title}</h2>}
+          {extractTextFromBlocks(partnerProfile.description, 1000) && (
+            <p class="dealer-section-lede">{extractTextFromBlocks(partnerProfile.description, 1000)}</p>
+          )}
         </div>
+        <div class="dealer-partner-columns">
+          <div>
+            {partnerProfile.targetTitle && <h3 class="dealer-list-title">{partnerProfile.targetTitle}</h3>}
+            <ul class="dealer-list">
+              {(partnerProfile.targetItems ?? []).map((item) => item.text && <li>{item.text}</li>)}
+            </ul>
+          </div>
+          <div>
+            {partnerProfile.idealTitle && <h3 class="dealer-list-title">{partnerProfile.idealTitle}</h3>}
+            <ul class="dealer-list">
+              {(partnerProfile.idealItems ?? []).map((item) => item.text && <li>{item.text}</li>)}
+            </ul>
+          </div>
+        </div>
+        {partnerProfile.ctaLabel && (
+          <a class="dealer-button dealer-button--solid" href={resolveSectionHref(partnerProfile.ctaLink, '#dealer-form')}>
+            {partnerProfile.ctaLabel}
+            <ArrowRight class="dealer-button-icon" aria-hidden="true" />
+          </a>
+        )}
       </section>
     )}
 
+    {processSteps.length > 0 && (
+      <section id="process" class="dealer-process">
+        <div class="dealer-section-heading dealer-section-heading--wide">
+          <h2 class="dealer-section-title">{processSectionTitle}</h2>
+        </div>
+        <ol class="dealer-process-list">
+          {processSteps.map((step, index) => {
+            const stepText = locale === 'zh-cn' ? `第 ${index + 1} 步` : step.stepLabel?.trim() || `Step ${index + 1}`;
+            return (
+              <li class="dealer-process-step">
+                <div class="dealer-process-heading">
+                  <span class="dealer-process-number">{stepText}</span>
+                  {step.title && <h3>{step.title}</h3>}
+                </div>
+                {step.description && <p>{step.description}</p>}
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+    )}
+    </div>
+    )}
+
     <!-- Join Us Now：表单 + 客服信息 -->
-    <section class="mb-16 lg:mb-20">
-      <h2 class="mb-8 text-center text-3xl font-black text-slate-950 lg:mb-10 lg:text-4xl">
+    <section class="dealer-existing-section dealer-join-section mt-24 mb-16 lg:mt-32 lg:mb-20">
+      <h2 class="dealer-join-title mb-8 text-3xl font-black text-slate-950 lg:mb-10 lg:text-4xl">
         {dealer?.joinUsTitle ?? t(messages, 'dealer.joinUsTitle')}
       </h2>
       <div class="grid grid-cols-1 items-start gap-10 lg:grid-cols-5 lg:gap-12">
@@ -483,7 +608,7 @@ const formApiBase = (() => {
 
     <!-- 产品区 -->
     {dealerProducts.length > 0 && (
-      <section class="mb-16 lg:mb-20">
+      <section class="dealer-existing-section dealer-products-section mb-16 lg:mb-20">
         <div class="mb-8 flex items-center justify-between gap-4">
           <h2 class="text-3xl font-black text-slate-950 lg:text-4xl">
             {dealer?.productsTitle || t(messages, 'common.allProducts')}
@@ -506,7 +631,7 @@ const formApiBase = (() => {
 
     <!-- 文章区：使用后台勾选的 dealer insights -->
     {advantageInsights.length > 0 && (
-      <section class="mb-12">
+      <section class="dealer-existing-section dealer-articles-section mb-12">
         <div class="mb-8 flex items-center justify-between gap-4">
           <h2 class="text-3xl font-black text-slate-950 lg:text-4xl">
             {articlesSectionTitle}
@@ -532,72 +657,1006 @@ const formApiBase = (() => {
 <style>
   @reference "../../../styles/global.css";
 
-  .dealer-intro-richtext :global(ul),
-  .dealer-intro-richtext :global(ol) {
-    width: fit-content;
+  .dealer-page-shell {
+    --dealer-orange: #ff7000;
+    --dealer-ink: #161616;
+    --dealer-muted: #69717c;
+    --dealer-line: #e3e6e8;
+    --dealer-surface: #ffffff;
+    max-width: 90rem;
+  }
+
+  .dealer-existing-section {
+    max-width: 75rem;
+    margin-inline: auto;
+  }
+
+  .dealer-breadcrumb {
+    min-height: 2.25rem;
+  }
+
+  .dealer-hero {
+    position: relative;
+    overflow: hidden;
+    margin-inline: -0.375rem;
+    width: calc(100% + 0.75rem);
+    min-height: 0;
+    aspect-ratio: 1.68;
+    border-radius: 1rem;
+    background: #1f2326;
+    isolation: isolate;
+  }
+
+  .dealer-hero-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 46%;
+  }
+
+  .dealer-hero-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.02) 20%, rgba(0, 0, 0, 0.76) 100%);
+  }
+
+  .dealer-hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-end;
+    min-height: 0;
+    height: 100%;
+    padding: 1.35rem;
+  }
+
+  .dealer-hero-copy {
+    max-width: 54rem;
+    padding-inline-start: 0.85rem;
+    border-inline-start: 0.28rem solid var(--dealer-orange);
+    color: #ffffff;
+  }
+
+  .dealer-hero-copy h1 {
+    margin: 0;
+    color: inherit;
+    font-size: clamp(1.6rem, 5.6vw, 4rem);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+
+  .dealer-hero-title-desktop {
+    display: none;
+  }
+
+  .dealer-hero-title-mobile {
+    display: inline;
+  }
+
+  .dealer-hero-copy p {
+    margin: 0.55rem 0 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(0.82rem, 2.1vw, 1.25rem);
+    line-height: 1.45;
+  }
+
+  .dealer-join-title {
+    text-align: left;
+  }
+
+  .dealer-section {
+    margin-top: clamp(3.5rem, 8vw, 7.75rem);
+  }
+
+  .dealer-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    gap: 2.5rem;
+    max-width: 75rem;
+    margin-inline: auto;
+  }
+
+  .dealer-intro-media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 10rem;
+  }
+
+  .dealer-intro-image {
+    display: block;
+    width: auto;
     max-width: 100%;
-    margin-top: 1.75rem;
-    margin-bottom: 1.75rem;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1.5rem;
-    text-align: left;
+    max-height: 15rem;
+    object-fit: contain;
   }
 
-  .dealer-intro-richtext :global(li) {
-    margin-bottom: 0.9rem;
-    line-height: 1.7;
-    text-align: left;
+  .dealer-intro-copy {
+    min-width: 0;
   }
 
-  .dealer-intro-richtext :global(li:last-child) {
+  .dealer-intro-richtext :global(.blocks-content),
+  .dealer-intro-richtext :global(.article-content) {
+    color: var(--dealer-ink);
+    font-size: 0.94rem;
+    line-height: 1.8;
+  }
+
+  .dealer-intro-richtext :global(p) {
+    margin: 0 0 1rem;
+  }
+
+  .dealer-intro-richtext :global(p:last-child) {
     margin-bottom: 0;
   }
 
-  .dealer-intro-richtext :global(ul li::marker) {
-    color: rgb(125 211 252);
+  .dealer-intro-richtext :global(ul),
+  .dealer-intro-richtext :global(ol) {
+    margin: 1rem 0;
+    padding-inline-start: 1.35rem;
+    text-align: start;
   }
 
-  .dealer-intro-richtext :global(ol li::marker) {
-    color: rgb(56 189 248);
+  .dealer-intro-richtext :global(li) {
+    margin-bottom: 0.45rem;
   }
 
-  .dealer-intro-content :global(.dealer-intro-cta-row) {
-    @apply mt-8;
+  .dealer-product-line {
+    margin: 1.2rem 0 0;
+    color: var(--dealer-ink);
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.8;
   }
 
-  .dealer-intro-content :global(a) {
-    @apply transition-all duration-200;
+  .dealer-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
   }
 
-  .dealer-intro-content :global(a:hover) {
-    @apply text-orange-600 decoration-orange-300;
+  .dealer-cta-row .dealer-button,
+  .dealer-partner > .dealer-button {
+    min-width: 9rem;
+    min-height: 3.25rem;
+    padding: 0.85rem 1.5rem;
+    font-size: 1rem;
   }
 
-  .dealer-intro-content :global(p > a:only-child) {
-    @apply inline-flex items-center rounded-full bg-sky-50 px-4 py-2 no-underline text-sky-700 ring-1 ring-sky-100;
+  .dealer-cta-row .dealer-button-icon,
+  .dealer-partner > .dealer-button-icon {
+    width: 1.15rem;
+    height: 1.15rem;
   }
 
-  .dealer-intro-content :global(p > a:only-child:hover) {
-    @apply -translate-y-0.5 bg-sky-100 text-sky-800 ring-sky-200 shadow-sm;
+  .dealer-button,
+  .dealer-inline-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-height: 2.75rem;
+    padding: 0.7rem 1.2rem;
+    border-radius: 0.2rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
   }
 
-  .dealer-intro-content :global(a > .dealer-intro-cta),
-  .dealer-intro-content :global(a > .dealer-intro-inline-cta) {
-    @apply bg-transparent px-0 py-0 mx-0 text-inherit ring-0 shadow-none no-underline;
+  .dealer-button:hover,
+  .dealer-inline-cta:hover {
+    transform: translateY(-1px);
   }
 
-  .dealer-intro-content :global(.dealer-intro-cta),
-  .dealer-intro-content :global(.dealer-intro-inline-cta) {
-    @apply inline-flex items-center rounded-full bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 ring-1 ring-sky-100;
+  .dealer-button--outline {
+    border: 1px solid var(--dealer-orange);
+    color: var(--dealer-orange);
+    background: transparent;
   }
 
-  .dealer-intro-content :global(.dealer-intro-inline-cta) {
-    @apply mx-1 align-middle;
+  .dealer-button--outline:hover {
+    background: #fff3e8;
+  }
+
+  .dealer-button--solid {
+    border: 1px solid var(--dealer-orange);
+    color: #ffffff;
+    background: var(--dealer-orange);
+  }
+
+  .dealer-button--solid:hover {
+    border-color: #e86100;
+    background: #e86100;
+  }
+
+  .dealer-button-icon {
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 auto;
+  }
+
+  .dealer-support-groups {
+    display: grid;
+    gap: 3.25rem;
+  }
+
+  .dealer-support {
+    max-width: 75rem;
+    margin-inline: auto;
+  }
+
+  .dealer-support-group[data-support-group='dealer'] {
+    order: 2;
+  }
+
+  .dealer-support-group[data-support-group='wholesale'] {
+    order: 1;
+  }
+
+  .dealer-partner-process {
+    display: grid;
+    gap: 3.5rem;
+    max-width: 75rem;
+    margin-inline: auto;
+  }
+
+  .dealer-partner-process > .dealer-partner,
+  .dealer-partner-process > .dealer-process {
+    min-width: 0;
+  }
+
+  .dealer-section-title {
+    margin: 0 0 1.25rem;
+    color: var(--dealer-ink);
+    font-size: clamp(1.45rem, 3.3vw, 2.45rem);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  .dealer-support-group .dealer-section-title {
+    margin-bottom: 0.9rem;
+    font-size: clamp(1.05rem, 2.05vw, 1.7rem);
+    letter-spacing: -0.015em;
+  }
+
+  .dealer-accordion {
+    border-top: 1px solid var(--dealer-line);
+  }
+
+  .dealer-accordion-item {
+    border-bottom: 1px solid var(--dealer-line);
+  }
+
+  .dealer-accordion-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 3.15rem;
+    padding: 0.85rem 0.1rem;
+    color: var(--dealer-ink);
+    cursor: pointer;
+    font-size: 0.91rem;
+    font-weight: 500;
+    line-height: 1.35;
+    list-style: none;
+  }
+
+  .dealer-accordion-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .dealer-accordion-summary::marker {
+    content: '';
+  }
+
+  .dealer-accordion-summary:hover,
+  .dealer-accordion-item[open] > .dealer-accordion-summary {
+    color: var(--dealer-orange);
+  }
+
+  .dealer-accordion-icon {
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 auto;
+    color: var(--dealer-orange);
+    transition: transform 180ms ease;
+  }
+
+  .dealer-accordion-item[open] .dealer-accordion-icon {
+    transform: rotate(180deg);
+  }
+
+  .dealer-accordion-panel {
+    padding: 0.1rem 0.1rem 1.35rem 0.1rem;
+  }
+
+  .dealer-support-subtitle {
+    margin: 0 0 0.65rem;
+    color: var(--dealer-ink);
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .dealer-support-description,
+  .dealer-support-scope {
+    margin: 0 0 0.8rem;
+    color: var(--dealer-muted);
+    font-size: 0.88rem;
+    line-height: 1.75;
+  }
+
+  .dealer-support-scope {
+    color: var(--dealer-ink);
+    font-size: 0.82rem;
+  }
+
+  .dealer-support-scope strong {
+    font-weight: 700;
+  }
+
+  .dealer-gallery {
+    margin-top: 1rem;
+  }
+
+  .dealer-gallery-stage {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.15rem;
+  }
+
+  .dealer-gallery-track {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    border-radius: 0.15rem;
+  }
+
+  .dealer-gallery-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dealer-gallery-slide {
+    flex: 0 0 100%;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    scroll-snap-align: start;
+    background: #eceff1;
+  }
+
+  .dealer-gallery-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .dealer-gallery-switcher {
+    position: absolute;
+    left: 0.75rem;
+    bottom: 0.75rem;
+    z-index: 1;
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .dealer-gallery-arrow {
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 999rem;
+    color: var(--dealer-ink);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 0.25rem 0.75rem rgba(11, 16, 23, 0.18);
+    cursor: pointer;
+    transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
+  }
+
+  .dealer-gallery-arrow:hover {
+    color: #fff;
+    background: var(--dealer-orange);
+    transform: translateY(-1px);
+  }
+
+  .dealer-gallery-arrow:focus-visible {
+    outline: 2px solid var(--dealer-orange);
+    outline-offset: 2px;
+  }
+
+  .dealer-gallery-arrow-icon {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  .dealer-gallery-dots {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    margin-top: 0.6rem;
+    padding-inline-end: 0.15rem;
+  }
+
+  .dealer-gallery-dot {
+    width: 1.05rem;
+    height: 0.18rem;
+    padding: 0;
+    border: 0;
+    border-radius: 99rem;
+    background: #2c3135;
+    cursor: pointer;
+  }
+
+  .dealer-gallery-dot.is-active {
+    background: var(--dealer-orange);
+  }
+
+  .dealer-inline-cta {
+    min-height: 0;
+    margin-top: 0.65rem;
+    padding: 0;
+    color: var(--dealer-orange);
+  }
+
+  .dealer-group-cta {
+    margin-top: 1.25rem;
+  }
+
+  .dealer-legacy-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .dealer-legacy-card {
+    padding: 1.5rem;
+    background: var(--dealer-surface);
+    text-align: center;
+  }
+
+  .dealer-legacy-icon {
+    display: block;
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 0.9rem;
+    object-fit: contain;
+  }
+
+  .dealer-legacy-icon--fallback {
+    padding: 0.8rem;
+    color: var(--dealer-orange);
+  }
+
+  .dealer-legacy-card h3 {
+    margin: 0 0 0.45rem;
+    color: var(--dealer-ink);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .dealer-legacy-card p {
+    margin: 0;
+    color: var(--dealer-muted);
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+
+  .dealer-section-heading--wide {
+    max-width: 52rem;
+  }
+
+  .dealer-section-heading--center {
+    max-width: 50rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .dealer-section-lede {
+    margin: -0.35rem 0 0;
+    color: var(--dealer-muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+
+  .dealer-partner-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem;
+    margin-top: 2rem;
+  }
+
+  .dealer-list-title {
+    margin: 0 0 0.9rem;
+    color: var(--dealer-orange);
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.4;
+  }
+
+  .dealer-list {
+    margin: 0;
+    padding-inline-start: 1.2rem;
+    color: var(--dealer-ink);
+    list-style-position: outside;
+    list-style-type: disc;
+  }
+
+  .dealer-list li {
+    margin-bottom: 0.55rem;
+    padding-inline-start: 0.15rem;
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+
+  .dealer-partner > .dealer-button {
+    margin-top: 1.35rem;
+  }
+
+  .dealer-process-list {
+    display: grid;
+    gap: 1.75rem;
+    margin: 2.25rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .dealer-process-step {
+    display: block;
+    padding-inline-start: 1rem;
+    align-items: start;
+  }
+
+  .dealer-process-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
+  }
+
+  .dealer-process-number {
+    color: var(--dealer-orange);
+    font-size: 0.85rem;
+    font-weight: 800;
+    line-height: 1.7;
+    white-space: nowrap;
+  }
+
+  .dealer-process-step h3 {
+    margin: 0;
+    color: var(--dealer-ink);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .dealer-process-step p {
+    margin: 0.4rem 0 0;
+    color: var(--dealer-muted);
+    font-size: 0.86rem;
+    line-height: 1.7;
+  }
+
+  .dealer-faq-list {
+    max-width: 58rem;
+    margin-inline: auto;
+  }
+
+  @media (min-width: 640px) {
+    .dealer-hero-content {
+      min-height: 0;
+      padding: 2.25rem;
+    }
+
+    .dealer-hero {
+      min-height: 0;
+    }
+
+    .dealer-hero-copy {
+      padding-inline-start: 1.15rem;
+      border-inline-start-width: 0.35rem;
+    }
+
+    .dealer-intro-image {
+      max-height: 18rem;
+    }
+
+    .dealer-legacy-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 768px) {
+    .dealer-breadcrumb {
+      display: block;
+    }
+
+    .dealer-hero {
+      min-height: 0;
+      width: 100%;
+      margin-inline: 0;
+      aspect-ratio: 2720 / 1120;
+      border-radius: 1.25rem;
+    }
+
+    .dealer-hero-content {
+      min-height: 0;
+      padding: clamp(2.5rem, 5vw, 4.5rem);
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: clamp(6rem, 12vw, 10rem);
+    }
+
+    .dealer-intro {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2.75rem;
+      margin-top: clamp(2.5rem, 4vw, 4rem);
+    }
+
+    .dealer-intro-media {
+      min-height: 0;
+    }
+
+    .dealer-intro-image {
+      max-height: 25rem;
+    }
+
+    .dealer-intro-richtext :global(.blocks-content),
+    .dealer-intro-richtext :global(.article-content),
+    .dealer-product-line {
+      font-size: 1.125rem;
+      line-height: 1.75;
+    }
+
+    .dealer-intro-richtext :global(p) {
+      margin-bottom: 1.15rem;
+    }
+
+    .dealer-section-title {
+      font-size: 2rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .dealer-support-group .dealer-section-title {
+      font-size: 1.7rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .dealer-section-lede {
+      font-size: 1rem;
+    }
+
+    .dealer-accordion-summary {
+      font-size: 1rem;
+    }
+
+    .dealer-partner-columns {
+      gap: 1.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .dealer-list li {
+      margin-bottom: 0.45rem;
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .dealer-process-list {
+      gap: 3rem;
+      margin-top: 1.75rem;
+    }
+
+    .dealer-process-step p {
+      font-size: 0.95rem;
+    }
+
+    .dealer-support-groups {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5rem;
+    }
+
+    .dealer-support-group[data-support-group='dealer'] {
+      order: 1;
+    }
+
+    .dealer-support-group[data-support-group='wholesale'] {
+      order: 2;
+    }
+
+    .dealer-partner-process {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5rem;
+    }
+
+    .dealer-hero-copy p {
+      display: block;
+      margin-top: 1rem;
+      font-size: clamp(1rem, 1.55vw, 1.35rem);
+    }
+
+    .dealer-hero-title-desktop {
+      display: inline;
+    }
+
+    .dealer-hero-title-mobile {
+      display: none;
+    }
+
+    .dealer-hero-copy {
+      max-width: 62rem;
+      padding-inline-start: 0;
+      border-inline-start: 0;
+      text-align: center;
+    }
+
+    .dealer-partner-columns {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.75rem;
+    }
+
+    .dealer-process-list {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 3rem;
+    }
+
+    .dealer-process-step {
+      min-height: 0;
+      padding-inline-start: 1rem;
+    }
+
+    .dealer-process-number {
+      font-size: 0.95rem;
+    }
+
+    .dealer-process-step h3 {
+      font-size: 1rem;
+    }
+
+    .dealer-process-step p {
+      margin-top: 0.4rem;
+    }
+
+    .dealer-legacy-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 767px) {
+    .dealer-gallery-track {
+      overflow-x: auto;
+      touch-action: pan-y;
+      user-select: none;
+      cursor: grab;
+    }
+
+    .dealer-gallery-track.is-dragging {
+      cursor: grabbing;
+      scroll-behavior: auto;
+      scroll-snap-type: none;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .dealer-breadcrumb {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dealer-button,
+    .dealer-inline-cta,
+    .dealer-accordion-icon,
+    .dealer-gallery-arrow,
+    .dealer-gallery-track {
+      transition: none;
+      scroll-behavior: auto;
+    }
   }
 </style>
 
 <script define:vars={{ locale, formTexts }}>
+  (function () {
+    document.querySelectorAll('[data-dealer-accordion]').forEach((accordion) => {
+      const items = Array.from(accordion.querySelectorAll('details'));
+      const mobileQuery = window.matchMedia('(max-width: 767px)');
+
+      const syncMobileAccordionState = () => {
+        if (!mobileQuery.matches) return;
+        items.forEach((item) => {
+          item.open = false;
+        });
+      };
+
+      items.forEach((item) => {
+        item.addEventListener('toggle', () => {
+          if (!item.open) return;
+          items.forEach((other) => {
+            if (other !== item) other.open = false;
+          });
+        });
+      });
+
+      syncMobileAccordionState();
+      mobileQuery.addEventListener?.('change', syncMobileAccordionState);
+    });
+
+    document.querySelectorAll('[data-dealer-gallery]').forEach((gallery) => {
+      const track = gallery.querySelector('[data-dealer-gallery-track]');
+      const slides = Array.from(gallery.querySelectorAll('[data-dealer-gallery-slide]'));
+      const dots = Array.from(gallery.querySelectorAll('[data-dealer-gallery-dot]'));
+      const previousButton = gallery.querySelector('[data-dealer-gallery-prev]');
+      const nextButton = gallery.querySelector('[data-dealer-gallery-next]');
+      if (!track || slides.length < 2 || dots.length === 0) return;
+      const details = gallery.closest('details');
+      const mobileQuery = window.matchMedia('(max-width: 767px)');
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const autoplayDelay = 5000;
+      let activeIndex = 0;
+      let autoplayTimer = null;
+      let resumeTimer = null;
+      let pointerId = null;
+      let pointerStartX = 0;
+      let pointerStartScrollLeft = 0;
+      let isDragging = false;
+
+      const getClosestIndex = () => slides.reduce((closestIndex, slide, index) => {
+          const currentDistance = Math.abs(slide.offsetLeft - track.scrollLeft);
+          const closestDistance = Math.abs(slides[closestIndex].offsetLeft - track.scrollLeft);
+          return currentDistance < closestDistance ? index : closestIndex;
+        }, 0);
+
+      const updateActiveDot = () => {
+        activeIndex = getClosestIndex();
+        dots.forEach((dot, index) => {
+          const isActive = index === activeIndex;
+          dot.classList.toggle('is-active', isActive);
+          if (isActive) dot.setAttribute('aria-current', 'true');
+          else dot.removeAttribute('aria-current');
+        });
+      };
+
+      const isGalleryOpen = () => !details || details.open;
+
+      const stopAutoplay = () => {
+        if (autoplayTimer !== null) {
+          window.clearInterval(autoplayTimer);
+          autoplayTimer = null;
+        }
+      };
+
+      const startAutoplay = () => {
+        stopAutoplay();
+        if (prefersReducedMotion.matches || document.hidden || !isGalleryOpen()) return;
+        autoplayTimer = window.setInterval(() => {
+          if (document.hidden || !isGalleryOpen()) {
+            stopAutoplay();
+            return;
+          }
+          goToSlide(activeIndex + 1);
+        }, autoplayDelay);
+      };
+
+      const scheduleAutoplayResume = () => {
+        if (resumeTimer !== null) window.clearTimeout(resumeTimer);
+        resumeTimer = window.setTimeout(startAutoplay, autoplayDelay);
+      };
+
+      const goToSlide = (index) => {
+        activeIndex = (index + slides.length) % slides.length;
+        track.scrollTo({
+          left: slides[activeIndex].offsetLeft,
+          behavior: prefersReducedMotion.matches ? 'auto' : 'smooth',
+        });
+        updateActiveDot();
+      };
+
+      const navigate = (index) => {
+        stopAutoplay();
+        goToSlide(index);
+        scheduleAutoplayResume();
+      };
+
+      dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => navigate(index));
+      });
+
+      previousButton?.addEventListener('click', () => navigate(activeIndex - 1));
+      nextButton?.addEventListener('click', () => navigate(activeIndex + 1));
+
+      track.addEventListener('scroll', updateActiveDot, { passive: true });
+
+      track.addEventListener('pointerdown', (event) => {
+        if (!mobileQuery.matches) return;
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        pointerId = event.pointerId;
+        pointerStartX = event.clientX;
+        pointerStartScrollLeft = track.scrollLeft;
+        isDragging = false;
+        stopAutoplay();
+        track.setPointerCapture?.(event.pointerId);
+      });
+
+      track.addEventListener('pointermove', (event) => {
+        if (!mobileQuery.matches || pointerId !== event.pointerId) return;
+        const delta = event.clientX - pointerStartX;
+        if (Math.abs(delta) > 6) {
+          isDragging = true;
+          event.preventDefault();
+          track.scrollLeft = pointerStartScrollLeft - delta;
+        }
+      });
+
+      const endPointerDrag = (event) => {
+        if (pointerId !== event.pointerId) return;
+        if (track.hasPointerCapture?.(event.pointerId)) track.releasePointerCapture(event.pointerId);
+        pointerId = null;
+        track.classList.remove('is-dragging');
+        if (isDragging) goToSlide(getClosestIndex());
+        isDragging = false;
+        scheduleAutoplayResume();
+      };
+
+      track.addEventListener('pointerup', endPointerDrag);
+      track.addEventListener('pointercancel', endPointerDrag);
+      track.addEventListener('pointerleave', (event) => {
+        if (mobileQuery.matches && pointerId === event.pointerId) endPointerDrag(event);
+      });
+      track.addEventListener('pointerdown', () => {
+        if (mobileQuery.matches) track.classList.add('is-dragging');
+      });
+      track.addEventListener('mouseenter', stopAutoplay);
+      track.addEventListener('mouseleave', startAutoplay);
+      track.addEventListener('focusin', stopAutoplay);
+      track.addEventListener('focusout', () => {
+        if (!gallery.contains(document.activeElement)) scheduleAutoplayResume();
+      });
+
+      details?.addEventListener('toggle', () => {
+        if (!details.open) {
+          stopAutoplay();
+          return;
+        }
+        window.requestAnimationFrame(() => {
+          updateActiveDot();
+          startAutoplay();
+        });
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopAutoplay();
+        else startAutoplay();
+      });
+      mobileQuery.addEventListener?.('change', () => {
+        if (!mobileQuery.matches) {
+          pointerId = null;
+          isDragging = false;
+          track.classList.remove('is-dragging');
+        }
+        updateActiveDot();
+      });
+      prefersReducedMotion.addEventListener?.('change', startAutoplay);
+      updateActiveDot();
+      startAutoplay();
+    });
+  })();
+
   (function () {
     const form = document.getElementById('dealer-form');
     if (!form) return;
