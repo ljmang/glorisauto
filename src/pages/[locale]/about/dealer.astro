@@ -56,6 +56,7 @@ async function fetchBecomeDealerContent() {
     focus: { populate: { cover: true } },
     supportItems: { populate: { icon: true } },
     processSteps: { populate: { cover: true } },
+    faqItems: { populate: '*' },
     products: { populate: { cover: true, images: true, category: true } },
   };
 
@@ -91,6 +92,7 @@ const supportItems = dealer?.supportItems ?? [];
 const supportGroups = dealer?.supportGroups ?? [];
 const partnerProfile = dealer?.partnerProfile ?? null;
 const processSteps = dealer?.processSteps ?? [];
+const faqItems = (dealer?.faqItems ?? []).filter((item) => item.question?.trim());
 const dealerProducts = (dealer?.products ?? []) as ProductAttributes[];
 const advantageInsights = ((dealer?.articles ?? (dealer as (BecomeDealerAttributes & { insights?: (InsightAttributes & { cover?: unknown })[] }) | null)?.insights) ?? []) as (InsightAttributes & { cover?: unknown })[];
 const focusFallbackIcons = [Sparkles, Wrench, TrendingUp];
@@ -444,6 +446,34 @@ const formApiBase = (() => {
       </section>
     )}
     </div>
+    )}
+
+    {faqItems.length > 0 && (
+      <section id="faq" class="dealer-section dealer-faq">
+        <div class="dealer-section-heading dealer-section-heading--wide">
+          <h2 class="dealer-section-title">{dealer?.faqTitle?.trim() || 'FAQ'}</h2>
+        </div>
+        <div class="dealer-faq-list dealer-accordion" data-dealer-accordion>
+          {faqItems.map((faq, index) => (
+            <details class="dealer-accordion-item" open={index === 0}>
+              <summary class="dealer-accordion-summary">
+                <span>{faq.question}</span>
+                <ChevronDown class="dealer-accordion-icon" aria-hidden="true" />
+              </summary>
+              <div class="dealer-accordion-panel">
+                {Array.isArray(faq.answer) && faq.answer.length > 0 && (
+                  <BlocksRenderer
+                    blocks={faq.answer}
+                    locale={locale}
+                    variant="dealer"
+                    class="dealer-faq-answer"
+                  />
+                )}
+              </div>
+            </details>
+          ))}
+        </div>
+      </section>
     )}
 
     <!-- Join Us Now：表单 + 客服信息 -->
@@ -1257,6 +1287,18 @@ const formApiBase = (() => {
   .dealer-faq-list {
     max-width: 58rem;
     margin-inline: auto;
+    margin-top: 1.25rem;
+  }
+
+  .dealer-faq-answer {
+    margin: 0;
+    color: var(--dealer-muted);
+    font-size: 0.95rem;
+    line-height: 1.75;
+  }
+
+  .dealer-faq-answer :global(p) {
+    margin: 0;
   }
 
   @media (min-width: 640px) {
