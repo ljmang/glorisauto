@@ -93,6 +93,13 @@ const supportGroups = dealer?.supportGroups ?? [];
 const partnerProfile = dealer?.partnerProfile ?? null;
 const processSteps = dealer?.processSteps ?? [];
 const faqItems = (dealer?.faqItems ?? []).filter((item) => item.question?.trim());
+const dealerSupportTitlePattern = /经销商|販売代理店|موزع|dealer|distribu/i;
+function isDealerSupportGroup(title: string | null | undefined): boolean {
+  return dealerSupportTitlePattern.test(title ?? '');
+}
+const orderedSupportGroups = [...supportGroups].sort(
+  (first, second) => Number(isDealerSupportGroup(second.title)) - Number(isDealerSupportGroup(first.title))
+);
 const dealerProducts = (dealer?.products ?? []) as ProductAttributes[];
 const advantageInsights = ((dealer?.articles ?? (dealer as (BecomeDealerAttributes & { insights?: (InsightAttributes & { cover?: unknown })[] }) | null)?.insights) ?? []) as (InsightAttributes & { cover?: unknown })[];
 const focusFallbackIcons = [Sparkles, Wrench, TrendingUp];
@@ -272,9 +279,9 @@ const formApiBase = (() => {
     {supportGroups.length > 0 ? (
       <section id="support" class="dealer-section dealer-support">
         <div class="dealer-support-groups">
-          {supportGroups.map((group) => {
+          {orderedSupportGroups.map((group) => {
             const groupTitle = group.title?.replace(/[（(]\s*折叠效果\s*[）)]/g, '').replace(/\s{2,}/g, ' ').trim();
-            const groupKind = /经销商|dealer|distributor/i.test(group.title || '') ? 'dealer' : 'wholesale';
+            const groupKind = isDealerSupportGroup(group.title) ? 'dealer' : 'wholesale';
             const defaultOpenIndex = (group.items?.length ?? 0) > 1 ? 1 : 0;
             return (
             <div class="dealer-support-group" data-support-group={groupKind}>
@@ -925,11 +932,11 @@ const formApiBase = (() => {
   }
 
   .dealer-support-group[data-support-group='dealer'] {
-    order: 2;
+    order: 1;
   }
 
   .dealer-support-group[data-support-group='wholesale'] {
-    order: 1;
+    order: 2;
   }
 
   .dealer-partner-process {
@@ -1412,14 +1419,6 @@ const formApiBase = (() => {
     .dealer-support-groups {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 5rem;
-    }
-
-    .dealer-support-group[data-support-group='dealer'] {
-      order: 1;
-    }
-
-    .dealer-support-group[data-support-group='wholesale'] {
-      order: 2;
     }
 
     .dealer-partner-process {
