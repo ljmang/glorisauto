@@ -122,8 +122,9 @@ const mobileHeroTitle =
 const heroSubtitle = dealer?.heroSubtitle?.trim();
 const heroPrimaryLabel = dealer?.heroPrimaryLabel?.trim() || t(messages, 'common.allProducts');
 const heroPrimaryHref = resolveSectionHref(dealer?.heroPrimaryLink, toHref('/products', locale));
-const heroSecondaryLabel = dealer?.heroSecondaryLabel?.trim() || t(messages, 'dealer.actionCta');
-const heroSecondaryHref = resolveSectionHref(dealer?.heroSecondaryLink, '#dealer-form');
+const dealerApplyLabel = t(messages, 'dealer.applyCta');
+const heroSecondaryLabel = dealerApplyLabel;
+const dealerFormHref = '#dealer-form';
 const introProductLine = dealer?.introProductLine?.trim();
 const supportScopeLabels: Record<Locale, string> = {
   en: 'Support includes:',
@@ -266,7 +267,7 @@ const formApiBase = (() => {
               {heroPrimaryLabel}
               <ArrowRight class="dealer-button-icon" aria-hidden="true" />
             </a>
-            <a class="dealer-button dealer-button--solid" href={heroSecondaryHref}>
+            <a class="dealer-button dealer-button--solid" href={dealerFormHref}>
               {heroSecondaryLabel}
               <ArrowRight class="dealer-button-icon" aria-hidden="true" />
             </a>
@@ -423,8 +424,8 @@ const formApiBase = (() => {
           </div>
         </div>
         {partnerProfile.ctaLabel && (
-          <a class="dealer-button dealer-button--solid" href={resolveSectionHref(partnerProfile.ctaLink, '#dealer-form')}>
-            {partnerProfile.ctaLabel}
+          <a class="dealer-button dealer-button--solid" href={dealerFormHref}>
+            {dealerApplyLabel}
             <ArrowRight class="dealer-button-icon" aria-hidden="true" />
           </a>
         )}
