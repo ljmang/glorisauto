@@ -219,6 +219,14 @@
 {/if}
 
 <style>
+  .home-video-rail-shell {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+    contain: paint;
+  }
+
   .home-video-rail-bleed {
     width: calc(100% + (100vw - 100%) / 2);
     max-width: 100vw;

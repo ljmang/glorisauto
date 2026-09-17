@@ -82,7 +82,6 @@ const homepagePopulate = {
 			cover: true,
 		},
 	},
-	ctaBackground: true,
 } as const;
 
 async function fetchHomepageData() {
@@ -93,7 +92,7 @@ async function fetchHomepageData() {
 		});
 	} catch (error) {
 		// Keep a newly deployed frontend compatible while an older Strapi instance is still being updated.
-		if (!/Invalid key (whyChooseItems|videos|ctaBackground)/.test(String(error))) throw error;
+		if (!/Invalid key (whyChooseItems|videos)/.test(String(error))) throw error;
 		return fetchApiWithLocaleFallback<StrapiResponse<HomeAttributes>>(api.home, {
 			locale,
 			populate: homepageBasePopulate,
@@ -333,10 +332,6 @@ const heroMediaProp = parseHeroMedia(data.heroMedia);
 const heroDefaultBackground =
 	parseImage(data.heroDefaultBackground) ??
 	parseImage(defaultHomeData?.data?.heroDefaultBackground);
-const ctaBackground =
-	data.heroDefaultBackground ??
-	defaultHomeData?.data?.heroDefaultBackground ??
-	data.ctaBackground;
 const heroTitle = data.heroTitle ?? t(messages, "home.heroTitle");
 const heroCtaHref = toHref(data.heroButtonLink ?? "/", locale);
 const heroSampleCta = t(messages, "home.heroSecondaryCta");
@@ -655,12 +650,10 @@ const homepageCategories = (Array.isArray(homepageCategoriesRes?.data)
 		<!-- Homepage CTA 行动召唤 -->
 		{showHomeCta && (
 			<HomeCta
-				eyebrow={data.ctaEyebrow}
 				title={data.ctaTitle as string}
 				description={data.ctaDescription}
 				primaryLabel={data.ctaPrimaryLabel}
 				primaryHref={data.ctaPrimaryLabel ? ctaPrimaryHref : undefined}
-				background={ctaBackground}
 				locale={locale}
 			/>
 		)}

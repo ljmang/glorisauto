@@ -2,6 +2,7 @@
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import BackToTop from '@/components/BackToTop.astro';
+import HomeCta from '@/components/HomeCta.astro';
 import { t, type Messages, type Locale } from '@/i18n';
 import {
   localeLanguageTag,
@@ -10,12 +11,12 @@ import {
   defaultLocale,
   stripLocalePrefix,
 } from '@/i18n/config';
-import type { SeoPageAttributes, SiteSeoAttributes } from '@/types/content';
+import type { HomeAttributes, SeoPageAttributes, SiteSeoAttributes } from '@/types/content';
 import type { StrapiResponse, StrapiSeo } from '@/types';
 import type { BreadcrumbMetaItem, JsonLdNode, SeoPageType } from '@/utils/seo';
 import { resolveSeoMeta } from '@/utils/seo';
 import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
-import { transformNavigations } from '@/utils/navigationData';
+import { toHref, transformNavigations } from '@/utils/navigationData';
 import { fetchSeoPage, fetchSiteSeo } from '@/utils/siteConfig';
 import '@/styles/global.css';
 
@@ -33,6 +34,8 @@ interface Props {
   modifiedTime?: string;
   authorName?: string;
   siteSeo?: SiteSeoAttributes | null;
+  /** Override the route-based global CTA visibility when a page needs a bespoke ending. */
+  globalCta?: boolean;
 }
 
 const {
@@ -49,6 +52,7 @@ const {
   modifiedTime,
   authorName,
   siteSeo: providedSiteSeo = undefined,
+  globalCta: globalCtaOverride = undefined,
 } = Astro.props;
 
 type NavItem = ReturnType<typeof transformNavigations>;
@@ -165,11 +169,84 @@ async function getSeoPage(currentLocale: Locale, pathname: string): Promise<SeoP
   }
 }
 
+type GlobalCtaAttributes = Pick<
+  HomeAttributes,
+  | 'ctaEnabled'
+  | 'ctaTitle'
+  | 'ctaDescription'
+  | 'ctaPrimaryLabel'
+  | 'ctaPrimaryLink'
+>;
+
+function pickLocalizedText(localized?: string | null, fallback?: string | null): string | undefined {
+  const value = localized?.trim() || fallback?.trim();
+  return value || undefined;
+}
+
+async function getGlobalCta(currentLocale: Locale): Promise<GlobalCtaAttributes | null> {
+  try {
+    const [localizedRes, fallbackRes] = await Promise.all([
+      fetchApiWithLocaleFallback<StrapiResponse<GlobalCtaAttributes>>(api.home, {
+        locale: currentLocale,
+      }),
+      currentLocale === defaultLocale
+        ? Promise.resolve<StrapiResponse<GlobalCtaAttributes> | null>(null)
+        : fetchApiWithLocaleFallback<StrapiResponse<GlobalCtaAttributes>>(api.home, {
+            locale: defaultLocale,
+          }),
+    ]);
+
+    const localized = localizedRes?.data;
+    const fallback = fallbackRes?.data;
+    if (!localized && !fallback) return null;
+
+    return {
+      ctaEnabled: localized?.ctaEnabled ?? fallback?.ctaEnabled ?? true,
+      ctaTitle: pickLocalizedText(localized?.ctaTitle, fallback?.ctaTitle),
+      ctaDescription: pickLocalizedText(localized?.ctaDescription, fallback?.ctaDescription),
+      ctaPrimaryLabel: pickLocalizedText(localized?.ctaPrimaryLabel, fallback?.ctaPrimaryLabel),
+      ctaPrimaryLink: pickLocalizedText(localized?.ctaPrimaryLink, fallback?.ctaPrimaryLink),
+    };
+  } catch (error) {
+    console.error('[BaseLayout] failed to load the global CTA, skipping it for this page:', error);
+    return null;
+  }
+}
+
+function shouldShowGlobalCtaForPath(pathname: string): boolean {
+  const path = stripLocalePrefix(pathname);
+  const segments = path.split('/').filter(Boolean);
+
+  const excludedPaths = new Set([
+    '/',
+    '/404',
+    '/contact',
+    '/cookie-preferences',
+    '/privacy-policy',
+    '/search',
+    '/support/customer-service',
+    '/thank-you',
+    '/about/dealer',
+  ]);
+  if (excludedPaths.has(path)) return false;
+
+  // These pages already end with a focused conversion block. Keep one clear CTA per page.
+  if (segments[0] === 'solutions' && segments.length > 1) return false;
+  if (segments[0] === 'about' && segments[1] === 'insights' && segments.length >= 4) return false;
+  if (segments[0] === 'help' && segments.length >= 3) return false;
+
+  return true;
+}
+
+const shouldRenderGlobalCta = globalCtaOverride ?? shouldShowGlobalCtaForPath(Astro.url.pathname);
+
 const [navData, siteSeo, seoPage] = await Promise.all([
   getNavData(locale, messages),
   providedSiteSeo === undefined ? getSiteSeo(locale) : Promise.resolve(providedSiteSeo),
   getSeoPage(locale, Astro.url.pathname),
 ]);
+
+const globalCtaData = shouldRenderGlobalCta ? await getGlobalCta(locale) : null;
 
 const resolvedSeo = resolveSeoMeta({
   title,
@@ -252,6 +329,15 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
     <main class="flex-1">
       <slot />
     </main>
+    {shouldRenderGlobalCta && globalCtaData?.ctaTitle && (
+      <HomeCta
+        title={globalCtaData.ctaTitle}
+        description={globalCtaData.ctaDescription}
+        primaryLabel={globalCtaData.ctaPrimaryLabel}
+        primaryHref={globalCtaData.ctaPrimaryLabel ? toHref(globalCtaData.ctaPrimaryLink || '/contact', locale) : undefined}
+        locale={locale}
+      />
+    )}
     <Footer messages={messages} locale={locale} navData={navData} />
     <BackToTop />
     <script is:inline>
