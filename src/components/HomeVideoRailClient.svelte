@@ -223,8 +223,6 @@
     width: 100%;
     min-width: 0;
     max-width: 100%;
-    overflow-x: clip;
-    contain: paint;
   }
 
   .home-video-rail-bleed {
@@ -243,6 +241,11 @@
   }
 
   @media (max-width: 767px) {
+    .home-video-rail-shell {
+      overflow-x: clip;
+      contain: paint;
+    }
+
     .home-video-card {
       flex-basis: 82vw;
     }
