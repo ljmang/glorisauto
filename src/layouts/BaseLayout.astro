@@ -78,11 +78,10 @@ function mergeNavColumns(localized: NavItem['columns'], fallback: NavItem['colum
     const fallbackColumn = fallbackByPath.get(navPathKey(column.href));
     if (!fallbackColumn) return column;
 
-    const existingLinks = new Set(column.items.map((link) => navPathKey(link.href)));
-    const missingLinks = fallbackColumn.items.filter((link) => !existingLinks.has(navPathKey(link.href)));
-    return missingLinks.length > 0
-      ? { ...column, items: [...column.items, ...missingLinks] }
-      : column;
+    // A localized column is authoritative once it contains its own links.
+    // Do not append fallback-language links with different paths, otherwise
+    // translated category links can be followed by duplicate English detail links.
+    return column.items.length > 0 ? column : { ...column, items: fallbackColumn.items };
   });
 
   const existingColumns = new Set(mergedLocalized.map((column) => navPathKey(column.href)));
