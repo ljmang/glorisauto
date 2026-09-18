@@ -1,110 +1,214 @@
 ---
 /**
- * 产品多媒体切换：主媒体 + 缩略图，支持图片 / 视频切换
+ * 产品多媒体轮播：主媒体 + 缩略图，支持图片 / 视频切换、触摸滑动和键盘操作。
  */
 import type { ParsedMediaItem } from '@/utils/strapiApi';
 import { resolveLocalizedImageAltText } from '@/utils/strapiApi';
 import type { Locale } from '@/i18n/config';
+import { ChevronLeft, ChevronRight, Play } from 'lucide-svelte';
 
 interface Props {
   media: ParsedMediaItem[];
   productName: string;
   locale: Locale;
+  labels: {
+    previous: string;
+    next: string;
+    playVideo: string;
+    viewImage: string;
+    mediaCount: string;
+  };
 }
 
-const { media, productName, locale } = Astro.props;
+const { media, productName, locale, labels } = Astro.props;
 const list = Array.isArray(media) && media.length > 0 ? media : [];
 const first = list[0];
 const firstAlt = first ? resolveLocalizedImageAltText(locale, null, first.alt, productName) : productName;
+
+function formatMediaCount(current: number, total: number): string {
+  return labels.mediaCount.replace('{current}', String(current)).replace('{total}', String(total));
+}
 ---
 
-<div class="product-gallery" data-product-gallery-root>
-  <div class="mb-4 aspect-square w-full overflow-hidden" data-product-gallery-stage>
-    {first ? (
-      first.type === 'video' ? (
-        <video
-          data-product-gallery-main
-          src={first.src}
-          poster={first.poster}
-          aria-label={firstAlt}
-          width={first.width ?? 600}
-          height={first.height ?? 600}
-          class="h-full w-full object-contain"
-          preload="metadata"
-          autoplay
-          muted
-          playsinline
-          loop
-          controls
-        />
+<div
+  class="product-gallery min-w-0"
+  data-product-gallery-root
+  data-autoplay-breakpoint="768"
+  data-product-gallery-count-template={labels.mediaCount}
+>
+  <div
+    id="product-gallery-stage"
+    class="product-gallery-stage relative w-full overflow-hidden bg-slate-100"
+    data-product-gallery-stage
+    data-type={first?.type ?? 'image'}
+    role="group"
+    aria-roledescription="carousel"
+    aria-label={productName}
+    tabindex="0"
+  >
+    <div class="absolute inset-0" data-product-gallery-media>
+      {first ? (
+        first.type === 'video' ? (
+          <video
+            data-product-gallery-main
+            src={first.src}
+            poster={first.poster}
+            aria-label={firstAlt}
+            width={first.width ?? 600}
+            height={first.height ?? 600}
+            class="h-full w-full bg-slate-950 object-contain"
+            preload="metadata"
+            muted
+            playsinline
+            loop
+            controls
+          />
+        ) : (
+          <img
+            data-product-gallery-main
+            src={first.src}
+            alt={firstAlt}
+            width={first.width ?? 600}
+            height={first.height ?? 600}
+            class="h-full w-full object-contain"
+            loading="eager"
+          />
+        )
       ) : (
-        <img
-          data-product-gallery-main
-          src={first.src}
-          alt={firstAlt}
-          width={first.width ?? 600}
-          height={first.height ?? 600}
-          class="h-full w-full object-contain"
-          loading="eager"
-        />
-      )
-    ) : (
-      <div class="flex h-full w-full items-center justify-center text-gray-400">No media</div>
-    )}
+        <div class="flex h-full w-full items-center justify-center text-gray-400">No media</div>
+      )}
+    </div>
+
   </div>
 
   {list.length > 1 && (
-    <div class="flex flex-wrap justify-center gap-2" role="tablist" aria-label="Product media">
-      {list.map((item, i) => (
-        <button
-          type="button"
-          data-product-thumb
-          data-type={item.type}
-          data-src={item.src}
-          data-alt={resolveLocalizedImageAltText(locale, null, item.alt, productName)}
-          data-poster={item.poster ?? ''}
-          data-width={item.width ? String(item.width) : ''}
-          data-height={item.height ? String(item.height) : ''}
-          class="h-16 w-16 shrink-0 overflow-hidden rounded border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500"
-          class:list={[
-            i === 0 ? 'border-orange-500' : 'border-gray-200 hover:border-gray-300',
-          ]}
-          aria-selected={i === 0}
-          aria-label={item.type === 'video' ? `Play video ${i + 1}` : `View image ${i + 1}`}
-        >
-          {item.type === 'video' ? (
-            <div class="relative h-full w-full bg-gray-900">
-              {item.poster ? (
-                <img src={item.poster} alt="" class="h-full w-full object-cover" width="64" height="64" loading="lazy" />
-              ) : (
-                <div class="flex h-full w-full items-center justify-center text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
-                  Video
-                </div>
-              )}
-              <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <span class="flex h-7 w-7 items-center justify-center rounded-full bg-black/65 text-[11px] text-white">
-                  ▶
+    <div
+      class="product-gallery-controls flex items-center gap-3 pt-4"
+      aria-label={productName}
+    >
+      <button
+        type="button"
+        data-product-gallery-prev
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-800 transition hover:border-orange-500 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+        aria-label={labels.previous}
+      >
+        <ChevronLeft class="h-5 w-5" aria-hidden="true" />
+      </button>
+
+      <div class="product-gallery-thumbs flex min-w-0 items-center gap-2 overflow-x-auto" role="tablist" aria-label={productName}>
+        {list.map((item, i) => (
+          <button
+            type="button"
+            data-product-thumb
+            data-type={item.type}
+            data-src={item.src}
+            data-alt={resolveLocalizedImageAltText(locale, null, item.alt, productName)}
+            data-poster={item.poster ?? ''}
+            data-width={item.width ? String(item.width) : ''}
+            data-height={item.height ? String(item.height) : ''}
+            role="tab"
+            aria-controls="product-gallery-stage"
+            class="group h-16 w-16 shrink-0 overflow-hidden border-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 sm:h-20 sm:w-20"
+            class:list={[i === 0 ? 'border-orange-500' : 'border-slate-200 hover:border-slate-400']}
+            aria-selected={i === 0}
+            aria-label={item.type === 'video' ? `${labels.playVideo} ${i + 1}` : `${labels.viewImage} ${i + 1}`}
+          >
+            {item.type === 'video' ? (
+              <div class="relative h-full w-full bg-slate-900">
+                {item.poster ? (
+                  <img src={item.poster} alt="" class="h-full w-full object-cover" width="80" height="80" loading="lazy" />
+                ) : (
+                  <div class="flex h-full w-full items-center justify-center text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
+                    Video
+                  </div>
+                )}
+                <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <span class="flex h-8 w-8 items-center justify-center rounded-full bg-black/65 text-white">
+                    <Play class="ml-0.5 h-4 w-4 fill-current" aria-hidden="true" />
+                  </span>
                 </span>
-              </span>
-            </div>
-          ) : (
-            <img src={item.src} alt="" class="h-full w-full object-cover" width="64" height="64" loading="lazy" />
-          )}
-        </button>
-      ))}
+              </div>
+            ) : (
+              <img src={item.src} alt="" class="h-full w-full object-cover" width="80" height="80" loading="lazy" />
+            )}
+          </button>
+        ))}
+      </div>
+
+      <span
+        data-product-gallery-counter
+        class="sr-only"
+        aria-live="polite"
+      >
+        {formatMediaCount(1, list.length)}
+      </span>
+
+      <button
+        type="button"
+        data-product-gallery-next
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-800 transition hover:border-orange-500 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+        aria-label={labels.next}
+      >
+        <ChevronRight class="h-5 w-5" aria-hidden="true" />
+      </button>
     </div>
   )}
 </div>
 
+<style>
+  .product-gallery-stage {
+    touch-action: pan-y;
+    height: clamp(300px, 40vw, 640px);
+  }
+
+  .product-gallery-controls {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    justify-content: center;
+  }
+
+  .product-gallery-thumbs {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(203 213 225) transparent;
+  }
+
+  @media (max-width: 767px) {
+    .product-gallery-stage {
+      height: clamp(240px, 72vw, 480px);
+    }
+
+    .product-gallery-controls {
+      gap: 0.625rem;
+    }
+  }
+</style>
+
 <script>
-  function autoplayVideo(video) {
+  function shouldAutoplay(root) {
+    const breakpoint = Number(root.getAttribute('data-autoplay-breakpoint') || '768');
+    return window.matchMedia(`(min-width: ${breakpoint}px)`).matches;
+  }
+
+  function autoplayVideo(video, root) {
     if (!(video instanceof HTMLVideoElement)) return;
     video.muted = true;
     video.defaultMuted = true;
     video.playsInline = true;
-    const playPromise = video.play();
-    if (playPromise && typeof playPromise.catch === 'function') {
-      playPromise.catch(() => {});
+
+    if (!shouldAutoplay(root)) return;
+
+    const play = () => {
+      const playPromise = video.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {});
+      }
+    };
+
+    if (video.readyState >= 2) {
+      play();
+    } else {
+      video.addEventListener('canplay', play, { once: true });
     }
   }
 
@@ -122,77 +226,157 @@ const firstAlt = first ? resolveLocalizedImageAltText(locale, null, first.alt, p
     thumbs.forEach((thumb, index) => {
       thumb.setAttribute('aria-selected', index === activeIndex ? 'true' : 'false');
       thumb.classList.toggle('border-orange-500', index === activeIndex);
-      thumb.classList.toggle('border-gray-200', index !== activeIndex);
+      thumb.classList.toggle('border-slate-200', index !== activeIndex);
+      thumb.classList.toggle('hover:border-slate-400', index !== activeIndex);
     });
+  }
+
+  function formatCounter(template, current, total) {
+    return template
+      .replace('{current}', String(current))
+      .replace('{total}', String(total));
   }
 
   document.querySelectorAll('[data-product-gallery-root]').forEach((root) => {
     const stage = root.querySelector('[data-product-gallery-stage]');
-    if (!(stage instanceof HTMLElement)) return;
+    const mediaLayer = root.querySelector('[data-product-gallery-media]');
+    if (!(stage instanceof HTMLElement) || !(mediaLayer instanceof HTMLElement)) return;
 
     const thumbs = Array.from(root.querySelectorAll('[data-product-thumb]'));
+    const previousButton = root.querySelector('[data-product-gallery-prev]');
+    const nextButton = root.querySelector('[data-product-gallery-next]');
+    const counter = root.querySelector('[data-product-gallery-counter]');
+    const countTemplate = root.getAttribute('data-product-gallery-count-template') || '{current} / {total}';
+    let activeIndex = 0;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let pointerStarted = false;
 
     const initialVideo = stage.querySelector('[data-product-gallery-main]');
     if (initialVideo instanceof HTMLVideoElement) {
-      autoplayVideo(initialVideo);
+      autoplayVideo(initialVideo, root);
+    }
+
+    function updateCounter(index) {
+      if (!(counter instanceof HTMLElement)) return;
+      counter.textContent = formatCounter(countTemplate, index + 1, thumbs.length);
+    }
+
+    function updateStageType(type) {
+      stage.setAttribute('data-type', type);
+    }
+
+    function focusThumb(index) {
+      const thumb = thumbs[index];
+      if (!(thumb instanceof HTMLElement)) return;
+      thumb.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+
+    function showMedia(index, moveFocus = false) {
+      if (thumbs.length === 0) return;
+      const nextIndex = (index + thumbs.length) % thumbs.length;
+      const thumb = thumbs[nextIndex];
+      const src = thumb.getAttribute('data-src');
+      const type = thumb.getAttribute('data-type');
+      const alt = thumb.getAttribute('data-alt') || '';
+      const poster = thumb.getAttribute('data-poster') || '';
+      const width = Number(thumb.getAttribute('data-width'));
+      const height = Number(thumb.getAttribute('data-height'));
+
+      if (!src || !type) return;
+
+      const currentVideo = stage.querySelector('[data-product-gallery-main]');
+      if (currentVideo instanceof HTMLVideoElement) {
+        stopVideo(currentVideo);
+      }
+
+      let nextNode;
+
+      if (type === 'video') {
+        const video = document.createElement('video');
+        video.src = src;
+        video.className = 'h-full w-full bg-slate-950 object-contain';
+        video.preload = 'metadata';
+        video.muted = true;
+        video.defaultMuted = true;
+        video.loop = true;
+        video.controls = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', '');
+        video.setAttribute('data-product-gallery-main', '');
+        if (poster) video.poster = poster;
+        if (alt) video.setAttribute('aria-label', alt);
+        if (Number.isFinite(width) && width > 0) video.width = width;
+        if (Number.isFinite(height) && height > 0) video.height = height;
+        nextNode = video;
+      } else {
+        const image = document.createElement('img');
+        image.src = src;
+        image.alt = alt;
+        image.className = 'h-full w-full object-contain';
+        image.loading = 'eager';
+        image.setAttribute('data-product-gallery-main', '');
+        if (Number.isFinite(width) && width > 0) image.width = width;
+        if (Number.isFinite(height) && height > 0) image.height = height;
+        nextNode = image;
+      }
+
+      mediaLayer.replaceChildren(nextNode);
+      updateStageType(type);
+      syncThumbState(thumbs, nextIndex);
+      updateCounter(nextIndex);
+      activeIndex = nextIndex;
+
+      if (nextNode instanceof HTMLVideoElement) {
+        autoplayVideo(nextNode, root);
+      }
+
+      focusThumb(nextIndex);
+      if (moveFocus) stage.focus({ preventScroll: true });
     }
 
     thumbs.forEach((thumb, index) => {
-      thumb.addEventListener('click', () => {
-        const src = thumb.getAttribute('data-src');
-        const type = thumb.getAttribute('data-type');
-        const alt = thumb.getAttribute('data-alt') || '';
-        const poster = thumb.getAttribute('data-poster') || '';
-        const width = Number(thumb.getAttribute('data-width'));
-        const height = Number(thumb.getAttribute('data-height'));
+      thumb.addEventListener('click', () => showMedia(index));
+    });
 
-        if (!src || !type) return;
+    previousButton?.addEventListener('click', () => showMedia(activeIndex - 1, true));
+    nextButton?.addEventListener('click', () => showMedia(activeIndex + 1, true));
 
-        const currentVideo = stage.querySelector('[data-product-gallery-main]');
-        if (currentVideo instanceof HTMLVideoElement) {
-          stopVideo(currentVideo);
-        }
+    stage.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        showMedia(activeIndex - 1, true);
+      }
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        showMedia(activeIndex + 1, true);
+      }
+    });
 
-        let nextNode;
+    stage.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      if (event.target instanceof Element && event.target.closest('video, button')) return;
+      pointerStartX = event.clientX;
+      pointerStartY = event.clientY;
+      pointerStarted = true;
+    });
 
-        if (type === 'video') {
-          const video = document.createElement('video');
-          video.src = src;
-          video.className = 'h-full w-full object-contain';
-          video.preload = 'metadata';
-          video.autoplay = true;
-          video.muted = true;
-          video.defaultMuted = true;
-          video.loop = true;
-          video.controls = true;
-          video.playsInline = true;
-          video.setAttribute('playsinline', '');
-          video.setAttribute('data-product-gallery-main', '');
-          if (poster) video.poster = poster;
-          if (alt) video.setAttribute('aria-label', alt);
-          if (Number.isFinite(width) && width > 0) video.width = width;
-          if (Number.isFinite(height) && height > 0) video.height = height;
-          nextNode = video;
-        } else {
-          const image = document.createElement('img');
-          image.src = src;
-          image.alt = alt;
-          image.className = 'h-full w-full object-contain';
-          image.loading = 'eager';
-          image.setAttribute('data-product-gallery-main', '');
-          if (Number.isFinite(width) && width > 0) image.width = width;
-          if (Number.isFinite(height) && height > 0) image.height = height;
-          nextNode = image;
-        }
+    stage.addEventListener('pointerup', (event) => {
+      if (!pointerStarted) return;
+      pointerStarted = false;
+      const deltaX = event.clientX - pointerStartX;
+      const deltaY = event.clientY - pointerStartY;
+      if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+      showMedia(activeIndex + (deltaX < 0 ? 1 : -1), true);
+    });
 
-        stage.replaceChildren(nextNode);
+    stage.addEventListener('pointercancel', () => {
+      pointerStarted = false;
+    });
 
-        if (nextNode instanceof HTMLVideoElement) {
-          autoplayVideo(nextNode);
-        }
-
-        syncThumbState(thumbs, index);
-      });
+    window.matchMedia('(min-width: 768px)').addEventListener?.('change', () => {
+      const current = stage.querySelector('[data-product-gallery-main]');
+      if (current instanceof HTMLVideoElement) autoplayVideo(current, root);
     });
   });
 </script>

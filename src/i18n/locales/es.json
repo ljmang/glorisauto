@@ -67,7 +67,16 @@
     "leaveMessage": "Enviar un mensaje",
     "inquire": "Solicitar información",
     "gritOptions": "Opciones de grano",
-    "suitableMaterials": "Materiales adecuados"
+    "suitableMaterials": "Materiales adecuados",
+    "overview": "Descripción general",
+    "sectionNavigation": "Secciones del producto",
+    "brandPartnership": "Marca y asociaciones",
+    "wholesaleDistribution": "Venta mayorista y distribución",
+    "previousMedia": "Medio anterior",
+    "nextMedia": "Siguiente medio",
+    "playVideo": "Reproducir vídeo",
+    "viewImage": "Ver imagen",
+    "mediaCount": "{current} de {total}"
   },
   "common": {
     "submit": "Enviar",

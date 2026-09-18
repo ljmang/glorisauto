@@ -67,7 +67,16 @@
     "leaveMessage": "留言咨询",
     "inquire": "询价",
     "gritOptions": "粒度选项",
-    "suitableMaterials": "适用材料"
+    "suitableMaterials": "适用材料",
+    "overview": "概览",
+    "sectionNavigation": "产品目录",
+    "brandPartnership": "品牌与合作",
+    "wholesaleDistribution": "批发与经销",
+    "previousMedia": "上一个媒体",
+    "nextMedia": "下一个媒体",
+    "playVideo": "播放视频",
+    "viewImage": "查看图片",
+    "mediaCount": "{current} / {total}"
   },
   "common": {
     "submit": "提交",

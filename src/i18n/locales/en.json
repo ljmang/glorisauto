@@ -67,7 +67,16 @@
     "leaveMessage": "Leave a Message",
     "inquire": "Inquire",
     "gritOptions": "Grit Options",
-    "suitableMaterials": "Suitable materials"
+    "suitableMaterials": "Suitable materials",
+    "overview": "Overview",
+    "sectionNavigation": "Product sections",
+    "brandPartnership": "Brand & Partnership",
+    "wholesaleDistribution": "Wholesale & Distribution",
+    "previousMedia": "Previous media",
+    "nextMedia": "Next media",
+    "playVideo": "Play video",
+    "viewImage": "View image",
+    "mediaCount": "{current} of {total}"
   },
   "common": {
     "submit": "Submit",

@@ -67,7 +67,16 @@
     "leaveMessage": "お問い合わせ",
     "inquire": "見積もり依頼",
     "gritOptions": "番手オプション",
-    "suitableMaterials": "適用素材"
+    "suitableMaterials": "適用素材",
+    "overview": "概要",
+    "sectionNavigation": "製品セクション",
+    "brandPartnership": "ブランドとパートナーシップ",
+    "wholesaleDistribution": "卸売・流通",
+    "previousMedia": "前のメディア",
+    "nextMedia": "次のメディア",
+    "playVideo": "動画を再生",
+    "viewImage": "画像を表示",
+    "mediaCount": "{current} / {total}"
   },
   "common": {
     "submit": "送信",

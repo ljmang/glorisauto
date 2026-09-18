@@ -67,7 +67,16 @@
     "leaveMessage": "اترك رسالة",
     "inquire": "طلب سعر",
     "gritOptions": "خيارات درجة الصنفرة",
-    "suitableMaterials": "المواد المناسبة"
+    "suitableMaterials": "المواد المناسبة",
+    "overview": "نظرة عامة",
+    "sectionNavigation": "أقسام المنتج",
+    "brandPartnership": "العلامة التجارية والشراكة",
+    "wholesaleDistribution": "البيع بالجملة والتوزيع",
+    "previousMedia": "الوسائط السابقة",
+    "nextMedia": "الوسائط التالية",
+    "playVideo": "تشغيل الفيديو",
+    "viewImage": "عرض الصورة",
+    "mediaCount": "{current} من {total}"
   },
   "common": {
     "submit": "إرسال",
