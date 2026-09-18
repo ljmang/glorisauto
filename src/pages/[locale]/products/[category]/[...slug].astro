@@ -273,7 +273,7 @@ const breadcrumbItems = [
   messages={messages}
   locale={locale}
 >
-  <div class='product-detail-page container mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8' data-product-detail-page>
+  <div class='product-detail-page container mx-auto px-4 py-8' data-product-detail-page>
     {product ? (
       <>
         <Breadcrumb items={breadcrumbItems} locale={locale} />
@@ -289,7 +289,7 @@ const breadcrumbItems = [
                         href={`#${item.id}`}
                         data-product-nav-link
                         data-section-id={item.id}
-                        class='block whitespace-nowrap py-1 text-base font-medium text-slate-950 transition-colors hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2'
+                        class='block whitespace-nowrap py-1 text-base font-medium text-slate-950 transition-colors hover:text-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2'
                         aria-current={index === 0 ? 'location' : undefined}
                       >
                         {item.label}
@@ -303,6 +303,8 @@ const breadcrumbItems = [
 
           <main class='min-w-0'>
             <section id='product-overview' class='scroll-mt-[8.5rem] pb-12' data-product-section='product-overview'>
+              <h1 class='mb-6 text-3xl font-black leading-[1.1] tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]'>{product.name}</h1>
+
               <div class='product-overview-grid flex flex-col gap-10 lg:gap-14'>
                 <div class='product-overview-media min-w-0'>
                   <ProductGallery
@@ -313,8 +315,6 @@ const breadcrumbItems = [
                   />
                 </div>
                 <div class='product-overview-info min-w-0 max-w-5xl'>
-                  <h1 class='text-3xl font-black leading-[1.1] tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]'>{product.name}</h1>
-
                   {informationList.length > 0 && (
                     <div class='mt-8 space-y-7'>
                       {informationList.map((item) => (
@@ -522,6 +522,15 @@ const breadcrumbItems = [
 
   .product-section-nav a[aria-current='location'] {
     @apply font-bold text-orange-500;
+  }
+
+  .product-section-nav a,
+  .product-section-nav a:hover,
+  .product-section-nav a:active {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    text-decoration: none;
   }
 
   .product-spec-row:nth-child(even) {
