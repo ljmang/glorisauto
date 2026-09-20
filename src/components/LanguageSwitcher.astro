@@ -36,6 +36,16 @@ interface ProductLookupResult {
   localizations?: ProductLocalization[];
 }
 
+interface CategoryLocalization {
+  locale?: string;
+  slug?: string;
+}
+
+interface CategoryLookupResult {
+  slug?: string;
+  localizations?: CategoryLocalization[];
+}
+
 const { currentLocale } = Astro.props;
 const isRtl = isRtlLocale(currentLocale);
 
@@ -98,6 +108,7 @@ if (productMatch) {
 
   const item = Array.isArray(res?.data) ? res.data[0] : undefined;
   const localizations = Array.isArray(item?.localizations) ? item.localizations : [];
+  const availableLocales = new Set<Locale>([currentLocale]);
 
   if (item?.slug && item.category?.slug) {
     resolvedPathByLocale[currentLocale] = `/products/${item.category.slug}/${item.slug}`;
@@ -107,6 +118,49 @@ if (productMatch) {
     const targetLocale = loc.locale ? strapiToLocale[loc.locale] : undefined;
     if (!targetLocale || !loc.slug || !loc.category?.slug) continue;
     resolvedPathByLocale[targetLocale] = `/products/${loc.category.slug}/${loc.slug}`;
+    availableLocales.add(targetLocale);
+  }
+
+  // This product is intentionally available only in its authored locales. For
+  // other languages, send visitors to the localized product index instead of
+  // generating a URL for a static route that does not exist.
+  for (const locale of supportedLocales) {
+    if (!availableLocales.has(locale)) {
+      resolvedPathByLocale[locale] = '/products';
+    }
+  }
+}
+
+const categoryMatch = currentPath.match(/^\/products\/([^/]+)\/?$/);
+if (!productMatch && categoryMatch) {
+  const [, categorySlug] = categoryMatch;
+  const strapiLocale = localeToStrapi[currentLocale];
+  const res = await fetchApi<{ data?: CategoryLookupResult[] }>(api.categories, {
+    locale: strapiLocale,
+    populate: { localizations: true },
+    filters: {
+      slug: { $eq: categorySlug },
+    },
+    pagination: { pageSize: 1 },
+  });
+
+  const item = Array.isArray(res?.data) ? res.data[0] : undefined;
+  const localizations = Array.isArray(item?.localizations) ? item.localizations : [];
+
+  // Categories follow the same rule as products: only locales with a real
+  // localization should retain the category URL.
+  for (const locale of supportedLocales) {
+    resolvedPathByLocale[locale] = '/products';
+  }
+
+  if (item?.slug) {
+    resolvedPathByLocale[currentLocale] = `/products/${item.slug}`;
+  }
+
+  for (const loc of localizations) {
+    const targetLocale = loc.locale ? strapiToLocale[loc.locale] : undefined;
+    if (!targetLocale || !loc.slug) continue;
+    resolvedPathByLocale[targetLocale] = `/products/${loc.slug}`;
   }
 }
 ---
