@@ -1,0 +1,167 @@
+---
+import { type Locale, isRtlLocale } from '@/i18n/config';
+import { t, type Messages } from '@/i18n';
+import { toHref } from '@/utils/navigationData';
+import type { CategoryTreeNode } from '@/utils/categoryTree';
+
+type ProductQuickNavProduct = {
+  name?: string;
+  slug?: string;
+  sort?: number | null;
+  category?: { slug?: string } | null;
+};
+
+interface Props {
+  categories: CategoryTreeNode[];
+  products: ProductQuickNavProduct[];
+  locale: Locale;
+  messages: Messages;
+  currentCategorySlug: string;
+  currentProductSlug: string;
+}
+
+const {
+  categories,
+  products,
+  locale,
+  messages,
+  currentCategorySlug,
+  currentProductSlug,
+} = Astro.props;
+
+function getSort(value: number | null | undefined): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : Number.MAX_SAFE_INTEGER;
+}
+
+const productGroups = categories
+  .map((root) => {
+    const categorySlugs = new Set([root.slug, ...root.children.map((child) => child.slug)]);
+    const groupProducts = products
+      .filter((item) => item.slug && item.name && item.category?.slug && categorySlugs.has(item.category.slug))
+      .sort((a, b) => getSort(a.sort) - getSort(b.sort) || (a.name ?? '').localeCompare(b.name ?? ''));
+
+    return {
+      ...root,
+      products: groupProducts,
+    };
+  })
+  .filter((group) => group.products.length > 0);
+
+const currentGroup = productGroups.find(
+  (group) => group.slug === currentCategorySlug || group.children.some((child) => child.slug === currentCategorySlug)
+);
+const currentGroupSlug = currentGroup?.slug ?? '';
+const navId = `product-quick-nav-${locale}`;
+const isRtl = isRtlLocale(locale);
+---
+
+<nav
+  id={navId}
+  class="product-quick-nav"
+  aria-label={t(messages, 'products.productNavigation')}
+  data-product-quick-nav
+>
+  <a
+    href={toHref('/products', locale)}
+    class="mb-2 block py-2 text-lg font-semibold text-slate-950 transition-colors hover:text-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+  >
+    {t(messages, 'products.allProducts')}
+  </a>
+
+  <div class="space-y-1">
+    {productGroups.map((group) => {
+      const isCurrentGroup = group.slug === currentGroupSlug;
+      const panelId = `${navId}-${group.slug}`;
+      return (
+        <div data-product-quick-group data-open={isCurrentGroup ? 'true' : 'false'}>
+          <button
+            type="button"
+            class:list={[
+              'product-quick-nav-toggle flex w-full items-center justify-between gap-3 py-2 text-start text-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2',
+              isCurrentGroup ? 'font-bold text-orange-500' : 'font-semibold text-slate-950 hover:text-orange-500',
+            ]}
+            data-product-quick-toggle
+            aria-expanded={isCurrentGroup}
+            aria-controls={panelId}
+          >
+            <span>{group.name}</span>
+            <svg
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+              class:list={['h-4 w-4 shrink-0 transition-transform duration-200', isCurrentGroup && 'rotate-180']}
+              data-product-quick-chevron
+            >
+              <path d="m5 7.5 5 5 5-5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+
+          <div id={panelId} data-product-quick-panel hidden={!isCurrentGroup} class="product-quick-nav-panel">
+            <ul
+              class:list={[
+                'space-y-0.5 border-slate-200 pb-2',
+                isRtl ? 'border-r pr-3' : 'border-l pl-3',
+              ]}
+            >
+              {group.products.map((item) => {
+                const itemCategorySlug = item.category?.slug ?? group.slug;
+                const isCurrentProduct = item.slug === currentProductSlug && itemCategorySlug === currentCategorySlug;
+                return (
+                  <li>
+                    <a
+                      href={toHref(`/products/${itemCategorySlug}/${item.slug}`, locale)}
+                      class:list={[
+                        'block py-1.5 text-base leading-snug transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2',
+                        isCurrentProduct ? 'font-bold text-orange-500' : 'font-normal text-slate-950 hover:text-orange-500',
+                      ]}
+                      aria-current={isCurrentProduct ? 'page' : undefined}
+                    >
+                      {item.name}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+  <a
+    href="#wholesale-distribution"
+    class="mt-3 block py-2 text-lg font-semibold text-slate-950 transition-colors hover:text-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+  >
+    {t(messages, 'products.wholesaleDistribution')}
+  </a>
+</nav>
+
+<script>
+  document.querySelectorAll('[data-product-quick-nav]').forEach((nav) => {
+    const groups = Array.from(nav.querySelectorAll('[data-product-quick-group]'));
+
+    const setGroupOpen = (group, open) => {
+      const toggle = group.querySelector('[data-product-quick-toggle]');
+      const panel = group.querySelector('[data-product-quick-panel]');
+      const chevron = group.querySelector('[data-product-quick-chevron]');
+      if (!(toggle instanceof HTMLButtonElement) || !(panel instanceof HTMLElement)) return;
+
+      group.setAttribute('data-open', String(open));
+      toggle.setAttribute('aria-expanded', String(open));
+      panel.hidden = !open;
+      chevron?.classList.toggle('rotate-180', open);
+    };
+
+    groups.forEach((group) => {
+      const toggle = group.querySelector('[data-product-quick-toggle]');
+      if (!(toggle instanceof HTMLButtonElement)) return;
+
+      toggle.addEventListener('click', () => {
+        const shouldOpen = toggle.getAttribute('aria-expanded') !== 'true';
+        groups.forEach((item) => setGroupOpen(item, item === group && shouldOpen));
+      });
+    });
+  });
+</script>

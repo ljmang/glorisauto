@@ -652,8 +652,8 @@ const homepageCategories = (Array.isArray(homepageCategoriesRes?.data)
 			<HomeCta
 				title={data.ctaTitle as string}
 				description={data.ctaDescription}
-				primaryLabel={data.ctaPrimaryLabel}
-				primaryHref={data.ctaPrimaryLabel ? ctaPrimaryHref : undefined}
+				primaryLabel={t(messages, "dealer.headerCta")}
+				primaryHref={ctaPrimaryHref}
 				locale={locale}
 			/>
 		)}

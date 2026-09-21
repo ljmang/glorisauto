@@ -332,8 +332,8 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
       <HomeCta
         title={globalCtaData.ctaTitle}
         description={globalCtaData.ctaDescription}
-        primaryLabel={globalCtaData.ctaPrimaryLabel}
-        primaryHref={globalCtaData.ctaPrimaryLabel ? toHref(globalCtaData.ctaPrimaryLink || '/contact', locale) : undefined}
+        primaryLabel={t(messages, 'dealer.headerCta')}
+        primaryHref={toHref(globalCtaData.ctaPrimaryLink || '/contact', locale)}
         locale={locale}
       />
     )}

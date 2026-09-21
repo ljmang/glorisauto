@@ -4,26 +4,46 @@ import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApi, api, parseImage, parseMediaItems, getMediaUrl } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
+import { buildCategoryTree, type CategoryTreeNode } from '@/utils/categoryTree';
 import { markdownToHtml } from '@/utils/markdown';
 import { hasMeaningfulText, sanitizeInlineText, sanitizeMarkdown } from '@/utils/contentSanitizers';
 import type { BlockNode } from '@/types/blocks';
 import BlocksRenderer from '@/components/BlocksRenderer.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ProductGallery from '@/components/ProductGallery.astro';
+import ProductQuickNav from '@/components/ProductQuickNav.astro';
+import ProductB2bSupport from '@/components/ProductB2bSupport.astro';
 import DownloadFileCard from '@/components/DownloadFileCard.astro';
 import InsightCard from '@/components/InsightCard.astro';
 import { CircleChevronRight, MessageCircle } from 'lucide-svelte';
-import type { HelpCenterAttributes, InsightAttributes, ProductAttributes } from '@/types/content';
+import type { CategoryAttributes, HelpCenterAttributes, InsightAttributes, ProductAttributes } from '@/types/content';
+
+type ProductNavigationProduct = Pick<ProductAttributes, 'name' | 'slug' | 'sort'> & {
+  category?: { slug?: string } | null;
+};
+
+type ProductNavigationProps = {
+  productNavigationCategories: CategoryAttributes[];
+  productNavigationProducts: ProductNavigationProduct[];
+};
 
 export async function getStaticPaths() {
-  const paths: { params: { locale: string; category: string; slug: string } }[] = [];
+  const paths: { params: { locale: string; category: string; slug: string }; props: ProductNavigationProps }[] = [];
   for (const locale of supportedLocales) {
-    const res = await fetchApi<{ data?: (ProductAttributes & { category?: { slug?: string } })[] }>(api.products, {
-      locale,
-      populate: { cover: true, images: true, category: true },
-      pagination: { pageSize: 500 },
-    });
-    const list = Array.isArray(res?.data) ? res.data : [];
+    const [productsRes, categoriesRes] = await Promise.all([
+      fetchApi<{ data?: ProductNavigationProduct[] }>(api.products, {
+        locale,
+        populate: { category: true },
+        pagination: { pageSize: 500 },
+      }),
+      fetchApi<{ data?: CategoryAttributes[] }>(api.categories, {
+        locale,
+        populate: { parent: true },
+        pagination: { pageSize: 100 },
+      }),
+    ]);
+    const list = Array.isArray(productsRes?.data) ? productsRes.data : [];
+    const categories = Array.isArray(categoriesRes?.data) ? categoriesRes.data : [];
     for (const product of list) {
       const slug = product.slug;
       const categorySlug =
@@ -31,7 +51,13 @@ export async function getStaticPaths() {
           ? (product.category as { slug?: string }).slug
           : '';
       if (slug && categorySlug) {
-        paths.push({ params: { locale, category: categorySlug, slug } });
+        paths.push({
+          params: { locale, category: categorySlug, slug },
+          props: {
+            productNavigationCategories: categories,
+            productNavigationProducts: list,
+          },
+        });
       }
     }
   }
@@ -43,6 +69,31 @@ const locale: Locale = getLocale(params.locale);
 const categorySlug = params.category ?? '';
 const productSlug = params.slug ?? '';
 const messages = await loadMessages(locale);
+const navigationProps = Astro.props as Partial<ProductNavigationProps>;
+let productNavigationCategories = navigationProps.productNavigationCategories ?? [];
+let productNavigationProducts = navigationProps.productNavigationProducts ?? [];
+
+// Astro skips getStaticPaths() for this dynamic route in dev mode, so load the
+// same navigation data here when the page is rendered outside the static build.
+if (productNavigationCategories.length === 0 || productNavigationProducts.length === 0) {
+  const [productsRes, categoriesRes] = await Promise.all([
+    fetchApi<{ data?: ProductNavigationProduct[] }>(api.products, {
+      locale,
+      populate: { category: true },
+      pagination: { pageSize: 500 },
+    }),
+    fetchApi<{ data?: CategoryAttributes[] }>(api.categories, {
+      locale,
+      populate: { parent: true },
+      pagination: { pageSize: 100 },
+    }),
+  ]);
+
+  productNavigationProducts = Array.isArray(productsRes?.data) ? productsRes.data : [];
+  productNavigationCategories = Array.isArray(categoriesRes?.data) ? categoriesRes.data : [];
+}
+
+const productNavigationTree: CategoryTreeNode[] = buildCategoryTree(productNavigationCategories);
 
 type ProductResponse = { data?: ProductAttributes[] };
 
@@ -118,7 +169,13 @@ const holeList = ((product as { hole?: { name?: string }[] } | null)?.hole ?? []
   .filter((item) => item.name);
 const industryPainPointsMarkdown = sanitizeMarkdown(product?.industryPainPoints ?? '');
 const industryPainPointsHtml = await markdownToHtml(industryPainPointsMarkdown, product?.name);
-const productFeaturesMarkdown = sanitizeMarkdown(product?.productFeatures ?? '');
+function stripLegacyB2bSupport(markdown: string): string {
+  const legacyHeadingPattern = /^#{1,3}\s+(?:For wholesalers\s*&\s*Distributors|适用于(?:批发商和经销商|代理商和分销商|经销商)|Para mayoristas|卸売業者|販売代理店向け|لتجار الجملة|للموزعين|Certifications?\s*&\s*Compliance Support|认证与合规支持|Certificaciones y soporte de cumplimiento|認証・コンプライアンス支援|دعم الشهادات والامتثال|Distributor Support|经销商支持|Apoyo a distribuidores|販売代理店向けサポート|دعم الموزعين)\s*$/imu;
+  const match = legacyHeadingPattern.exec(markdown);
+  return match && typeof match.index === 'number' ? markdown.slice(0, match.index).trim() : markdown;
+}
+
+const productFeaturesMarkdown = stripLegacyB2bSupport(sanitizeMarkdown(product?.productFeatures ?? ''));
 const productFeaturesHtml = await markdownToHtml(productFeaturesMarkdown, product?.name);
 const productDescription = sanitizeInlineText(product?.description ?? '');
 
@@ -229,24 +286,6 @@ if (isFilmMasterPage) {
   }
 }
 
-type ProductSectionLink = {
-  id: string;
-  label: string;
-  visible: boolean;
-};
-
-const productSectionLinks: ProductSectionLink[] = [
-  { id: 'product-overview', label: t(messages, 'products.overview'), visible: true },
-  { id: 'technical-details', label: t(messages, 'products.technicalDetails'), visible: technicalDetailsList.length > 0 },
-  { id: 'industry-pain-points', label: t(messages, 'products.industryPainPoints'), visible: Boolean(industryPainPointsHtml) },
-  { id: 'product-features', label: t(messages, 'products.features'), visible: Boolean(productFeaturesHtml) },
-  { id: 'brand--partnership', label: t(messages, 'products.brandPartnership'), visible: productFeaturesHtml.includes('brand--partnership') },
-  { id: 'downloads', label: t(messages, 'products.downloads'), visible: downloadFilesList.length > 0 },
-  { id: 'related-insights', label: t(messages, 'products.relatedInsights'), visible: relatedInsightItems.length > 0 },
-  { id: 'faq', label: t(messages, 'products.faq'), visible: faqItems.length > 0 },
-  { id: 'home-cta-title', label: t(messages, 'products.wholesaleDistribution'), visible: true },
-].filter((item) => item.visible);
-
 const productGalleryLabels = {
   previous: t(messages, 'products.previousMedia'),
   next: t(messages, 'products.nextMedia'),
@@ -278,27 +317,16 @@ const breadcrumbItems = [
       <>
         <Breadcrumb items={breadcrumbItems} locale={locale} />
 
-        <div class='product-detail-layout lg:grid lg:grid-cols-[minmax(150px,190px)_minmax(0,1fr)] lg:items-start lg:gap-12'>
-          <aside class='mb-6 lg:mb-0 lg:sticky lg:top-[8.5rem] lg:self-start'>
-            <div class='product-section-nav'>
-              <nav aria-label={t(messages, 'products.sectionNavigation')} data-product-section-nav>
-                <ul class='flex gap-5 overflow-x-auto py-2 lg:block lg:space-y-3 lg:overflow-visible lg:py-1'>
-                  {productSectionLinks.map((item, index) => (
-                    <li class='shrink-0'>
-                      <a
-                        href={`#${item.id}`}
-                        data-product-nav-link
-                        data-section-id={item.id}
-                        class='block whitespace-nowrap py-1 text-base font-medium text-slate-950 transition-colors hover:text-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2'
-                        aria-current={index === 0 ? 'location' : undefined}
-                      >
-                        {item.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            </div>
+        <div class='product-detail-layout lg:grid lg:grid-cols-[minmax(190px,230px)_minmax(0,1fr)] lg:items-start lg:gap-12'>
+          <aside class='mb-8 lg:mb-0 lg:sticky lg:top-[8.5rem] lg:self-start'>
+            <ProductQuickNav
+              categories={productNavigationTree}
+              products={productNavigationProducts}
+              locale={locale}
+              messages={messages}
+              currentCategorySlug={categorySlug}
+              currentProductSlug={productSlug}
+            />
           </aside>
 
           <main class='min-w-0'>
@@ -412,6 +440,8 @@ const breadcrumbItems = [
               </section>
             )}
 
+            <ProductB2bSupport locale={locale} />
+
             {downloadFilesList.length > 0 && (
               <section id='downloads' class='product-content-section' data-product-section='downloads'>
                 <div class='mb-4 flex items-center justify-between gap-4'>
@@ -511,28 +541,6 @@ const breadcrumbItems = [
     scroll-margin-top: 8.5rem;
   }
 
-  .product-section-nav ul {
-    scrollbar-width: none;
-    scroll-padding-inline: 1rem;
-  }
-
-  .product-section-nav ul::-webkit-scrollbar {
-    display: none;
-  }
-
-  .product-section-nav a[aria-current='location'] {
-    @apply font-bold text-orange-500;
-  }
-
-  .product-section-nav a,
-  .product-section-nav a:hover,
-  .product-section-nav a:active {
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-    text-decoration: none;
-  }
-
   .product-spec-row:nth-child(even) {
     @apply bg-slate-50/70;
   }
@@ -597,28 +605,11 @@ const breadcrumbItems = [
     @apply mb-2 text-lg leading-[1.55];
   }
 
-  .product-section-nav a:hover {
-    @apply text-orange-500;
-  }
-
-  .product-section-nav {
-    scrollbar-width: thin;
-  }
-
   @media (min-width: 1024px) {
-    .product-section-nav {
+    .product-quick-nav {
       max-height: calc(100vh - 9.5rem);
       overflow-y: auto;
-    }
-  }
-
-  @media (max-width: 1023px) {
-    .product-section-nav {
-      position: sticky;
-      top: 7.5rem;
-      z-index: 20;
-      max-height: none;
-      overflow: visible;
+      scrollbar-width: thin;
     }
   }
 </style>
@@ -661,106 +652,4 @@ const breadcrumbItems = [
       }, waitIntervalMs);
     });
   })();
-</script>
-
-<script>
-  document.querySelectorAll('[data-product-detail-page]').forEach((page) => {
-    const links = Array.from(page.querySelectorAll('[data-product-nav-link]'));
-    const sections = Array.from(page.querySelectorAll('[data-product-section]'));
-    const navTargets = links
-      .map((link) => document.getElementById(link.getAttribute('data-section-id') || ''))
-      .filter((target) => target instanceof HTMLElement);
-    const observedTargets = navTargets;
-
-    if (links.length === 0 || sections.length === 0) return;
-
-    let forcedActiveSection = null;
-    let forcedActiveUntil = 0;
-
-    function setActiveSection(sectionId, keepActiveLinkVisible = false) {
-      links.forEach((link) => {
-        const isActive = link.getAttribute('data-section-id') === sectionId;
-        if (isActive) {
-          link.setAttribute('aria-current', 'location');
-          if (window.matchMedia('(max-width: 1023px)').matches) {
-            link.scrollIntoView({ block: 'nearest', inline: 'center' });
-          }
-        } else {
-          link.removeAttribute('aria-current');
-        }
-      });
-    }
-
-    function updateSectionHash(sectionId) {
-      const nextHash = `#${sectionId}`;
-      if (window.history && typeof window.history.pushState === 'function') {
-        window.history.pushState(null, '', nextHash);
-        return;
-      }
-      if (window.location.hash !== nextHash) {
-        window.location.hash = sectionId;
-      }
-    }
-
-    links.forEach((link) => {
-      link.addEventListener('click', (event) => {
-        const sectionId = link.getAttribute('data-section-id');
-        const section = sectionId ? document.getElementById(sectionId) : null;
-        if (!sectionId || !section) return;
-
-        event.preventDefault();
-        forcedActiveSection = sectionId;
-        forcedActiveUntil = Date.now() + 2600;
-        setActiveSection(sectionId, true);
-        const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
-        section.scrollIntoView({ behavior, block: 'start' });
-        updateSectionHash(sectionId);
-      });
-    });
-
-    const hashId = window.location.hash.slice(1);
-    const hasInitialHash = Boolean(hashId && navTargets.some((target) => target.id === hashId));
-
-    function scrollToInitialHash() {
-      if (!hasInitialHash) return;
-      const target = document.getElementById(hashId);
-      if (!target) return;
-
-      target.scrollIntoView({ block: 'start' });
-      forcedActiveSection = hashId;
-      forcedActiveUntil = Date.now() + 1600;
-      setActiveSection(hashId);
-    }
-
-    if (hasInitialHash) {
-      setActiveSection(hashId);
-      if (document.readyState === 'complete') {
-        window.requestAnimationFrame(scrollToInitialHash);
-      } else {
-        window.addEventListener('load', scrollToInitialHash, { once: true });
-      }
-      window.setTimeout(scrollToInitialHash, 300);
-    } else {
-      setActiveSection(sections[0].id);
-    }
-
-    if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          const visibleEntries = entries
-            .filter((entry) => entry.isIntersecting)
-            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-          const activeEntry = visibleEntries[0];
-          if (forcedActiveSection && Date.now() < forcedActiveUntil) return;
-          forcedActiveSection = null;
-          if (activeEntry?.target instanceof HTMLElement) {
-            setActiveSection(activeEntry.target.id);
-          }
-        },
-        { rootMargin: '-18% 0px -68% 0px', threshold: [0, 0.25, 0.75] },
-      );
-
-      observedTargets.forEach((target) => observer.observe(target));
-    }
-  });
 </script>
