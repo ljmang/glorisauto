@@ -50,16 +50,12 @@ const { currentLocale } = Astro.props;
 const isRtl = isRtlLocale(currentLocale);
 
 const currentPath = Astro.url.pathname.replace(`/${currentLocale}`, '') || '/';
-const localeToStrapi: Record<Locale, string> = { en: 'en', 'zh-cn': 'zh-cn', 'ja': 'ja', ar: 'ar', es: 'es' };
+const localeToStrapi: Record<string, string> = { en: 'en', 'zh-cn': 'zh-cn', 'ja': 'ja', ar: 'ar', es: 'es', vi: 'vi' };
 const strapiToLocale: Record<string, Locale> = { en: 'en', 'zh-cn': 'zh-cn', 'ja': 'ja', ar: 'ar', es: 'es' };
 
-const resolvedPathByLocale: Record<Locale, string> = {
-  en: currentPath,
-  'zh-cn': currentPath,
-  'ja': currentPath,
-  ar: currentPath,
-  es: currentPath,
-};
+const resolvedPathByLocale: Record<string, string> = Object.fromEntries(
+  supportedLocales.map((loc) => [loc, currentPath])
+);
 
 const insightMatch = currentPath.match(/^\/about\/insights\/([^/]+)\/([^/]+)\/?$/);
 if (insightMatch) {

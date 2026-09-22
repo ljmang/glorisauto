@@ -10,6 +10,9 @@ const files = [
   'noto-sans-latin-300-normal.woff2',
   'noto-sans-latin-400-normal.woff2',
   'noto-sans-latin-600-normal.woff2',
+  'noto-sans-vietnamese-300-normal.woff2',
+  'noto-sans-vietnamese-400-normal.woff2',
+  'noto-sans-vietnamese-600-normal.woff2',
 ];
 
 fs.mkdirSync(dest, { recursive: true });
