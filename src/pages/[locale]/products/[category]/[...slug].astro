@@ -221,6 +221,14 @@ function getInsightKey(insight: ProductInsightEntry): string {
   return `title:${insight.title}`;
 }
 
+function getInsightTimestamp(insight: ProductInsightEntry): number {
+  const value = insight.publishedAt ?? insight.updatedAt;
+  if (!value) return 0;
+
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
 for (const insight of relatedInsights) {
   if (!insight?.slug || !insight?.title) continue;
 
@@ -228,6 +236,10 @@ for (const insight of relatedInsights) {
   const exists = relatedInsightItems.some((existingInsight) => getInsightKey(existingInsight) === key);
   if (!exists) relatedInsightItems.push(insight);
 }
+
+const latestRelatedInsightItems = relatedInsightItems
+  .sort((a, b) => getInsightTimestamp(b) - getInsightTimestamp(a))
+  .slice(0, 3);
 
 type HelpCenterItem = {
   title?: string;
@@ -464,7 +476,7 @@ const breadcrumbItems = [
               </section>
             )}
 
-            {relatedInsightItems.length > 0 && (
+            {latestRelatedInsightItems.length > 0 && (
               <section id='related-insights' class='product-content-section' data-product-section='related-insights'>
                 <div class='mb-5 flex items-center justify-between gap-4'>
                   <div>
@@ -479,7 +491,7 @@ const breadcrumbItems = [
                   </a>
                 </div>
                 <div class='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
-                  {relatedInsightItems.map((insight) => (
+                  {latestRelatedInsightItems.map((insight) => (
                     <InsightCard insight={insight} locale={locale} />
                   ))}
                 </div>
