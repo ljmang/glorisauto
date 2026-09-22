@@ -446,7 +446,7 @@ const reviewedDateLabel = reviewedDate
     {relatedProducts.length > 0 && (
       <section class="mt-20 border-t border-slate-200 pt-12">
         <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
-          Product references
+          {t(messages, 'helpCenter.relatedProducts')}
         </p>
         <h2 class="mb-6 text-3xl font-extrabold text-slate-950">{t(messages, 'helpCenter.relatedProducts')}</h2>
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -461,7 +461,7 @@ const reviewedDateLabel = reviewedDate
     {relatedArticles.length > 0 && (
       <section class="mt-20 border-t border-slate-200 pt-12">
         <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
-          Continue reading
+          {t(messages, 'helpCenter.relatedArticles')}
         </p>
         <h2 class="mb-6 text-3xl font-extrabold text-slate-950">{t(messages, 'helpCenter.relatedArticles')}</h2>
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">

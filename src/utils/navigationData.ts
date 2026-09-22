@@ -278,6 +278,7 @@ const VI_NAV_LABEL_MAP: Record<string, string> = {
   'Insights': 'Góc nhìn & Tin tức',
   'Contact Us': 'Liên hệ',
   'Become a Dealer': 'Trở thành đại lý',
+  'Become Our Dealer': 'Trở thành đại lý',
 
   // Categories / L2 / L3
   'Sand Paper': 'Giấy nhám',
