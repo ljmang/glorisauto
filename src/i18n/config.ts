@@ -1,4 +1,4 @@
-export const supportedLocales = ['en', 'zh-cn', 'ja', 'ar', 'es'] as const
+export const supportedLocales = ['en', 'zh-cn', 'ja', 'ar', 'es', 'vi'] as const
 export type Locale = (typeof supportedLocales)[number]
 
 export const defaultLocale: Locale = 'en'
@@ -6,7 +6,7 @@ export const defaultLocale: Locale = 'en'
 /** Remove a supported locale prefix while keeping the rest of the route intact. */
 export function stripLocalePrefix(path: string): string {
   const pattern = new RegExp(
-    `^/(?:${[...supportedLocales, 'vi'].join('|')})(?=/|$)`,
+    `^/(?:${supportedLocales.join('|')})(?=/|$)`,
     'i'
   )
   const normalized = path.replace(pattern, '')
@@ -15,7 +15,7 @@ export function stripLocalePrefix(path: string): string {
 }
 
 /** 语言展示配置：桌面/手机语言切换共用，新增语言只改此处 */
-export const localeDisplayConfig: Record<Locale | 'vi', { label: string; flag: string }> = {
+export const localeDisplayConfig: Record<Locale, { label: string; flag: string }> = {
   'en': { label: 'English', flag: '🇺🇸' },
   'zh-cn': { label: '中文', flag: '🇨🇳' },
   'ja': { label: '日本語', flag: '🇯🇵' },
@@ -24,7 +24,7 @@ export const localeDisplayConfig: Record<Locale | 'vi', { label: string; flag: s
   'vi': { label: 'Tiếng Việt', flag: '🇻🇳' },
 }
 
-export const localeLanguageTag: Record<Locale | 'vi', string> = {
+export const localeLanguageTag: Record<Locale, string> = {
   'en': 'en',
   'zh-cn': 'zh-CN',
   'ja': 'ja-JP',
@@ -33,7 +33,7 @@ export const localeLanguageTag: Record<Locale | 'vi', string> = {
   'vi': 'vi-VN',
 }
 
-export const localeDateTag: Record<Locale | 'vi', string> = {
+export const localeDateTag: Record<Locale, string> = {
   'en': 'en-US',
   'zh-cn': 'zh-CN',
   'ja': 'ja-JP',
@@ -42,7 +42,7 @@ export const localeDateTag: Record<Locale | 'vi', string> = {
   'vi': 'vi-VN',
 }
 
-export const localeOgTag: Record<Locale | 'vi', string> = {
+export const localeOgTag: Record<Locale, string> = {
   'en': 'en_US',
   'zh-cn': 'zh_CN',
   'ja': 'ja_JP',

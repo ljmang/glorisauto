@@ -268,6 +268,59 @@ const AR_NAV_LABEL_MAP: Record<string, string> = {
   'ورق رمل': 'ورق صنفرة',
 };
 
+const VI_NAV_LABEL_MAP: Record<string, string> = {
+  // L1 Top items
+  'Products': 'Sản phẩm',
+  'Support': 'Hỗ trợ',
+  'About Us': 'Về chúng tôi',
+  'About': 'Về chúng tôi',
+  'Insights': 'Góc nhìn & Tin tức',
+  'Contact Us': 'Liên hệ',
+  'Become a Dealer': 'Trở thành đại lý',
+
+  // Categories / L2 / L3
+  'Sand Paper': 'Giấy nhám',
+  'Film Sanding Disc': 'Đĩa chà nhám màng phim',
+  'Sanding Mesh': 'Lưới chà nhám',
+  'Sanding Sponges': 'Mút xốp chà nhám',
+  'Fine Sanding': 'Chà nhám siêu mịn',
+  'Body Fillers': 'Matit trét xe ô tô',
+  '2K PUTTY BASE': 'Matit trét 2K',
+  'Polishing Compound': 'Xi & Hợp chất đánh bóng',
+  'Rubbing Compound 10A': 'Xi phá xước 10A',
+  'Finish Polish 10C': 'Xi bóng hoàn thiện 10C',
+  'Automotive Window Film': 'Phim cách nhiệt ô tô',
+  'Ceramic Window Film': 'Phim gốm Nano Ceramic',
+  'Hybrid (Metal + Ceramic) Window Film': 'Phim Hybrid (Kim loại + Gốm)',
+  'Metallic Window Film': 'Phim kim loại phún xạ',
+  'Paint Protection Film': 'Phim bảo vệ sơn (PPF)',
+  'TPU PPF': 'TPU PPF',
+  'Clear Coat': 'Dầu bóng ô tô',
+  '2K Medium Solid Clear Coat 5L': 'Dầu bóng 2K Medium Solid 5L',
+  '2K Medium Solid Clear Coat 1L': 'Dầu bóng 2K Medium Solid 1L',
+  'High-Performance Thinner': 'Dung môi pha sơn cao cấp',
+
+  // Support
+  'Technical Documents': 'Tài liệu kỹ thuật',
+  'Brochures': 'Catalog & Tài liệu giới thiệu',
+  'Selection Guide': 'Hướng dẫn chọn sản phẩm',
+  'Application & Installation': 'Hướng dẫn thi công & Lắp đặt',
+  'Troubleshooting & Care': 'Xử lý sự cố & Bảo dưỡng',
+  'Help Center': 'Trung tâm hỗ trợ',
+  'Download': 'Tải tài liệu',
+  'Customer Service': 'Dịch vụ khách hàng',
+
+  // About / Insights
+  'Brand Story': 'Câu chuyện thương hiệu',
+  'Production Base': 'Nhà máy sản xuất',
+  'News': 'Tin tức',
+  'Application Cases': 'Dự án thực tế',
+  'Market Trends': 'Xu hướng thị trường',
+  'Solutions': 'Giải pháp',
+  'video': 'Video',
+  'Videos': 'Video',
+};
+
 export function normalizeNavLabel(rawLabel: unknown, locale: string): string {
   const label = typeof rawLabel === 'string' ? rawLabel.trim() : '';
   if (!label) return '';
@@ -277,6 +330,9 @@ export function normalizeNavLabel(rawLabel: unknown, locale: string): string {
   }
   if (locale === 'ar') {
     return AR_NAV_LABEL_MAP[normalizedKey] || AR_NAV_LABEL_MAP[label] || label;
+  }
+  if (locale === 'vi') {
+    return VI_NAV_LABEL_MAP[normalizedKey] || VI_NAV_LABEL_MAP[label] || label;
   }
   return label;
 }

@@ -181,6 +181,40 @@ const copyByLocale: Record<Locale, Record<PageKey, CollectionPageCopy>> = {
         'Estas páginas de soluciones organizan los productos, guías y perspectivas de Gloris en torno a escenarios reales de clientes. Úselas para evaluar enfoques completos para talleres de carrocería, grupos de concesionarios e instaladores de películas para lunas.',
     },
   },
+  vi: {
+    products: {
+      heading: 'Sản Phẩm Sơn & Sửa Chữa Ô Tô',
+      seoTitle: 'Sản Phẩm Sửa Chữa & Hoàn Thiện Ô Tô | Nhám, Matit, Phim Cách Nhiệt & PPF',
+      seoDescription:
+        'Khám phá danh mục sản phẩm sửa chữa và hoàn thiện ô tô Gloris, bao gồm vật liệu mài mòn, matit trét xe, xi đánh bóng, phim cách nhiệt và phim bảo vệ sơn PPF cho nhà phân phối và xưởng dịch vụ.',
+      intro:
+        'Khám phá danh mục sản phẩm toàn diện của Gloris phục vụ quy trình sửa chữa ô tô, chuẩn bị bề mặt, đánh bóng, dán phim cách nhiệt và bảo vệ lớp sơn. Được thiết kế tối ưu cho các nhà phân phối, xưởng sơn gò hàn và trung tâm chăm sóc xe chuyên nghiệp.',
+    },
+    help: {
+      heading: 'Trung Tâm Hỗ Trợ',
+      seoTitle: 'Trung Tâm Hỗ Trợ Kỹ Thuật Ô Tô | Câu Hỏi Thường Gặp & Hướng Dẫn Thi Công',
+      seoDescription:
+        'Tìm câu trả lời thực tế về cách chọn giấy nhám, thời điểm xả nhám matit, quy trình đánh bóng sơn, hiệu năng phim cách nhiệt và bảo dưỡng phim PPF.',
+      intro:
+        'Sử dụng trung tâm hỗ trợ để so sánh sản phẩm, khắc phục lỗi kỹ thuật bề mặt và nâng cao hiệu quả thi công từ khâu chọn vật tư đến hoàn thiện thực tế.',
+    },
+    insights: {
+      heading: 'Góc Nhìn & Tin Tức',
+      seoTitle: 'Góc Nhìn Ngành Sửa Chữa Ô Tô | Kiến Thức Kỹ Thuật & Xu Hướng Thị Trường',
+      seoDescription:
+        'Đọc các bài viết mới nhất từ Gloris về công nghệ sơn sửa ô tô, xu hướng thị trường, tối ưu hóa quy trình xưởng, phim cách nhiệt và giải pháp bảo vệ sơn PPF.',
+      intro:
+        'Chuyên mục Góc nhìn & Tin tức tổng hợp các bài viết chuyên sâu về cải tiến quy trình sửa chữa, lựa chọn vật liệu, định hướng thị trường và công nghệ bảo vệ bề mặt ô tô.',
+    },
+    solutions: {
+      heading: 'Giải Pháp Hậu Mãi Ô Tô',
+      seoTitle: 'Giải Pháp Ngành Dịch Vụ Ô Tô | Hiệu Quả Đồng Sơn, Tiêu Chuẩn Hóa & Dán Phim',
+      seoDescription:
+        'Khám phá các gói giải pháp Gloris giúp tối ưu hóa hiệu suất sửa chữa đồng sơn, tiêu chuẩn hóa vật tư đại lý và nâng cấp dịch vụ dán phim cách nhiệt ô tô.',
+      intro:
+        'Các trang giải pháp hệ thống hóa sản phẩm, tài liệu hướng dẫn và kinh nghiệm thực tiễn theo các tình huống vận hành thực tế của đại lý ô tô, xưởng sơn và trung tâm thi công phim.',
+    },
+  },
 };
 
 export function getCollectionPageCopy(locale: Locale, key: PageKey): CollectionPageCopy {

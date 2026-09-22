@@ -132,11 +132,12 @@ const supportScopeLabels: Record<Locale, string> = {
   ja: 'サポート内容：',
   ar: 'يشمل الدعم:',
   es: 'El soporte incluye:',
+  vi: 'Phạm vi hỗ trợ:',
 };
 function stripSupportScopeLabel(value: string): string {
   return value
     .trim()
-    .replace(/^(?:Support includes:|支持范围：|サポート内容：|يشمل الدعم：|يشمل الدعم:|El soporte incluye:)\s*/i, '');
+    .replace(/^(?:Support includes:|支持范围：|サポート内容：|يشمل الدعم：|يشمل الدعم:|El soporte incluye:|Phạm vi hỗ trợ:)\s*/i, '');
 }
 const introBlocks = Array.isArray(dealer?.introContent) ? dealer.introContent : [];
 const introLeadBlocks = introBlocks.slice(0, 1);
