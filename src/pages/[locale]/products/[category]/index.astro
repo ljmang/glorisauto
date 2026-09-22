@@ -10,6 +10,16 @@ import ProductCard from '@/components/ProductCard.astro';
 import type { ProductAttributes } from '@/types/content';
 import type { CategoryAttributes } from '@/types/content';
 
+function resolveCategorySlug(slug: string, locale: Locale): string {
+  if (locale === 'zh-cn' && slug === 'paint-protection-film') {
+    return 'tpu-ppf';
+  }
+  if (locale !== 'zh-cn' && slug === 'tpu-ppf') {
+    return 'paint-protection-film';
+  }
+  return slug;
+}
+
 export async function getStaticPaths() {
   const paths: { params: { locale: string; category: string } }[] = [];
   for (const locale of supportedLocales) {
@@ -18,9 +28,20 @@ export async function getStaticPaths() {
       pagination: { pageSize: 100 },
     });
     const list = Array.isArray(res?.data) ? res.data : [];
+    const addedSlugs = new Set<string>();
     for (const item of list) {
       const category = item.slug;
-      if (category) paths.push({ params: { locale, category } });
+      if (category) {
+        paths.push({ params: { locale, category } });
+        addedSlugs.add(category);
+      }
+    }
+    // 兼容别名：
+    if (locale === 'zh-cn' && addedSlugs.has('tpu-ppf') && !addedSlugs.has('paint-protection-film')) {
+      paths.push({ params: { locale, category: 'paint-protection-film' } });
+    }
+    if (locale !== 'zh-cn' && addedSlugs.has('paint-protection-film') && !addedSlugs.has('tpu-ppf')) {
+      paths.push({ params: { locale, category: 'tpu-ppf' } });
     }
   }
   return paths;
@@ -30,6 +51,7 @@ const params = Astro.params as { locale?: string; category?: string };
 const locale: Locale = getLocale(params.locale);
 const isRtl = isRtlLocale(locale);
 const categorySlug = params.category ?? '';
+const effectiveCategorySlug = resolveCategorySlug(categorySlug, locale);
 const messages = await loadMessages(locale);
 
 // 分类列表并构建树
@@ -49,24 +71,32 @@ const categoriesRes = await fetchApi<{ data?: CategoryAttributes[] }>(api.catego
 });
 const categories = Array.isArray(categoriesRes?.data) ? categoriesRes.data : [];
 const categoryTree = buildCategoryTree(categories);
-const currentCategory = categories.find((c) => c.slug === categorySlug);
+const currentCategory = categories.find((c) => c.slug === categorySlug) || categories.find((c) => c.slug === effectiveCategorySlug);
 const categoryName = currentCategory?.name ?? categorySlug;
 const categoryDescription = currentCategory?.description?.trim() ?? "";
 
 // 若当前是一级分类（有子分类），则展示该一级 + 其下全部二级分类的产品；否则只展示当前分类产品
-const rootWithSlug = categoryTree.find((r) => r.slug === categorySlug);
+const rootWithSlug = categoryTree.find((r) => r.slug === categorySlug) || categoryTree.find((r) => r.slug === effectiveCategorySlug);
 const slugsToFilter =
   rootWithSlug && rootWithSlug.children.length > 0
     ? [rootWithSlug.slug, ...rootWithSlug.children.map((c) => c.slug)]
-    : [categorySlug];
+    : [currentCategory?.slug || effectiveCategorySlug];
 
 const productsRes = await fetchApi<{ data?: ProductAttributes[] }>(api.products, {
   locale,
   populate: { cover: true, images: true, category: true },
-  filters: slugsToFilter.length > 1 ? { category: { slug: { $in: slugsToFilter } } } : { category: { slug: { $eq: categorySlug } } },
+  filters: slugsToFilter.length > 1 ? { category: { slug: { $in: slugsToFilter } } } : { category: { slug: { $eq: slugsToFilter[0] } } },
   pagination: { pageSize: 100 },
 });
 const products = Array.isArray(productsRes?.data) ? productsRes.data : [];
+
+const isAlias = categorySlug !== (currentCategory?.slug || effectiveCategorySlug);
+const canonicalHref = toHref(`/products/${currentCategory?.slug || effectiveCategorySlug}`, locale);
+const pageSeo = currentCategory?.seo
+  ? { ...currentCategory.seo, ...(isAlias ? { canonicalURL: canonicalHref } : {}) }
+  : isAlias
+    ? { canonicalURL: canonicalHref }
+    : undefined;
 
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
@@ -79,12 +109,15 @@ const allProductsLabel = t(messages, 'products.allProducts');
 <BaseLayout
   title={`${categoryName} - ${t(messages, 'pageTitle.products')}`}
   description={categoryDescription}
-  seo={currentCategory?.seo}
+  seo={pageSeo}
   pageType="collection"
   breadcrumbs={breadcrumbItems}
   messages={messages}
   locale={locale}
 >
+  {isAlias && (
+    <meta http-equiv="refresh" content={`0;url=${canonicalHref}`} slot="head" />
+  )}
   <div class="container mx-auto px-4 py-8">
     <Breadcrumb items={breadcrumbItems} locale={locale} />
 

@@ -312,6 +312,7 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
     {resolvedSeo.jsonLd.map((schema, index) => (
       <script type="application/ld+json" set:html={JSON.stringify(schema)} data-schema={String(index)} />
     ))}
+    <slot name="head" />
   </head>
   <body class="min-h-screen flex flex-col bg-gray-50 font-sans font-normal tracking-tight antialiased">
     <!-- Google Tag Manager (noscript) -->

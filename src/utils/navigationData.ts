@@ -104,8 +104,20 @@ function canonicalizeLegacyRoutePath(path: string, locale?: string): string {
   const legacyPath = LEGACY_ROUTE_ALIAS_MAP.get(path);
   if (legacyPath) return legacyPath;
 
-  if (locale === 'zh-cn' && path === '/products/paint-protection-film') {
-    return '/products/tpu-ppf';
+  if (locale === 'zh-cn') {
+    if (path === '/products/paint-protection-film') {
+      return '/products/tpu-ppf';
+    }
+    if (path.startsWith('/products/paint-protection-film/')) {
+      return path.replace('/products/paint-protection-film/', '/products/tpu-ppf/');
+    }
+  } else {
+    if (path === '/products/tpu-ppf') {
+      return '/products/paint-protection-film';
+    }
+    if (path.startsWith('/products/tpu-ppf/')) {
+      return path.replace('/products/tpu-ppf/', '/products/paint-protection-film/');
+    }
   }
 
   return path;

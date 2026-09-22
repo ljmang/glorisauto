@@ -27,6 +27,16 @@ type ProductNavigationProps = {
   productNavigationProducts: ProductNavigationProduct[];
 };
 
+function resolveCategorySlug(slug: string, locale: Locale): string {
+  if (locale === 'zh-cn' && slug === 'paint-protection-film') {
+    return 'tpu-ppf';
+  }
+  if (locale !== 'zh-cn' && slug === 'tpu-ppf') {
+    return 'paint-protection-film';
+  }
+  return slug;
+}
+
 export async function getStaticPaths() {
   const paths: { params: { locale: string; category: string; slug: string }; props: ProductNavigationProps }[] = [];
   for (const locale of supportedLocales) {
@@ -58,6 +68,24 @@ export async function getStaticPaths() {
             productNavigationProducts: list,
           },
         });
+        if (locale === 'zh-cn' && categorySlug === 'tpu-ppf') {
+          paths.push({
+            params: { locale, category: 'paint-protection-film', slug },
+            props: {
+              productNavigationCategories: categories,
+              productNavigationProducts: list,
+            },
+          });
+        }
+        if (locale !== 'zh-cn' && categorySlug === 'paint-protection-film') {
+          paths.push({
+            params: { locale, category: 'tpu-ppf', slug },
+            props: {
+              productNavigationCategories: categories,
+              productNavigationProducts: list,
+            },
+          });
+        }
       }
     }
   }
@@ -67,6 +95,7 @@ export async function getStaticPaths() {
 const params = Astro.params as { locale?: string; category?: string; slug?: string };
 const locale: Locale = getLocale(params.locale);
 const categorySlug = params.category ?? '';
+const effectiveCategorySlug = resolveCategorySlug(categorySlug, locale);
 const productSlug = params.slug ?? '';
 const messages = await loadMessages(locale);
 const navigationProps = Astro.props as Partial<ProductNavigationProps>;
@@ -119,7 +148,7 @@ const productBasePopulate = {
 
 const productFilters = {
   slug: { $eq: productSlug },
-  category: { slug: { $eq: categorySlug } },
+  category: { slug: { $eq: effectiveCategorySlug } },
 };
 
 const productsRes = await fetchApi<ProductResponse>(api.products, {
@@ -306,10 +335,18 @@ const productGalleryLabels = {
   mediaCount: t(messages, 'products.mediaCount'),
 };
 
+const isAlias = categorySlug !== effectiveCategorySlug;
+const canonicalHref = toHref(`/products/${effectiveCategorySlug}/${productSlug}`, locale);
+const pageSeo = product?.seo
+  ? { ...product.seo, ...(isAlias ? { canonicalURL: canonicalHref } : {}) }
+  : isAlias
+    ? { canonicalURL: canonicalHref }
+    : undefined;
+
 const breadcrumbItems = [
   { label: t(messages, 'pageTitle.home'), href: '/' },
   { label: t(messages, 'pageTitle.products'), href: '/products' },
-  { label: categoryName, href: `/products/${categorySlug}` },
+  { label: categoryName, href: `/products/${effectiveCategorySlug}` },
   { label: product?.name ?? productSlug },
 ];
 ---
@@ -318,12 +355,15 @@ const breadcrumbItems = [
   title={product ? `${product.name} - ${t(messages, 'pageTitle.products')}` : t(messages, 'pageTitle.products')}
   description={productDescription}
   image={product?.cover ?? (productSeoImage ? { url: productSeoImage.src } : undefined)}
-  seo={product?.seo}
+  seo={pageSeo}
   pageType="product"
   breadcrumbs={breadcrumbItems}
   messages={messages}
   locale={locale}
 >
+  {isAlias && (
+    <meta http-equiv="refresh" content={`0;url=${canonicalHref}`} slot="head" />
+  )}
   <div class='product-detail-page container mx-auto px-4 py-8' data-product-detail-page>
     {product ? (
       <>
