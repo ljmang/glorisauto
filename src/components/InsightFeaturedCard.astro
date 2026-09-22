@@ -3,7 +3,7 @@ import type { InsightAttributes, InsightCategoryAttributes } from '@/types/conte
 import type { Messages } from '@/i18n';
 import { type Locale, localeDateTag } from '@/i18n/config';
 import { t } from '@/i18n';
-import { parseImage, resolveImageAltText } from '@/utils/strapiApi';
+import { parseImage, resolveImageAltText, normalizeInsight } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { Image } from 'astro:assets';
 
@@ -13,7 +13,8 @@ interface Props {
   messages: Messages;
 }
 
-const { insight, locale, messages } = Astro.props;
+const { insight: rawInsight, locale, messages } = Astro.props;
+const insight = normalizeInsight(rawInsight, locale) || rawInsight;
 const coverImage = parseImage(insight.cover || (insight as { coverImage?: unknown }).coverImage);
 const coverAlt = resolveImageAltText(insight.coverAlt, coverImage?.alt, insight.title);
 const category = insight.insight_category && typeof insight.insight_category === 'object' && 'slug' in insight.insight_category

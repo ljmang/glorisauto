@@ -28,6 +28,15 @@ const firstAlt = first ? resolveLocalizedImageAltText(locale, null, first.alt, p
 function formatMediaCount(current: number, total: number): string {
   return labels.mediaCount.replace('{current}', String(current)).replace('{total}', String(total));
 }
+
+const noMediaByLocale: Record<Locale, string> = {
+  en: 'No media',
+  'zh-cn': '暂无媒体',
+  ja: 'メディアなし',
+  ar: 'لا توجد وسائط',
+  es: 'Sin archivos multimedia',
+};
+const noMediaText = noMediaByLocale[locale] || 'No media';
 ---
 
 <div
@@ -75,7 +84,7 @@ function formatMediaCount(current: number, total: number): string {
           />
         )
       ) : (
-        <div class="flex h-full w-full items-center justify-center text-gray-400">No media</div>
+        <div class="flex h-full w-full items-center justify-center text-gray-400">{noMediaText}</div>
       )}
     </div>
 

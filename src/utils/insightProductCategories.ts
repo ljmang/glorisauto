@@ -1,5 +1,5 @@
 import { toHref } from './navigationData';
-import { parseImage, resolveImageAltText } from './strapiApi';
+import { parseImage, resolveImageAltText, normalizeInsight } from './strapiApi';
 import { type Locale, localeDateTag } from '@/i18n/config';
 import type { InsightAttributes, InsightCategoryAttributes, ProductAttributes } from '@/types/content';
 
@@ -109,7 +109,9 @@ export function buildInsightCardItems(
   locale: Locale
 ): InsightCardItem[] {
   return insights
-    .map((insight) => {
+    .map((rawInsight) => {
+      const insight = normalizeInsight(rawInsight, locale);
+      if (!insight) return null;
       const title = insight.title?.trim() ?? '';
       if (!title || !insight.slug) return null;
 

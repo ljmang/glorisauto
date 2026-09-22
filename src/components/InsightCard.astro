@@ -6,7 +6,7 @@
  */
 
 import type { InsightAttributes, InsightCategoryAttributes } from '@/types/content';
-import { parseImage, resolveImageAltText } from '@/utils/strapiApi';
+import { parseImage, resolveImageAltText, normalizeInsight } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import { Image } from 'astro:assets';
 
@@ -17,7 +17,8 @@ interface Props {
   href?: string;
 }
 
-const { insight, locale, href: hrefOverride } = Astro.props;
+const { insight: rawInsight, locale, href: hrefOverride } = Astro.props;
+const insight = normalizeInsight(rawInsight, locale) || rawInsight;
 
 // 解析封面图片（实际数据字段是 cover，不是 coverImage）
 const coverImage = parseImage(insight.cover || (insight as { coverImage?: unknown }).coverImage);

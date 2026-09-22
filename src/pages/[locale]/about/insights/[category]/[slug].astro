@@ -10,7 +10,7 @@ import TableOfContents from '@/components/TableOfContents.astro';
 import ArticleSampleCta from '@/components/ArticleSampleCta.astro';
 import { supportedLocales, type Locale, getLocale, localeDateTag } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
-import { fetchApiWithLocaleFallback, api } from '@/utils/strapiApi';
+import { fetchApiWithLocaleFallback, api, normalizeInsight, normalizeInsights } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import type { InsightAttributes, InsightCategoryAttributes, ProductAttributes } from '@/types/content';
 import { renderMarkdownWithTOC } from '@/utils/markdown';
@@ -62,7 +62,7 @@ const articleRes = await fetchApiWithLocaleFallback<{ data?: InsightAttributes[]
     insight_category: { slug: { $eq: categorySlug } },
   },
 });
-const article = articleRes?.data?.[0];
+const article = normalizeInsight(articleRes?.data?.[0], locale);
 
 if (!article) {
   return Astro.redirect(toHref('/about/insights', locale));
@@ -73,7 +73,7 @@ const categoryName = article.insight_category && typeof article.insight_category
   : categorySlug;
 
 const relatedProducts = (article as { products?: ProductAttributes[] })?.products ?? [];
-const relatedArticles = (article as { articles?: InsightAttributes[] })?.articles ?? [];
+const relatedArticles = normalizeInsights((article as { articles?: InsightAttributes[] })?.articles ?? [], locale);
 
 const publishedDate = article.publishedAt
   ? new Date(article.publishedAt).toLocaleDateString(localeDateTag[locale], {

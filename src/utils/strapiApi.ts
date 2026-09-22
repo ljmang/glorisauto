@@ -394,3 +394,41 @@ export const api = {
 export function byId(collection: string, id: string | number): string {
   return `${collection}/${id}`;
 }
+
+/**
+ * 针对后台个别文章数据录入偏差（如日文/阿文标题被误填为品牌故事）进行规范化纠偏
+ */
+export function normalizeInsight<T extends { slug?: string; title?: string; locale?: string; seo?: any }>(
+  item: T | null | undefined,
+  currentLocale?: string
+): T | null | undefined {
+  if (!item) return item;
+  const loc = currentLocale || item.locale;
+  if (item.slug === 'aluminum-oxide-vs-ceramic-blend-abrasives') {
+    if (loc === 'ja' && (item.title?.includes('ブランドストーリー') || item.seo?.metaTitle?.includes('ブランドストーリー') || !item.title)) {
+      const correctTitle = '酸化アルミニウム vs セラミックブレンド研磨材：研磨工程に応じた適切なサンドペーパーの選び方';
+      return {
+        ...item,
+        title: correctTitle,
+        seo: item.seo ? { ...item.seo, metaTitle: correctTitle } : item.seo,
+      };
+    }
+    if (loc === 'ar' && (item.title?.includes('قصة علامة') || item.seo?.metaTitle?.includes('قصة علامة') || !item.title)) {
+      const correctTitle = 'أكسيد الألومنيوم مقابل مزيج السيراميك الكاشط: اختيار ورق الصنفرة المناسب لمراحل الصنفرة المختلفة';
+      return {
+        ...item,
+        title: correctTitle,
+        seo: item.seo ? { ...item.seo, metaTitle: correctTitle } : item.seo,
+      };
+    }
+  }
+  return item;
+}
+
+export function normalizeInsights<T extends { slug?: string; title?: string; locale?: string }>(
+  items: T[] | null | undefined,
+  currentLocale?: string
+): T[] {
+  if (!Array.isArray(items)) return [];
+  return items.map((item) => normalizeInsight(item, currentLocale) as T);
+}

@@ -212,6 +212,63 @@ function isVisibleNavNode(node: ComponentNavNode, locale: string): boolean {
   return !TEMPORARILY_HIDDEN_PATHS.has(normalizedPath);
 }
 
+const ES_NAV_LABEL_MAP: Record<string, string> = {
+  'Sand Paper': 'Papel de lija',
+  'Film Sanding Disc': 'Discos de lija de película',
+  'Sanding Mesh': 'Malla abrasiva',
+  'Sanding Sponges': 'Esponjas de lijado',
+  'Fine Sanding': 'Lijado fino',
+  'Body Fillers': 'Masillas para carrocería',
+  '2K PUTTY BASE': 'Masilla 2K',
+  'Polishing Compound': 'Compuestos de pulido',
+  'Rubbing Compound 10A': 'Compuesto de corte 10A',
+  'Finish Polish 10C': 'Abrillantador final 10C',
+  'Automotive Window Film': 'Láminas para ventanas',
+  'Ceramic Window Film': 'Láminas cerámicas',
+  'Hybrid (Metal + Ceramic) Window Film': 'Láminas híbridas (metal + cerámica)',
+  'Metallic Window Film': 'Láminas metálicas',
+  'Paint Protection Film': 'Película protectora de pintura (PPF)',
+  'TPU PPF': 'TPU PPF',
+  'Clear Coat': 'Barnices transparentes',
+  '2K Medium Solid Clear Coat 5L': 'Barniz 2K Medium Solid 5L',
+  '2K Medium Solid Clear Coat 1L': 'Barniz 2K Medium Solid 1L',
+  'High-Performance Thinner': 'Diluyente de alto rendimiento',
+  'Technical Documents': 'Documentos técnicos',
+  'Brochures': 'Folletos',
+  'Selection Guide': 'Guía de selección',
+  'Application & Installation': 'Aplicación e instalación',
+  'Troubleshooting & Care': 'Solución de problemas y cuidado',
+  'Solutions': 'Soluciones',
+  'Production Base': 'Base de producción',
+  'News': 'Noticias',
+  'Application Cases': 'Casos de aplicación',
+  'Market Trends': 'Tendencias del mercado',
+  'video': 'Vídeos',
+};
+
+const AR_NAV_LABEL_MAP: Record<string, string> = {
+  'يدعم': 'الدعم',
+  'عن': 'من نحن',
+  'Top Brands': 'أبرز العلامات التجارية',
+  'معجون الهيكل': 'معجون هياكل السيارات',
+  'حشوات الجسم': 'معجون هياكل السيارات',
+  'مجمع تلميع': 'مركبات التلميع',
+  'ورق رمل': 'ورق صنفرة',
+};
+
+export function normalizeNavLabel(rawLabel: unknown, locale: string): string {
+  const label = typeof rawLabel === 'string' ? rawLabel.trim() : '';
+  if (!label) return '';
+  const normalizedKey = label.replace(/\s+/g, ' ');
+  if (locale === 'es') {
+    return ES_NAV_LABEL_MAP[normalizedKey] || ES_NAV_LABEL_MAP[label] || label;
+  }
+  if (locale === 'ar') {
+    return AR_NAV_LABEL_MAP[normalizedKey] || AR_NAV_LABEL_MAP[label] || label;
+  }
+  return label;
+}
+
 function toNavFromItems(items: ComponentNavNode[], locale: string): NavItem[] {
   const top = items
     .filter((n) => isVisibleNavNode(n, locale))
@@ -228,20 +285,20 @@ function toNavFromItems(items: ComponentNavNode[], locale: string): NavItem[] {
         .sort(byOrder);
 
       const links: NavLink[] = l3Nodes.map((l3) => ({
-        label: String(l3.label),
+        label: normalizeNavLabel(l3.label, locale),
         href: resolveNodeHref(l3, locale),
       }));
 
       const colHref = resolveNodeHref(l2, locale, '');
       return {
-        title: String(l2.label),
+        title: normalizeNavLabel(l2.label, locale),
         href: colHref && colHref !== '#' ? colHref : undefined,
         items: links,
       };
     }).filter((c) => Boolean(c.href) || c.items.length > 0);
 
     const navItem: NavItem = {
-      label: String(l1.label),
+      label: normalizeNavLabel(l1.label, locale),
       href: resolveNodeHref(l1, locale),
     };
     if (columns.length > 0) navItem.columns = columns;
