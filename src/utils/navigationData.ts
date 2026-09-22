@@ -274,6 +274,7 @@ const VI_NAV_LABEL_MAP: Record<string, string> = {
   'Support': 'Hỗ trợ',
   'About Us': 'Về chúng tôi',
   'About': 'Về chúng tôi',
+  'About Gloris': 'Về Gloris',
   'Insights': 'Góc nhìn & Tin tức',
   'Contact Us': 'Liên hệ',
   'Become a Dealer': 'Trở thành đại lý',
