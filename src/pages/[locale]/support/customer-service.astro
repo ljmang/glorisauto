@@ -345,7 +345,25 @@ const formApiBase = (() => {
           return;
         }
         const err = await res.json().catch(() => ({}));
-        alert(err?.error?.message || formTexts.submitFailed);
+        const rawMsg = err?.error?.message;
+        let errorMsg = formTexts.submitFailed;
+        if (locale === 'en' && rawMsg) {
+          errorMsg = rawMsg;
+        } else if (typeof rawMsg === 'string') {
+          const lower = rawMsg.toLowerCase();
+          if (lower.includes('email') && (lower.includes('valid') || lower.includes('format'))) {
+            if (locale === 'zh-cn') errorMsg = '请输入有效的电子邮箱地址';
+            else if (locale === 'es') errorMsg = 'Introduce una dirección de correo electrónico válida';
+            else if (locale === 'ja') errorMsg = '有効なメールアドレスを入力してください';
+            else if (locale === 'ar') errorMsg = 'يرجى إدخال عنوان بريد إلكتروني صالح';
+          } else if (lower.includes('required')) {
+            if (locale === 'zh-cn') errorMsg = '请填写所有必填项';
+            else if (locale === 'es') errorMsg = 'Por favor, completa todos los campos obligatorios';
+            else if (locale === 'ja') errorMsg = '必須項目をすべて入力してください';
+            else if (locale === 'ar') errorMsg = 'يرجى ملء جميع الحقول المطلوبة';
+          }
+        }
+        alert(errorMsg);
       } catch (_) {
         alert(formTexts.submitFailed);
       } finally {
