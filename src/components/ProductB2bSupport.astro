@@ -4,12 +4,6 @@ import { type Locale, isRtlLocale } from '@/i18n/config';
 type ProductB2bSupportCopy = {
   title: string;
   intro: string;
-  complianceTitle: string;
-  complianceIntro: string;
-  complianceItems: string[];
-  distributorTitle: string;
-  distributorIntro: string;
-  distributorItems: string[];
 };
 
 interface Props {
@@ -24,131 +18,26 @@ const copyByLocale: Record<Locale, ProductB2bSupportCopy> = {
     title: 'For Wholesalers & Distributors',
     intro:
       'Gloris supplies complete automotive refinishing solutions to wholesalers and distributors worldwide. Our product range covers abrasive sanding discs, body filler, clear coats, window films and PPF. We deliver consistent, high-quality products with reliable supply to help partners grow their automotive repair business.',
-    complianceTitle: 'Certifications & Compliance Support',
-    complianceIntro: 'We provide comprehensive technical documentation and compliance support, including:',
-    complianceItems: [
-      'Technical Data Sheet (TDS)',
-      'Safety Data Sheet (SDS)',
-      'VOC Test Report',
-      'RoHS Compliance',
-      'REACH Compliance',
-      'Material Safety Data Sheet (MSDS)',
-      'Third-Party Test Reports',
-    ],
-    distributorTitle: 'Distributor Support',
-    distributorIntro: 'Gloris provides comprehensive business and marketing support for global distributors, including:',
-    distributorItems: [
-      'Product literature and technical documentation',
-      'Marketing materials (images, videos, product catalogs)',
-      'Sample support and testing assistance',
-      'Technical training and application guidance',
-      'Regional market protection and pricing support',
-      'Long-term after-sales and technical support services',
-    ],
   },
   'zh-cn': {
     title: '适用于批发商和经销商',
     intro:
       '戈力斯为全球批发商与经销商提供全套汽车表面修复解决方案。我们的产品涵盖各类研磨砂纸、汽车腻子、清漆、窗膜和 PPF，以稳定供货和一致的高品质产品，助力合作伙伴拓展汽车修复业务。',
-    complianceTitle: '认证与合规支持',
-    complianceIntro: '我们提供全面的技术文档和合规支持，包括：',
-    complianceItems: [
-      '产品技术数据表（TDS）',
-      '安全数据表（SDS）',
-      'VOC 测试报告',
-      'RoHS 合规文件',
-      'REACH 合规文件',
-      '材料安全数据表（MSDS）',
-      '第三方测试报告',
-    ],
-    distributorTitle: '经销商支持',
-    distributorIntro: 'Gloris 为全球经销商提供全面的业务与市场支持，包括：',
-    distributorItems: [
-      '产品资料和技术文档',
-      '营销资料（图片、视频、产品目录）',
-      '样品支持和测试协助',
-      '技术培训与施工指导',
-      '区域市场保护与价格支持',
-      '长期售后与技术支持服务',
-    ],
   },
   ja: {
     title: '卸売業者・販売代理店向け',
     intro:
       'Glorisは、世界中の卸売業者および販売代理店に、自動車補修向けの総合ソリューションを提供しています。製品ラインアップには、研磨ディスク、ボディフィラー、クリヤーコート、ウィンドウフィルム、PPFが含まれます。安定した高品質の製品と信頼できる供給体制により、パートナーの自動車補修ビジネスの成長を支援します。',
-    complianceTitle: '認証・コンプライアンス支援',
-    complianceIntro: '包括的な技術資料とコンプライアンス対応を提供しています。内容は以下のとおりです：',
-    complianceItems: [
-      '製品技術データシート（TDS）',
-      '安全データシート（SDS）',
-      'VOC試験報告書',
-      'RoHS適合',
-      'REACH適合',
-      '化学物質安全データシート（MSDS）',
-      '第三者試験報告書',
-    ],
-    distributorTitle: '販売代理店向けサポート',
-    distributorIntro: 'Glorisは、世界中の販売代理店に向けて、以下のような幅広いビジネス・マーケティング支援を提供しています：',
-    distributorItems: [
-      '製品資料および技術文書',
-      'マーケティング資料（画像、動画、製品カタログ）',
-      'サンプル提供および試験支援',
-      '技術研修および施工ガイダンス',
-      '地域市場保護および価格支援',
-      '長期的なアフターサービス・技術サポート',
-    ],
   },
   ar: {
     title: 'لتجار الجملة والموزعين',
     intro:
       'توفر Gloris حلولاً متكاملة لإصلاح وتشطيب أسطح السيارات لتجار الجملة والموزعين حول العالم. تشمل مجموعة منتجاتنا أقراص الصنفرة الكاشطة، ومعجون هياكل السيارات، وطبقات الطلاء الشفافة، وأفلام النوافذ وPPF. ونوفر منتجات عالية الجودة ومتسقة مع إمداد موثوق لمساعدة شركائنا على تنمية أعمال إصلاح السيارات.',
-    complianceTitle: 'دعم الشهادات والامتثال',
-    complianceIntro: 'نوفر وثائق فنية شاملة ودعمًا للامتثال، بما في ذلك:',
-    complianceItems: [
-      'ورقة البيانات الفنية للمنتج (TDS)',
-      'صحيفة بيانات السلامة (SDS)',
-      'تقرير اختبار المركبات العضوية المتطايرة (VOC)',
-      'امتثال RoHS',
-      'امتثال REACH',
-      'صحيفة بيانات سلامة المواد (MSDS)',
-      'تقارير اختبارات من جهات خارجية',
-    ],
-    distributorTitle: 'دعم الموزعين',
-    distributorIntro: 'تقدم Gloris دعمًا شاملاً للأعمال والتسويق للموزعين حول العالم، بما في ذلك:',
-    distributorItems: [
-      'مواد المنتجات والوثائق الفنية',
-      'المواد التسويقية (الصور والفيديوهات وكتالوجات المنتجات)',
-      'دعم العينات والمساعدة في الاختبارات',
-      'التدريب الفني وإرشادات التطبيق',
-      'حماية الأسواق الإقليمية ودعم الأسعار',
-      'خدمات الدعم الفني وخدمة ما بعد البيع على المدى الطويل',
-    ],
   },
   es: {
     title: 'Para mayoristas y distribuidores',
     intro:
       'Gloris ofrece soluciones completas de reparación y acabado de superficies automotrices a mayoristas y distribuidores de todo el mundo. Nuestra gama incluye discos de lijado abrasivos, masilla para carrocería, barnices transparentes, láminas para ventanas y PPF. Ofrecemos productos uniformes y de alta calidad con un suministro fiable para ayudar a nuestros socios a desarrollar su negocio de reparación automotriz.',
-    complianceTitle: 'Certificaciones y soporte de cumplimiento',
-    complianceIntro: 'Proporcionamos documentación técnica completa y soporte de cumplimiento, incluidos:',
-    complianceItems: [
-      'Ficha técnica del producto (TDS)',
-      'Hoja de datos de seguridad (SDS)',
-      'Informe de pruebas de VOC',
-      'Cumplimiento de RoHS',
-      'Cumplimiento de REACH',
-      'Hoja de datos de seguridad de materiales (MSDS)',
-      'Informes de pruebas de terceros',
-    ],
-    distributorTitle: 'Apoyo a distribuidores',
-    distributorIntro: 'Gloris ofrece a los distribuidores de todo el mundo un amplio apoyo comercial y de marketing, que incluye:',
-    distributorItems: [
-      'Materiales del producto y documentación técnica',
-      'Materiales de marketing (imágenes, vídeos y catálogos de productos)',
-      'Apoyo con muestras y asistencia para pruebas',
-      'Formación técnica y orientación de aplicación',
-      'Protección de mercados regionales y apoyo en precios',
-      'Servicios de soporte técnico y posventa a largo plazo',
-    ],
   },
 };
 
@@ -164,17 +53,5 @@ const copy = copyByLocale[locale];
   <div class="product-b2b-support-content max-w-none text-lg leading-[1.6] text-slate-700">
     <h2 class="mb-5 text-2xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-3xl">{copy.title}</h2>
     <p class="mb-4 max-w-none">{copy.intro}</p>
-
-    <h3 class="mt-8 mb-3 text-xl font-bold leading-snug text-slate-900">{copy.complianceTitle}</h3>
-    <p class="mb-4 max-w-none">{copy.complianceIntro}</p>
-    <ul class="my-4 list-disc space-y-2 ps-6">
-      {copy.complianceItems.map((item) => <li>{item}</li>)}
-    </ul>
-
-    <h3 class="mt-8 mb-3 text-xl font-bold leading-snug text-slate-900">{copy.distributorTitle}</h3>
-    <p class="mb-4 max-w-none">{copy.distributorIntro}</p>
-    <ul class="my-4 list-disc space-y-2 ps-6">
-      {copy.distributorItems.map((item) => <li>{item}</li>)}
-    </ul>
   </div>
 </section>

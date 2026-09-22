@@ -318,7 +318,7 @@ const breadcrumbItems = [
         <Breadcrumb items={breadcrumbItems} locale={locale} />
 
         <div class='product-detail-layout lg:grid lg:grid-cols-[minmax(190px,230px)_minmax(0,1fr)] lg:items-start lg:gap-12'>
-          <aside class='mb-8 lg:mb-0 lg:sticky lg:top-[8.5rem] lg:self-start'>
+          <aside class='hidden lg:block lg:mb-0 lg:sticky lg:top-[8.5rem] lg:self-start'>
             <ProductQuickNav
               categories={productNavigationTree}
               products={productNavigationProducts}
@@ -446,7 +446,7 @@ const breadcrumbItems = [
               <section id='downloads' class='product-content-section' data-product-section='downloads'>
                 <div class='mb-4 flex items-center justify-between gap-4'>
                   <div>
-                    <h2 class='text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl'>{t(messages, 'products.downloads')}</h2>
+                    <h2 class='text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl'>{t(messages, 'products.downloadsEyebrow')}</h2>
                   </div>
                   <a
                     href={toHref('/support/download', locale)}
