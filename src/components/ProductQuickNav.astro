@@ -63,7 +63,7 @@ const isRtl = isRtlLocale(locale);
 >
   <a
     href={toHref('/products', locale)}
-    class="mb-2 block py-2 text-lg font-normal text-slate-950 transition-colors hover:text-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+    class="mb-2 block py-2 text-base font-normal text-slate-950 transition-colors hover:text-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
   >
     {t(messages, 'products.allProducts')}
   </a>
@@ -77,7 +77,7 @@ const isRtl = isRtlLocale(locale);
           <button
             type="button"
             class:list={[
-              'product-quick-nav-toggle flex w-full items-center justify-between gap-3 py-2 text-start text-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2',
+              'product-quick-nav-toggle flex w-full items-center justify-between gap-3 py-2 text-start text-base transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2',
               isCurrentGroup ? 'font-bold text-orange-500' : 'font-normal text-slate-950 hover:text-orange-500',
             ]}
             data-product-quick-toggle
@@ -113,7 +113,7 @@ const isRtl = isRtlLocale(locale);
                     <a
                       href={toHref(`/products/${itemCategorySlug}/${item.slug}`, locale)}
                       class:list={[
-                        'block py-1.5 text-base leading-snug transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2',
+                        'block py-1.5 text-[15px] leading-snug transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2',
                         isCurrentProduct ? 'font-bold text-orange-500' : 'font-normal text-slate-950 hover:text-orange-500',
                       ]}
                       aria-current={isCurrentProduct ? 'page' : undefined}
@@ -132,7 +132,7 @@ const isRtl = isRtlLocale(locale);
 
   <a
     href="#wholesale-distribution"
-    class="mt-3 block py-2 text-lg font-normal text-slate-950 transition-colors hover:text-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+    class="mt-3 block py-2 text-base font-normal text-slate-950 transition-colors hover:text-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
   >
     {t(messages, 'products.wholesaleDistribution')}
   </a>
