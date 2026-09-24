@@ -154,11 +154,11 @@ const tocItems = markdownResult.toc;
     {relatedProducts.length > 0 && (
       <section class="mt-20 border-t border-slate-200 pt-12">
         <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
-          Product references
+          {t(messages, 'helpCenter.productReferencesEyebrow')}
         </p>
         <h2 class="mb-3 text-3xl font-extrabold text-slate-950">{t(messages, 'helpCenter.relatedProducts')}</h2>
         <p class="mb-8 max-w-3xl text-base leading-7 text-slate-600">
-          Explore the products referenced in this article to move from technical reading into evaluation and sourcing.
+          {t(messages, 'helpCenter.productReferencesDescription')}
         </p>
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {relatedProducts.map((product) => (
@@ -171,11 +171,11 @@ const tocItems = markdownResult.toc;
     {relatedArticles.length > 0 && (
       <section class="mt-20 border-t border-slate-200 pt-12">
         <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
-          Continue reading
+          {t(messages, 'helpCenter.continueReadingEyebrow')}
         </p>
         <h2 class="mb-3 text-3xl font-extrabold text-slate-950">{t(messages, 'helpCenter.relatedArticles')}</h2>
         <p class="mb-8 max-w-3xl text-base leading-7 text-slate-600">
-          Read the next articles in this topic cluster for more application guidance, process detail, and product context.
+          {t(messages, 'helpCenter.relatedArticlesDescription')}
         </p>
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {relatedArticles.map((insight) => {

@@ -57,7 +57,7 @@
     "industryPainPointsEyebrow": "痛点分析",
     "features": "产品特点",
     "featuresEyebrow": "特性说明",
-    "downloads": "下载文档",
+    "downloads": "技术资源",
     "downloadsEyebrow": "技术资源",
     "relatedInsights": "相关洞察",
     "relatedInsightsEyebrow": "继续阅读",
@@ -72,7 +72,7 @@
     "sectionNavigation": "产品目录",
     "productNavigation": "产品快速导航",
     "brandPartnership": "品牌与合作",
-    "wholesaleDistribution": "批发与经销",
+    "wholesaleDistribution": "批发或代理",
     "previousMedia": "上一个媒体",
     "nextMedia": "下一个媒体",
     "playVideo": "播放视频",
@@ -99,7 +99,7 @@
       "title": "产品",
       "abrasivePaper": "砂纸",
       "films": "薄膜",
-      "compoundsPolishes": "抛光剂",
+      "compoundsPolishes": "抛光产品",
       "automotiveWindowFilm": "汽车窗膜",
       "paintProtectionFilms": "漆面保护膜"
     },
@@ -113,13 +113,13 @@
     "about": {
       "title": "关于我们",
       "brandStory": "品牌故事",
-      "productionBase": "生产制造",
+      "productionBase": "生产基地",
       "becomeDealer": "成为经销商",
       "contactUs": "联系我们",
       "insights": "洞察",
       "videos": "视频"
     },
-    "chat": "我们在这里！"
+    "chat": "我们随时为您提供帮助"
   },
   "cookie": {
     "title": "Cookie 偏好设置",
@@ -189,7 +189,7 @@
   "home": {
     "heroTitle": "欢迎",
     "heroCta": "联系我们",
-    "heroSecondaryCta": "探索B2B合作",
+    "heroSecondaryCta": "批发或代理",
     "insightsTitle": "应用指南",
     "latestHelpTitle": "施工问题解决",
     "productsDescription": "完整的汽车表面修复与保护产品组合",
@@ -197,7 +197,7 @@
     "freeSampleCta": "获取免费样品"
   },
   "articleSampleCta": {
-    "title": "想成为 Gloris 在您所在市场的代理商？",
+    "title": "想成为 Gloris 在您所在市场的经销商？",
     "description": "告诉我们您的所在地区、渠道资源和目标产品线，我们会尽快与您联系，并提供适合当地市场的产品、价格与合作支持方案。"
   },
   "error404": {
@@ -224,14 +224,14 @@
   },
   "dealer": {
     "headerCta": "批发或代理",
-    "sectionTag": "招募代理商",
-    "actionCta": "成为代理商",
+    "sectionTag": "招募经销商",
+    "actionCta": "成为经销商",
     "applyCta": "申请合作",
     "joinUsTitle": "立即加入我们",
     "customerServiceTitle": "客户服务",
     "whatsapp": "WhatsApp",
     "chatNow": "在线咨询",
-    "advantagesTitle": "Gloris 为合作经销商带来的价值"
+    "advantagesTitle": "Gloris 如何支持合作经销商"
   },
   "training": {
     "description": "通过我们全面的培训计划提升您的技能和知识。向行业专家学习，掌握表面处理和汽车护理的最新技术。"
@@ -249,6 +249,10 @@
     "other": "其他",
     "relatedProducts": "相关产品",
     "relatedArticles": "相关文章",
+    "productReferencesEyebrow": "文中提及的产品",
+    "productReferencesDescription": "查看本文提及的产品，进一步了解产品信息并评估采购方案。",
+    "continueReadingEyebrow": "继续阅读",
+    "relatedArticlesDescription": "阅读同一主题的相关文章，了解更多应用指导、施工流程和产品信息。",
     "relatedFaq": "相关常见问题",
     "noArticles": "该分类下暂无文章。",
     "browseByNeedTitle": "按需求查找",
