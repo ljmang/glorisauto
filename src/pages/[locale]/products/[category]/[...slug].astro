@@ -12,7 +12,6 @@ import BlocksRenderer from '@/components/BlocksRenderer.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ProductGallery from '@/components/ProductGallery.astro';
 import ProductQuickNav from '@/components/ProductQuickNav.astro';
-import ProductB2bSupport from '@/components/ProductB2bSupport.astro';
 import DownloadFileCard from '@/components/DownloadFileCard.astro';
 import InsightCard from '@/components/InsightCard.astro';
 import { CircleChevronRight, MessageCircle } from 'lucide-svelte';
@@ -491,8 +490,6 @@ const breadcrumbItems = [
                 />
               </section>
             )}
-
-            <ProductB2bSupport locale={locale} />
 
             {downloadFilesList.length > 0 && (
               <section id='downloads' class='product-content-section' data-product-section='downloads'>
