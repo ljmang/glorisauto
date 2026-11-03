@@ -3,6 +3,7 @@ import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import BackToTop from '@/components/BackToTop.astro';
 import HomeCta from '@/components/HomeCta.astro';
+import LocaleSuggestion from '@/components/LocaleSuggestion.astro';
 import { t, type Messages, type Locale } from '@/i18n';
 import {
   localeLanguageTag,
@@ -327,6 +328,7 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
     </noscript>
     <!-- End Google Tag Manager (noscript) -->
     <Header messages={messages} locale={locale} navData={navData} siteSeo={siteSeo} />
+    <LocaleSuggestion currentLocale={locale} />
     <main class="flex-1">
       <slot />
     </main>

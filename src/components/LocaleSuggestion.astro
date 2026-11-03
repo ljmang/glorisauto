@@ -1,0 +1,184 @@
+---
+import type { Locale } from '@/i18n/config';
+
+interface Props {
+  currentLocale: Locale;
+}
+
+const { currentLocale } = Astro.props;
+---
+
+<aside
+  id="locale-suggestion"
+  hidden
+  data-current-locale={currentLocale}
+  class="border-b border-orange-200 bg-orange-50"
+  role="region"
+  aria-live="polite"
+>
+  <div class="container mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+    <p id="locale-suggestion-message" class="m-0 text-sm text-gray-800"></p>
+    <div class="flex flex-wrap items-center gap-2">
+      <a
+        id="locale-suggestion-switch"
+        href="/"
+        class="inline-flex items-center justify-center rounded-full bg-orange-700 px-4 py-2 text-sm font-semibold text-white no-underline transition-colors hover:bg-orange-800"
+      ></a>
+      <button
+        id="locale-suggestion-stay"
+        type="button"
+        class="rounded-full px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-orange-100"
+      ></button>
+    </div>
+  </div>
+</aside>
+
+<script is:inline>
+  (() => {
+    const banner = document.getElementById('locale-suggestion');
+    if (!banner) return;
+
+    const supportedLocales = ['en', 'zh-cn', 'ja', 'ar', 'es', 'vi'];
+    const localeCookie = 'gloris_locale';
+    const currentLocale = banner.dataset.currentLocale;
+    const languageNames = {
+      en: 'English',
+      'zh-cn': '简体中文',
+      ja: '日本語',
+      ar: 'العربية',
+      es: 'Español',
+      vi: 'Tiếng Việt',
+    };
+    const copy = {
+      en: {
+        message: 'Your location or browser settings suggest {language}. Would you like to switch?',
+        switch: 'Switch language',
+        stay: 'Keep {language}',
+      },
+      'zh-cn': {
+        message: '根据你的网络位置或浏览器设置，{language} 可能更适合你。要切换吗？',
+        switch: '切换语言',
+        stay: '保持中文',
+      },
+      ja: {
+        message: 'お住まいの地域またはブラウザー設定から、{language} が適している可能性があります。切り替えますか？',
+        switch: '言語を切り替える',
+        stay: '日本語のまま',
+      },
+      ar: {
+        message: 'قد تكون {language} أنسب وفقًا لموقعك أو إعدادات المتصفح. هل تريد التبديل؟',
+        switch: 'تغيير اللغة',
+        stay: 'البقاء بالعربية',
+      },
+      es: {
+        message: 'Tu ubicación o la configuración del navegador sugieren {language}. ¿Quieres cambiar?',
+        switch: 'Cambiar idioma',
+        stay: 'Mantener español',
+      },
+      vi: {
+        message: 'Vị trí hoặc cài đặt trình duyệt cho thấy {language} có thể phù hợp hơn. Bạn muốn chuyển không?',
+        switch: 'Đổi ngôn ngữ',
+        stay: 'Giữ tiếng Việt',
+      },
+    };
+
+    function getCookie(name) {
+      const prefix = `${name}=`;
+      const value = document.cookie
+        .split(';')
+        .map((part) => part.trim())
+        .find((part) => part.startsWith(prefix));
+      if (!value) return '';
+      try {
+        return decodeURIComponent(value.slice(prefix.length));
+      } catch {
+        return '';
+      }
+    }
+
+    function saveLocalePreference(locale) {
+      if (!supportedLocales.includes(locale)) return;
+      document.cookie = `${localeCookie}=${encodeURIComponent(locale)}; Max-Age=31536000; Path=/; SameSite=Lax; Secure`;
+    }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const link = target.closest('[data-locale-target]');
+      if (link) saveLocalePreference(link.getAttribute('data-locale-target'));
+    }, true);
+
+    if (supportedLocales.includes(getCookie(localeCookie))) return;
+
+    function browserLocale() {
+      const choices = Array.isArray(navigator.languages) && navigator.languages.length
+        ? navigator.languages
+        : [navigator.language || ''];
+
+      for (const choice of choices) {
+        const normalized = String(choice).toLowerCase();
+        if (normalized.startsWith('zh')) return 'zh-cn';
+        if (normalized.startsWith('ja')) return 'ja';
+        if (normalized.startsWith('ar')) return 'ar';
+        if (normalized.startsWith('es')) return 'es';
+        if (normalized.startsWith('vi')) return 'vi';
+        if (normalized.startsWith('en')) return 'en';
+      }
+      return '';
+    }
+
+    function showSuggestion(locale) {
+      if (!supportedLocales.includes(locale) || locale === currentLocale) return;
+
+      const targetLink = document.querySelector(
+        `#lang-switcher-wrap a[data-locale-target="${locale}"]`
+      );
+      const message = document.getElementById('locale-suggestion-message');
+      const switchLink = document.getElementById('locale-suggestion-switch');
+      const stayButton = document.getElementById('locale-suggestion-stay');
+      const localeCopy = copy[currentLocale] || copy.en;
+      const language = languageNames[locale];
+
+      if (!targetLink || !message || !switchLink || !stayButton || !language) return;
+
+      message.textContent = localeCopy.message.replace('{language}', language);
+      switchLink.textContent = localeCopy.switch;
+      switchLink.href = targetLink.href;
+      switchLink.dataset.localeTarget = locale;
+      stayButton.textContent = localeCopy.stay.replace('{language}', languageNames[currentLocale] || 'English');
+      stayButton.addEventListener('click', () => {
+        saveLocalePreference(currentLocale);
+        banner.hidden = true;
+      }, { once: true });
+      banner.hidden = false;
+    }
+
+    async function getIpLocale() {
+      try {
+        const response = await fetch('/api/locale-suggestion', {
+          cache: 'no-store',
+          credentials: 'same-origin',
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) return '';
+        const data = await response.json();
+        return supportedLocales.includes(data.locale) ? data.locale : '';
+      } catch {
+        return '';
+      }
+    }
+
+    async function initialize() {
+      const preferredBrowserLocale = browserLocale();
+      if (preferredBrowserLocale && preferredBrowserLocale !== 'en') {
+        showSuggestion(preferredBrowserLocale);
+        return;
+      }
+
+      const suggestedLocale = await getIpLocale();
+      showSuggestion(suggestedLocale || preferredBrowserLocale || 'en');
+    }
+
+    initialize();
+  })();
+</script>

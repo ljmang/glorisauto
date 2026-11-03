@@ -136,6 +136,7 @@
             {#each supportedLocales as loc}
               <a
                 href={toHref(pathWithoutLocale, loc)}
+                data-locale-target={loc}
                 onclick={close}
                 class={`flex items-center gap-2 py-2 rounded px-2 -mx-2 no-underline  transition-colors ${
                   loc === locale ? 'text-orange-500' : ' hover:text-orange-500'
