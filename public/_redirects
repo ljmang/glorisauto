@@ -1,9 +1,6 @@
 # Cloudflare Pages redirects
 # Keep default-language shortcuts working for top-level entry URLs.
 
-# Keep Baidu's verification URL on the exact .html path while serving the token as plain text.
-/baidu_verify_codeva-fnjhWflRfX.html /baidu_verify_codeva-fnjhWflRfX.txt 200
-
 / /en/ 302
 /about /en/about/ 302
 /products /en/products/ 302
