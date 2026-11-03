@@ -282,6 +282,7 @@ const siteName = siteSeo?.siteName?.trim() || siteSeo?.companyName?.trim() || 'G
     {resolvedSeo.keywords && <meta name="keywords" content={resolvedSeo.keywords} />}
     {siteSeo?.googleVerification && <meta name="google-site-verification" content={siteSeo.googleVerification} />}
     {siteSeo?.bingVerification && <meta name="msvalidate.01" content={siteSeo.bingVerification} />}
+    <meta name="baidu-site-verification" content="codeva-fnjhWflRfX" />
     <link rel="canonical" href={resolvedSeo.canonicalUrl} />
     {resolvedSeo.alternates.map((alternate) => (
       <link rel="alternate" hreflang={alternate.hrefLang} href={alternate.href} />
