@@ -24,7 +24,11 @@ export async function onRequest(context) {
   const destination = new URL(request.url);
   destination.pathname = `/${locale}/`;
 
-  const response = Response.redirect(destination.toString(), 302);
-  response.headers.set('Cache-Control', 'private, no-store');
-  return response;
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: destination.toString(),
+      'Cache-Control': 'private, no-store',
+    },
+  });
 }
