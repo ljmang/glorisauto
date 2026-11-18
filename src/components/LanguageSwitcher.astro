@@ -183,6 +183,7 @@ if (!productMatch && categoryMatch) {
           <a
             href={toHref(resolvedPathByLocale[locale], locale)}
             data-locale-target={locale}
+            data-locale-fallback={(productMatch || categoryMatch) && resolvedPathByLocale[locale] === '/products' ? 'true' : undefined}
             class={`flex items-center gap-2 px-3 py-2 text-sm no-underline transition-colors ${
               locale === currentLocale
                 ? 'text-orange-600'

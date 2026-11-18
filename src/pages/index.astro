@@ -1,6 +1,10 @@
 ---
 import { defaultLocale } from '@/i18n/config';
+import { redirectToVisitorHome } from '@/i18n/visitorLocale';
 
-// 重定向到默认语言
-return Astro.redirect(`/${defaultLocale}`, 302);
+// Static builds have no visitor request. Pages Functions handle / at the edge.
+if (Astro.isPrerendered || (Astro.request.method !== 'GET' && Astro.request.method !== 'HEAD')) {
+  return Astro.redirect(`/${defaultLocale}/`, 302);
+}
+return redirectToVisitorHome(Astro.request, Astro.url);
 ---

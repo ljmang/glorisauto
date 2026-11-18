@@ -6,12 +6,14 @@ interface Props {
 }
 
 const { currentLocale } = Astro.props;
+const hasContentParams = Object.keys(Astro.params).some((key) => key !== 'locale');
 ---
 
 <aside
   id="locale-suggestion"
   hidden
   data-current-locale={currentLocale}
+  data-check-translation={hasContentParams ? 'true' : undefined}
   class="border-b border-orange-200 bg-orange-50"
   role="region"
   aria-live="polite"
@@ -127,11 +129,11 @@ const { currentLocale } = Astro.props;
       return '';
     }
 
-    function showSuggestion(locale) {
+    async function showSuggestion(locale) {
       if (!supportedLocales.includes(locale) || locale === currentLocale) return;
 
       const targetLink = document.querySelector(
-        `#lang-switcher-wrap a[data-locale-target="${locale}"]`
+        `#lang-switcher-wrap a[data-locale-target="${locale}"]:not([data-locale-fallback])`
       );
       const message = document.getElementById('locale-suggestion-message');
       const switchLink = document.getElementById('locale-suggestion-switch');
@@ -141,9 +143,20 @@ const { currentLocale } = Astro.props;
 
       if (!targetLink || !message || !switchLink || !stayButton || !language) return;
 
+      const destination = new URL(targetLink.href);
+      if (banner.hasAttribute('data-check-translation')) {
+        // A CMS page may only be published in some languages.
+        try {
+          const translation = await fetch(destination, { method: 'HEAD', redirect: 'error' });
+          if (!translation.ok) return;
+        } catch {
+          return;
+        }
+      }
+      destination.search = window.location.search;
       message.textContent = localeCopy.message.replace('{language}', language);
       switchLink.textContent = localeCopy.switch;
-      switchLink.href = targetLink.href;
+      switchLink.href = destination.href;
       switchLink.dataset.localeTarget = locale;
       stayButton.textContent = localeCopy.stay.replace('{language}', languageNames[currentLocale] || 'English');
       stayButton.addEventListener('click', () => {

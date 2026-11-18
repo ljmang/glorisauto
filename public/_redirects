@@ -1,7 +1,6 @@
 # Cloudflare Pages redirects
-# Keep default-language shortcuts working for top-level entry URLs.
+# functions/index.js chooses the language for /. Other entry shortcuts use English.
 
-/ /en/ 302
 /about /en/about/ 302
 /products /en/products/ 302
 /support /en/support/ 302
