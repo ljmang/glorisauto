@@ -183,7 +183,6 @@ if (!productMatch && categoryMatch) {
           <a
             href={toHref(resolvedPathByLocale[locale], locale)}
             data-locale-target={locale}
-            data-locale-fallback={(productMatch || categoryMatch) && resolvedPathByLocale[locale] === '/products' ? 'true' : undefined}
             class={`flex items-center gap-2 px-3 py-2 text-sm no-underline transition-colors ${
               locale === currentLocale
                 ? 'text-orange-600'
@@ -199,13 +198,24 @@ if (!productMatch && categoryMatch) {
   </details>
 </div>
 
-<script is:inline>
-  document.addEventListener('click', function (e) {
+<script define:vars={{ supportedLocales }}>
+  // Capture both menus before the mobile menu closes on selection.
+  document.addEventListener('click', function (event) {
+    if (!(event.target instanceof Element)) return;
+    const link = event.target.closest('a[data-locale-target]');
+    const locale = link?.dataset.localeTarget;
+    if (link && supportedLocales.includes(locale)) {
+      document.cookie = `gloris_locale=${encodeURIComponent(locale)}; Max-Age=31536000; Path=/; SameSite=Lax; Secure`;
+      if (window.location.search && link.origin === window.location.origin && !link.search) {
+        link.search = window.location.search;
+      }
+    }
+
     const wrap = document.getElementById('lang-switcher-wrap');
     const details = wrap && wrap.querySelector('details');
     if (!wrap || !details) return;
-    if (!wrap.contains(e.target)) {
+    if (!wrap.contains(event.target)) {
       details.removeAttribute('open');
     }
-  });
+  }, true);
 </script>
