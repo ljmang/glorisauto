@@ -28,6 +28,7 @@ import DownloadFileCard from "@/components/DownloadFileCard.astro";
 import HomeWhyChoose from "@/components/HomeWhyChoose.astro";
 import HomeVideoRail from "@/components/HomeVideoRail.astro";
 import HomeCta from "@/components/HomeCta.astro";
+import { getInsightFirstPublishedAtByDocumentId, sortInsightsByPublicationDate } from "@/utils/insightOrdering";
 
 export async function getStaticPaths() {
 	return supportedLocales.map((locale) => ({
@@ -272,11 +273,13 @@ const latestInsightsRes =
 						cover: true,
 						insight_category: true,
 					},
-					sort: ["sort:asc"],
-					pagination: { pageSize: 30 },
+					sort: ["publishedAt:desc"],
+					pagination: { pageSize: 100 },
 				},
 			)
 		: null;
+	const latestInsightPublicationDates =
+		homeInsightsMode === "latest" ? await getInsightFirstPublishedAtByDocumentId() : new Map<string, number>();
 
 const getCategorySlug = (insight: InsightAttributes): string => {
 	const category = insight?.insight_category;
@@ -295,7 +298,10 @@ const sortInsightsByRank = (list: InsightAttributes[]) =>
 	});
 
 const latestInsights = Array.isArray(latestInsightsRes?.data)
-	? sortInsightsByRank(latestInsightsRes.data.filter(isNonNewsInsight)).slice(0, homeInsightsCount)
+	? sortInsightsByPublicationDate(
+			latestInsightsRes.data.filter(isNonNewsInsight),
+			latestInsightPublicationDates,
+	  ).slice(0, homeInsightsCount)
 	: [];
 
 const displayInsights =

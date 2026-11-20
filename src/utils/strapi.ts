@@ -136,6 +136,7 @@ export function getMediaUrl(url: string | null | undefined): string {
 export type PopulateValue = string | number | boolean | Record<string, PopulateValue>;
 export interface FetchApiOptions {
   locale?: string;
+  fields?: string[];
   populate?: Record<string, PopulateValue> | string;
   filters?: Record<string, unknown>;
   pagination?: { page?: number; pageSize?: number };
@@ -151,13 +152,14 @@ export async function fetchApi<T = unknown>(
   path: string,
   options: FetchApiOptions = {}
 ): Promise<T> {
-  const { locale, populate, filters, pagination, sort, headers: customHeaders = {} } = options;
+  const { locale, fields, populate, filters, pagination, sort, headers: customHeaders = {} } = options;
   const base = getStrapiUrl();
   const pathClean = path.replace(/^\//, '');
   const url = new URL(`${base}/${pathClean}`);
 
   const strapiLocale = toStrapiLocale(locale);
   if (strapiLocale) url.searchParams.set('locale', strapiLocale);
+  fields?.forEach((field, index) => url.searchParams.set(`fields[${index}]`, field));
   if (pagination?.pageSize != null) url.searchParams.set('pagination[pageSize]', String(pagination.pageSize));
   if (pagination?.page != null) url.searchParams.set('pagination[page]', String(pagination.page));
   if (sort) {

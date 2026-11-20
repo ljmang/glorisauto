@@ -8,6 +8,7 @@ import { fetchApiWithLocaleFallback, api, parseImage, resolveImageAltText, resol
 import { toHref } from '@/utils/navigationData';
 import { fetchSiteSeo } from '@/utils/siteConfig';
 import { getSiteContactInfo } from '@/utils/siteContact';
+import { getInsightFirstPublishedAtByDocumentId, sortInsightsByPublicationDate } from '@/utils/insightOrdering';
 import type { AboutUsAttributes, InsightAttributes } from '@/types/content';
 import type { StrapiResponse } from '@/types';
 import { Image } from 'astro:assets';
@@ -66,14 +67,15 @@ const aboutUs = aboutUsRes?.data;
 const heroMedia = aboutUs ? parseImage(aboutUs.heroMedia) : null;
 const featuredInsightsCount = normalizeInsightsCount(aboutUs?.insightsCount, 2);
 const latestInsightsCount = normalizeInsightsCount(aboutUs?.latestInsightsCount, 3);
+const firstPublishedAtByDocumentId = aboutUs ? await getInsightFirstPublishedAtByDocumentId() : new Map<string, number>();
 
 const latestInsightsRes = aboutUs
   ? await fetchApiWithLocaleFallback<{ data?: InsightAttributes[] }>(api.insights, {
       locale,
       populate: { cover: true, insight_category: true },
-      sort: ['sort:asc'],
+      sort: ['publishedAt:desc'],
       pagination: {
-        pageSize: 30,
+        pageSize: 100,
       },
     })
   : null;
@@ -81,15 +83,12 @@ const latestInsightsRes = aboutUs
 const manualFeaturedArticles = Array.isArray(aboutUs?.insights)
   ? aboutUs.insights.filter((insight) => Boolean(insight?.slug))
   : [];
-const allLatestInsights = Array.isArray(latestInsightsRes?.data)
-  ? [...latestInsightsRes.data]
-      .filter((insight) => Boolean(insight?.slug))
-      .sort((a, b) => {
-        const aSort = Number.isFinite(a.sort) ? (a.sort as number) : Number.MAX_SAFE_INTEGER;
-        const bSort = Number.isFinite(b.sort) ? (b.sort as number) : Number.MAX_SAFE_INTEGER;
-        return aSort - bSort;
-      })
-  : [];
+const allLatestInsights = sortInsightsByPublicationDate(
+  Array.isArray(latestInsightsRes?.data)
+    ? latestInsightsRes.data.filter((insight) => Boolean(insight?.slug))
+    : [],
+  firstPublishedAtByDocumentId
+);
 const featuredArticles = manualFeaturedArticles.slice(0, featuredInsightsCount);
 const featuredInsightSlugs = new Set(
   featuredArticles.map((article) => article.slug).filter((slug): slug is string => Boolean(slug))

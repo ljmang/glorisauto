@@ -7,13 +7,14 @@ import Breadcrumb from '@/components/Breadcrumb.astro';
 import InsightFeaturedCard from '@/components/InsightFeaturedCard.astro';
 import InsightSearch from '@/components/InsightSearch.svelte';
 import InsightProductCategoryBrowser from '@/components/InsightProductCategoryBrowser.svelte';
-import { supportedLocales, type Locale, getLocale, localeLanguageTag } from '@/i18n/config';
+import { supportedLocales, type Locale, getLocale } from '@/i18n/config';
 import { loadMessages, t } from '@/i18n';
 import { fetchApiWithLocaleFallback, api, normalizeInsights } from '@/utils/strapiApi';
 import { toHref } from '@/utils/navigationData';
 import type { InsightAttributes, InsightCategoryAttributes } from '@/types/content';
 import { buildInsightSearchItems } from '@/utils/insightSearch';
 import { buildInsightProductCategoryOptions, buildInsightCardItems } from '@/utils/insightProductCategories';
+import { getInsightFirstPublishedAtByDocumentId, sortInsightsByPublicationDate } from '@/utils/insightOrdering';
 
 export async function getStaticPaths() {
   const paths: { params: { locale: string; category: string } }[] = [];
@@ -46,6 +47,7 @@ const categoriesRes = await fetchApiWithLocaleFallback<{ data?: InsightCategoryA
       },
     },
   },
+  sort: ['publishedAt:desc'],
   pagination: { pageSize: 100 },
 });
 const categories = (Array.isArray(categoriesRes?.data) ? categoriesRes.data : [])
@@ -72,15 +74,11 @@ const insightsRes = await fetchApiWithLocaleFallback<{ data?: InsightAttributes[
   pagination: { pageSize: 100 },
   filters: { insight_category: { slug: { $eq: categorySlug } } },
 });
-// 排序：优先按 sort 字段（与英文版一致的排名），未设置 sort 的排在最后
-const insights = normalizeInsights(
-  Array.isArray(insightsRes?.data) ? insightsRes.data : [],
-  locale
-).sort((a, b) => {
-    const aSort = Number.isFinite(a.sort) ? (a.sort as number) : Number.MAX_SAFE_INTEGER;
-    const bSort = Number.isFinite(b.sort) ? (b.sort as number) : Number.MAX_SAFE_INTEGER;
-    return aSort - bSort || (a.title ?? '').localeCompare(b.title ?? '', localeLanguageTag[locale]);
-  });
+const firstPublishedAtByDocumentId = await getInsightFirstPublishedAtByDocumentId();
+const insights = sortInsightsByPublicationDate(
+  normalizeInsights(Array.isArray(insightsRes?.data) ? insightsRes.data : [], locale),
+  firstPublishedAtByDocumentId
+);
 const insightSearchItems = buildInsightSearchItems(insights, locale);
 
 const breadcrumbItems = [

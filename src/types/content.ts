@@ -181,6 +181,7 @@ export type InsightCategoryContent = StrapiContent<InsightCategoryAttributes>;
 
 /** Insight 洞察/文章类型 */
 export interface InsightAttributes {
+  documentId?: string;
   title: string;
   slug: string;
   excerpt?: string;
@@ -191,7 +192,7 @@ export interface InsightAttributes {
   cover?: StrapiMedia | StrapiMedia[] | null;
   category?: unknown;
   insight_category?: InsightCategoryAttributes | null;
-  publishedAt?: string;
+  publishedAt?: string | null;
   updatedAt?: string;
   seo?: StrapiSeo | null;
 }
